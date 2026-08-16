@@ -72,6 +72,12 @@ type Runtime = {
   actionName?: string;
   following: boolean;
   guiding: boolean;
+  /**
+   * "Stay here" means HERE, not "go back where you spawned". Without this the
+   * NPC drops out of follow, path-walking reclaims the transform and snaps it
+   * to its authored waypoint. Parked NPCs hold position until asked to move.
+   */
+  parked: boolean;
   spokeTo: boolean;
 };
 
@@ -101,6 +107,18 @@ export const DEFAULTS: Required<Pick<NpcConfig, 'health' | 'damage' | 'speed' | 
 /* ------------------------------------------------------------- player --- */
 
 const PLAYER_MAX_HP = 100;
+/**
+ * Knockback is spread over time, not applied as one shove.
+ *
+ * The push writes the player's position directly (the character controller has
+ * no impulse channel), so a single 2-unit shove is a teleport: the chase camera
+ * snaps with it and the whole scene appears to jump — it reads as the page
+ * reloading. A small velocity bled out over a fifth of a second stays legible
+ * as "you got hit" without moving you across the beach.
+ */
+const KNOCK_SPEED = 2.6;   // units/s
+const KNOCK_TIME = 0.22;   // seconds
+let knock = { x: 0, z: 0, t: 0 };
 let playerHp = PLAYER_MAX_HP;
 let playerHurtT = 0;
 let spawn = new THREE.Vector3(0, 1.2, 0);
@@ -253,6 +271,7 @@ export function npcRuntime(item: PlacedItem): Runtime {
       home: item.obj.position.clone(),
       following: false,
       guiding: false,
+      parked: false,
       spokeTo: false,
     };
     rt.set(item, r);
@@ -397,8 +416,9 @@ function hurtPlayer(amount: number, fromX: number, fromZ: number, px: number, pz
   const dx = px - fromX;
   const dz = pz - fromZ;
   const d = Math.hypot(dx, dz) || 1;
-  pushPlayer?.((dx / d) * 2.2, (dz / d) * 2.2);
+  knock = { x: (dx / d) * KNOCK_SPEED, z: (dz / d) * KNOCK_SPEED, t: KNOCK_TIME };
   if (playerHp <= 0) {
+    knock.t = 0;
     playerHp = PLAYER_MAX_HP;
     renderHud();
     teleportPlayer?.(spawn.x, spawn.y, spawn.z);
@@ -431,6 +451,14 @@ export function updateNpcs(
   if (!active || !playerPos) return;
 
   playerHurtT = Math.max(0, playerHurtT - dt);
+
+  // Bleed out any knockback from a recent hit.
+  if (knock.t > 0) {
+    const step = Math.min(dt, knock.t);
+    pushPlayer?.(knock.x * step, knock.z * step);
+    knock.t -= dt;
+  }
+
   let prompt: string | null = null;
 
   for (const item of placed) {
@@ -487,6 +515,7 @@ export function updateNpcs(
     if (r.following) r.state = 'follow';
     else if (r.guiding) r.state = 'guide';
     else if (cfg.faction === 'hostile' && toPlayer < aggro) r.state = toPlayer <= reach ? 'attack' : 'chase';
+    else if (r.parked) r.state = 'idle';
     else if (cfg.behavior === 'flee' && toPlayer < aggro) r.state = 'flee';
     else if (r.state === 'chase' || r.state === 'attack' || r.state === 'flee') r.state = 'idle';
     else if (cfg.behavior === 'wander') r.state = 'wander';
@@ -495,7 +524,8 @@ export function updateNpcs(
 
     if (
       r.state === 'chase' || r.state === 'attack' || r.state === 'flee' ||
-      r.state === 'follow' || r.state === 'guide' || r.state === 'wander'
+      r.state === 'follow' || r.state === 'guide' || r.state === 'wander' ||
+      (r.parked && r.state === 'idle')
     ) {
       item.npcDriving = true;
     }
@@ -539,6 +569,7 @@ export function updateNpcs(
         const left = Math.hypot(dest[0] - p.x, dest[1] - p.z);
         if (left < 1.2) {
           r.guiding = false;
+          r.parked = true; // stay at the destination rather than walk home
           r.state = 'idle';
           play(item, 'idle');
           if (cfg.arriveLine) {
@@ -609,6 +640,8 @@ export function npcKey(code: string, playerPos: THREE.Vector3 | undefined): bool
 
     if (code === 'KeyF' && last && cfg.canFollow) {
       r.following = !r.following;
+      // Stopping means standing right here; starting means moving again.
+      r.parked = !r.following;
       r.guiding = false;
       endTalk();
       return true;
@@ -616,6 +649,7 @@ export function npcKey(code: string, playerPos: THREE.Vector3 | undefined): bool
     if (code === 'KeyG' && last && cfg.guideTo) {
       r.guiding = true;
       r.following = false;
+      r.parked = false;
       endTalk();
       return true;
     }

@@ -6,7 +6,11 @@ import { Renderer, getScene } from 'vibegame/rendering';
 import { Transform, WorldTransform } from 'vibegame/transforms';
 
 /**
- * Anne (Quaternius Pirate Kit) as the player's visual.
+ * The player's visual — Punk (Ultimate Modular Women Pack).
+ *
+ * Swapped off the pirate-kit characters because the modular People packs are a
+ * different art style, and once the world is populated with them the player has
+ * to match the crowd rather than the props.
  *
  * The engine's procedural blocky character keeps doing everything it already
  * does — physics, input, the animationState machine — we only take away its
@@ -15,6 +19,7 @@ import { Transform, WorldTransform } from 'vibegame/transforms';
  * stay in sync with the physics without re-deriving any of it.
  */
 
+const PLAYER_MODEL = '/models/ultimate-modular-women-pack/Punk.glb';
 const CHARACTER_HEIGHT = 1.55;
 
 /** clip name segments look like "CharacterArmature|...|Walk|..." — match the
@@ -36,7 +41,7 @@ let mixer: THREE.AnimationMixer | null = null;
 let actions: Record<string, THREE.AnimationAction> = {};
 let current: THREE.AnimationAction | null = null;
 let currentState = -1;
-let anne: THREE.Group | null = null;
+let player: THREE.Group | null = null;
 let baseOffsetY = 0;
 const clock = new THREE.Clock();
 
@@ -46,11 +51,11 @@ export async function initCharacterVisual(state: State, playerEntity: number) {
 
   const gltf = await new Promise<{ scene: THREE.Group; animations: THREE.AnimationClip[] }>(
     (resolve, reject) =>
-      new GLTFLoader().load('/models/quaternius-pirate/Anne.glb', resolve, undefined, reject)
+      new GLTFLoader().load(PLAYER_MODEL, resolve, undefined, reject)
   );
 
-  anne = gltf.scene;
-  anne.traverse((o) => {
+  player = gltf.scene;
+  player.traverse((o) => {
     const m = o as THREE.Mesh;
     if (m.isMesh) {
       m.castShadow = true;
@@ -67,19 +72,28 @@ export async function initCharacterVisual(state: State, playerEntity: number) {
   });
 
   // Fit to gameplay size, feet at origin.
-  const box = new THREE.Box3().setFromObject(anne);
+  const box = new THREE.Box3().setFromObject(player);
   const size = box.getSize(new THREE.Vector3());
   const s = CHARACTER_HEIGHT / Math.max(size.y, 1e-3);
-  anne.scale.setScalar(s);
-  const box2 = new THREE.Box3().setFromObject(anne);
+  player.scale.setScalar(s);
+  const box2 = new THREE.Box3().setFromObject(player);
   baseOffsetY = -box2.min.y;
-  scene.add(anne);
+  scene.add(player);
 
   // Animation setup.
-  mixer = new THREE.AnimationMixer(anne);
+  mixer = new THREE.AnimationMixer(player);
   actions = {};
+  // People-pack clip names differ a little from the pirate kit's.
+  const CANDIDATES: Record<string, string[]> = {
+    Idle: ['Idle', 'Idle_Neutral'],
+    Walk: ['Walk'],
+    Run: ['Run'],
+    Jump: ['Jump', 'Jump_Start'],
+    Jump_Idle: ['Jump_Idle', 'Jump_Air', 'Fall'],
+    Jump_Land: ['Jump_Land', 'Land'],
+  };
   for (const seg of ['Idle', 'Walk', 'Run', 'Jump', 'Jump_Idle', 'Jump_Land']) {
-    const clip = findClip(gltf.animations, seg);
+    const clip = CANDIDATES[seg].map((c) => findClip(gltf.animations, c)).find(Boolean) ?? null;
     if (clip) {
       const a = mixer.clipAction(clip);
       if (seg === 'Jump' || seg === 'Jump_Land') {
@@ -89,7 +103,10 @@ export async function initCharacterVisual(state: State, playerEntity: number) {
       actions[seg] = a;
     }
   }
-  console.info('[character] Anne clips:', Object.keys(actions).join(', '));
+  console.info(
+    `[character] ${PLAYER_MODEL.split('/').pop()} clips:`,
+    Object.keys(actions).join(', ')
+  );
   play('Idle');
   void playerEntity;
   hideBlockyCharacter(state);
@@ -142,7 +159,10 @@ function hideBlockyCharacter(state: State) {
 }
 
 function play(seg: string) {
-  const next = actions[seg] ?? actions['Idle'];
+  // The People packs ship no jump animations. Falling back to Idle would snap
+  // her to a standing pose mid-leap; holding whatever is already playing (a
+  // run or walk cycle) reads far better in the air.
+  const next = actions[seg];
   if (!next || next === current) return;
   next.reset().fadeIn(0.14).play();
   current?.fadeOut(0.14);
@@ -151,17 +171,17 @@ function play(seg: string) {
 
 /** Call from a draw-group system: glue Anne to the player and advance clips. */
 export function updateCharacterVisual(state: State, playerEntity: number) {
-  if (!anne || !mixer) return;
+  if (!player || !mixer) return;
   hideBlockyCharacter(state);
 
-  anne.position.set(
+  player.position.set(
     WorldTransform.posX[playerEntity],
     WorldTransform.posY[playerEntity] + baseOffsetY,
     WorldTransform.posZ[playerEntity]
   );
   const y = Transform.rotY[playerEntity];
   const w = Transform.rotW[playerEntity];
-  anne.rotation.y = Math.atan2(2 * w * y, 1 - 2 * y * y);
+  player.rotation.y = Math.atan2(2 * w * y, 1 - 2 * y * y);
 
   // Follow the engine's state machine.
   const ac = findAnimChar(state);

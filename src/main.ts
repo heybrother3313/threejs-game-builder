@@ -22,6 +22,7 @@ import {
 } from 'vibegame/rendering';
 import { Transform, WorldTransform } from 'vibegame/transforms';
 import { buildMode, initBuilder, toggleBuildMode } from './builder';
+import { setPlayerPosProvider } from './assistant';
 import { canRedo, canUndo, mark, redo, undo } from './history';
 import { initCharacterVisual, updateCharacterVisual } from './character';
 import {
@@ -651,6 +652,14 @@ withSystem(PlatformSlipSystem)
         }
       },
     });
+
+    // Let the assistant place things relative to where you're standing.
+    setPlayerPosProvider(() => ({
+      x: lastPlayerPos.x,
+      z: lastPlayerPos.z,
+      facingX: -Math.sin(heading),
+      facingZ: -Math.cos(heading),
+    }));
 
     initBuilder(state, () => cameraQuery(state.world)[0]);
 

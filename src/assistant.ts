@@ -21,6 +21,59 @@ import {
  */
 
 export type AiConfig = { url: string; model: string };
+
+/** Where the player is standing, so prompts can say "in front of me". */
+let playerPosProvider: (() => { x: number; z: number; facingX: number; facingZ: number }) | null = null;
+export function setPlayerPosProvider(fn: typeof playerPosProvider) {
+  playerPosProvider = fn;
+}
+
+/**
+ * Canned prompts. The assistant can only compose verbs it knows exist, and a
+ * blank box doesn't advertise them — these double as documentation and as the
+ * fastest way to get a testable scenario on screen.
+ */
+export const QUICK_PROMPTS: { label: string; prompt: string }[] = [
+  {
+    label: 'Combat test',
+    prompt:
+      'Spawn two hostile skeletons about 6 units in front of the player, health 30, ' +
+      'damage 8, aggroRadius 9, each dropping Coins as loot. Also place four pickable ' +
+      'barrels within 2 units of the player so I can throw them.',
+  },
+  {
+    label: 'Village',
+    prompt:
+      'Add four friendly people from the People pack standing around the player, each ' +
+      'idling with two lines of dialogue in a pirate voice. Make one of them able to ' +
+      'follow, and give another a guideTo target at the dock with an arrival line.',
+  },
+  {
+    label: 'Wildlife',
+    prompt:
+      'Add a fox, a deer and two birds near the player with wander behaviour, ' +
+      'non-solid, walking speed about 1.5.',
+  },
+  {
+    label: 'Reef',
+    prompt:
+      'Add eight different fish out in the water beyond z=11, each swimming a slow ' +
+      'patrol loop of 4 waypoints, non-solid, scaled small.',
+  },
+  {
+    label: 'Guard patrol',
+    prompt:
+      'Add two hostile guards from the People pack patrolling a rectangle around the ' +
+      'house, aggroRadius 7, health 40, speed 2, dropping a Gold Bag when defeated.',
+  },
+  {
+    label: 'Decorate',
+    prompt:
+      'Scatter about fifteen nature-kit pieces — rocks, ferns, grass and a few pines — ' +
+      'naturally around the beach with varied rotation and scale. Non-solid except the ' +
+      'pines. Keep them clear of the player.',
+  },
+];
 const CONFIG_KEY = 'sandbox-ai-v1';
 
 export function aiConfig(): AiConfig {
@@ -64,9 +117,23 @@ function systemPrompt(assetNames: Record<string, string[]>): string {
     'You edit a 3D game level. The level is a JSON array of entries. Entry fields:',
     'src (string, "/models/<dir>/<Name>.glb"), x, y, z (numbers, world position; ground is y=0),',
     'rotY (radians), scale OR fitHeight (target height in metres — prefer fitHeight ~1-4 for props, 8+ for buildings),',
-    'solid (boolean: player collides), pickable (boolean: player can carry/throw it),',
-    'clip (animation name, e.g. "Idle", "Walk", "Attack"; fish use "Swimming_Normal"),',
-    'path ([[x,z],...] patrol loop), speed (units/s), dialog (string shown with a "!" marker),',
+    'solid (boolean: player collides), pickable (boolean: player can carry with E and throw with F),',
+    'clip (animation name: "Idle", "Walk", "Run", "Attack"; fish use "Swimming_Normal"),',
+    'path ([[x,z],...] patrol loop walked on repeat), speed (units/s).',
+    '',
+    'NPC BEHAVIOUR — set entry.npc for anything that should act alive:',
+    '  npc.faction     "friendly" | "neutral" | "hostile". Hostiles chase and attack the player.',
+    '  npc.behavior    "idle" | "patrol" | "wander" | "guard" | "flee"',
+    '  npc.health      hit points (default 30). npc.damage: damage per hit (default 8).',
+    '  npc.speed       units/s. npc.aggroRadius: notice distance (default 8).',
+    '  npc.attackRadius  how close before it swings (default 1.7).',
+    '  npc.lines       ["line one", "line two"] — conversation, advanced with E.',
+    '  npc.canFollow   true offers "[F] Follow me" in conversation.',
+    '  npc.guideTo     [x, z] offers "[G] Lead the way" and walks the player there.',
+    '  npc.arriveLine  what they say on arrival.',
+    '  npc.loot        model path dropped when defeated, e.g. "/models/quaternius-pirate/Coins.glb".',
+    'Throwable props need pickable:true. Hostiles are defeated by throwing things at them.',
+    '',
     'paint (ground tile: sand|grass|water|road|rock|jungle — paint entries use src:"paint" and 2-unit grid x/z).',
     '',
     'The playable beach spans roughly x -13..13, z -9..9; water lies beyond ±9 in z.',
@@ -123,7 +190,13 @@ export async function runAssistant(
       { role: 'system', content: systemPrompt(assets) },
       {
         role: 'user',
-        content: `CURRENT LEVEL:\n${serialize()}\n\nREQUEST: ${request}`,
+        content:
+          (playerPosProvider
+            ? `PLAYER IS AT x=${playerPosProvider().x.toFixed(1)}, z=${playerPosProvider().z.toFixed(1)}, ` +
+              `facing direction (${playerPosProvider().facingX.toFixed(2)}, ${playerPosProvider().facingZ.toFixed(2)}). ` +
+              `"In front of the player" means along that facing direction.\n\n`
+            : '') +
+          `CURRENT LEVEL:\n${serialize()}\n\nREQUEST: ${request}`,
       },
     ],
   };

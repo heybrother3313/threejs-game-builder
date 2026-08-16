@@ -25,7 +25,7 @@ import {
 } from './level';
 import { cachedThumb, thumbFor } from './thumbs';
 import extraPalette from './levels/extra-palette.json';
-import { aiConfig, listModels, runAssistant, saveAiConfig } from './assistant';
+import { QUICK_PROMPTS, aiConfig, listModels, runAssistant, saveAiConfig } from './assistant';
 import { DEFAULTS, resetNpc, type NpcConfig } from './npc';
 import { canRedo, canUndo, initHistory, mark, redo, redoLabel, undo, undoLabel } from './history';
 
@@ -368,6 +368,8 @@ function buildUi() {
         border-radius: var(--radius-sm); padding: 6px 8px; resize: vertical; }
       #builder .settings .row { display:flex; gap:6px; margin-top: var(--space-xs); }
       #builder .settings .row button { flex:1; }
+      #builder .settings .chips { display:flex; flex-wrap:wrap; gap:5px; }
+      #builder .settings .chips button { flex:0 0 auto; padding:4px 9px; font-size:11px; }
       #builder .settings #ai-out { font-size: var(--text-label-sm);
         color: var(--text-secondary); margin-top: var(--space-xs);
         max-height:140px; overflow-y:auto; white-space:pre-wrap; }
@@ -423,6 +425,8 @@ function buildUi() {
       <div class="row">
         <button id="ai-test">Test connection</button>
       </div>
+      <label>Quick scenarios</label>
+      <div class="chips" id="ai-quick"></div>
       <label>Ask for level changes</label>
       <textarea id="ai-prompt" rows="4"
         placeholder="Add five pine trees along the west beach and a fox patrolling between them"></textarea>
@@ -491,6 +495,19 @@ function wireAiPanel() {
     panel.classList.toggle('on');
     layoutRightPanels();
   });
+
+  const quick = panel.querySelector('#ai-quick') as HTMLDivElement;
+  for (const q of QUICK_PROMPTS) {
+    const b = document.createElement('button');
+    b.textContent = q.label;
+    b.title = q.prompt;
+    // Fill, don't fire: you should be able to tweak before spending a run.
+    b.addEventListener('click', () => {
+      promptEl.value = q.prompt;
+      promptEl.focus();
+    });
+    quick.appendChild(b);
+  }
 
   ui.querySelector('#ai-test')!.addEventListener('click', async () => {
     outEl.textContent = 'Checking…';
