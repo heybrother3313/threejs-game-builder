@@ -50,6 +50,7 @@ import {
   updateNpcs,
 } from './npc';
 import { travelTo, worldName } from './worlds';
+import { updateLootPickup } from './loot';
 import {
   analyzeAssets,
   beginCarry,
@@ -477,6 +478,10 @@ const CarrySystem: System = {
       wantsGrab = wantsThrow = false;
       return;
     }
+    // Treasure scoops itself — no button, just walk over it.
+    updateLootPickup(
+      state, Transform.posX[player], Transform.posY[player], Transform.posZ[player]);
+
     // Standing by a portal, E means travel — it outranks pickup because the
     // portal is a deliberate destination and the barrel next to it isn't.
     const exit = travelingNow

@@ -6,6 +6,7 @@ import { Body, BodyType, Collider } from 'vibegame/physics';
 import { getScene } from 'vibegame/rendering';
 import { Transform } from 'vibegame/transforms';
 import type { NpcConfig } from './npc';
+import { isLoot } from './loot';
 import assetMeta from './levels/asset-meta.json';
 import defaultLevel from './levels/default-level.json';
 
@@ -1122,6 +1123,8 @@ export function findPickable(
     if (dist > bestDist || dist < 1e-3) continue;
     // No reaching up to a ledge or down through the floor.
     if (py !== undefined && Math.abs(item.obj.position.y - py) > 1.5) continue;
+    // Treasure auto-collects on contact; E stays for cargo and conversation.
+    if (isLoot(item.entry.src)) continue;
     if ((dx / dist) * fx + (dz / dist) * fz < 0.2) continue;
     best = item;
     bestDist = dist;

@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import type { State } from 'vibegame';
+import { setLootTrayVisible } from './loot';
 import { findClip, instantiate, loadModel, placed, type PlacedItem } from './level';
 
 /**
@@ -617,6 +618,7 @@ export function updateNpcs(
 ) {
   ensureUi();
   setHudVisible(active);
+  setLootTrayVisible(active);
   if (!active || !playerPos) return;
 
   playerHurtT = Math.max(0, playerHurtT - dt);
