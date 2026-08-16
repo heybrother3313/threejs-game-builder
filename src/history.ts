@@ -82,6 +82,18 @@ async function restore(entries: LevelEntry[]) {
   onChange?.();
 }
 
+/**
+ * Swap the whole level for another one, undoably.
+ *
+ * Loading a starter is the most destructive button in the builder, so it goes
+ * through history rather than through localStorage + reload: one ⌘Z puts your
+ * work back. That's the difference between trying a starter and not daring to.
+ */
+export async function replaceAll(entries: LevelEntry[], label: string) {
+  mark(label);
+  await restore(entries);
+}
+
 export async function undo() {
   if (!state || past.length === 0) return null;
   const step = past.pop()!;

@@ -28,7 +28,8 @@ import extraPalette from './levels/extra-palette.json';
 import { QUICK_PROMPTS, aiConfig, listModels, runAssistant, saveAiConfig } from './assistant';
 import { PLAYER_CHOICES, playerModel, setPlayerModel } from './character';
 import { DEFAULTS, resetNpc, resolveLoot, type NpcConfig } from './npc';
-import { canRedo, canUndo, initHistory, mark, redo, redoLabel, undo, undoLabel } from './history';
+import { canRedo, canUndo, initHistory, mark, redo, redoLabel, replaceAll, undo, undoLabel } from './history';
+import { STARTERS } from './starters';
 
 /**
  * The map builder: Tony Hawk park-editor semantics, not a DCC.
@@ -318,6 +319,27 @@ function buildUi() {
       #builder button:active { transform: translateY(3px); box-shadow: 0 0 0 var(--border-strong); }
       #builder button.accent { background: var(--accent); }
 
+      /* Starter picker: a centred sheet, since choosing one replaces the world
+         and that deserves a deliberate stop rather than a dropdown. */
+      #builder .modal { position:absolute; inset:0; display:flex; align-items:center;
+        justify-content:center; background: color-mix(in srgb, var(--text-primary) 45%, transparent);
+        pointer-events:auto; z-index:20; }
+      #builder .modal[hidden] { display:none; }
+      #builder .modal .sheet { width:min(560px, 90vw); padding: var(--space-md); }
+      #builder .modal h3 { margin:0 0 4px; font-family: var(--font-display);
+        font-size: var(--text-body); }
+      #builder .modal .note { margin:0 0 var(--space-sm); color: var(--text-secondary);
+        font-size: var(--text-label-sm); }
+      #builder .modal .cards { display:grid; grid-template-columns:1fr 1fr;
+        gap: var(--space-xs); }
+      #builder .modal .card { display:flex; flex-direction:column; align-items:flex-start;
+        gap:2px; text-align:left; padding: var(--space-sm); }
+      #builder .modal .card .name { font-family: var(--font-display); font-weight:600; }
+      #builder .modal .card .blurb { font-weight:400; color: var(--text-secondary);
+        font-size: var(--text-label-sm); line-height:1.35; }
+      #builder .modal .row { display:flex; justify-content:flex-end;
+        margin-top: var(--space-sm); }
+
       #builder .palette { position:absolute; left:16px; top:74px; bottom:16px; width:250px;
         display:flex; flex-direction:column; padding: var(--space-sm); pointer-events:auto; }
       #builder .palette .scroll { overflow-y:auto; overscroll-behavior: contain; flex:1; }
@@ -431,6 +453,7 @@ function buildUi() {
       <button id="b-save" class="accent">Save level.json</button>
       <button id="b-undo" title="Undo (⌘Z)">↶</button>
       <button id="b-redo" title="Redo (⇧⌘Z)">↷</button>
+      <button id="b-new">New from starter…</button>
       <button id="b-load">Load…</button>
       <button id="b-borders">Borders (B)</button>
       <button id="b-reset">Reset</button>
@@ -486,6 +509,23 @@ function buildUi() {
       </div>
     </div>
     <div class="status plinth" id="b-status"></div>
+    <div class="modal" id="b-starters" hidden>
+      <div class="sheet plinth">
+        <h3>Start from a place</h3>
+        <p class="note">
+          Replaces everything in the level. Undo (⌘Z) puts your work back.
+        </p>
+        <div class="cards">
+          ${STARTERS.map(
+            (s2) => `<button class="card" data-starter="${s2.id}">
+              <span class="name">${s2.name}</span>
+              <span class="blurb">${s2.blurb}</span>
+            </button>`
+          ).join('')}
+        </div>
+        <div class="row"><button id="b-starters-cancel">Cancel</button></div>
+      </div>
+    </div>
   `;
   document.body.appendChild(ui);
   paletteEl = ui.querySelector('#b-palette')!;
@@ -516,6 +556,29 @@ function buildUi() {
     setAnimationsPlaying(buildAnims);
   });
   wireAiPanel();
+  const startersEl = ui.querySelector('#b-starters') as HTMLDivElement;
+  const showStarters = (on: boolean) => {
+    startersEl.hidden = !on;
+  };
+  ui.querySelector('#b-new')!.addEventListener('click', () => showStarters(true));
+  ui.querySelector('#b-starters-cancel')!.addEventListener('click', () => showStarters(false));
+  // Click-off closes: the sheet is a choice, not a trap.
+  startersEl.addEventListener('click', (ev) => {
+    if (ev.target === startersEl) showStarters(false);
+  });
+  for (const card of startersEl.querySelectorAll('.card')) {
+    card.addEventListener('click', async () => {
+      const starter = STARTERS.find((s2) => s2.id === (card as HTMLElement).dataset.starter);
+      if (!starter) return;
+      showStarters(false);
+      clearSelection();
+      setStatus(`Building <b>${starter.name}</b>…`);
+      const entries = starter.build();
+      await replaceAll(entries, `Load ${starter.name}`);
+      setStatus(`<b>${starter.name}</b> — ${entries.length} pieces. ⌘Z to undo.`);
+    });
+  }
+
   ui.querySelector('#b-reset')!.addEventListener('click', () => {
     clearPersisted();
     location.reload();
