@@ -77,7 +77,8 @@ function paintBlob(
       if (d > radius + rand() * 1.6 - 0.8) continue;
       const px = Math.round((cx + x) / 2) * 2;
       const pz = Math.round((cz + z) / 2) * 2;
-      if (Math.abs(px) > BOUNDS.x + 1 || Math.abs(pz) > BOUNDS.z + 3) continue;
+      // Stay on the slab: a tile past the island edge floats over open sea.
+      if (Math.abs(px) > 13 || Math.abs(pz) > 9) continue;
       out.push({ src: 'paint', paint, x: px, y: 0, z: pz, rotY: 0 });
     }
   }
@@ -143,7 +144,6 @@ function pirateCove(): LevelEntry[] {
   return [
     spawnFlag(0, -1),
     ...paintBlob('sand', 0, 0, 11, rand),
-    ...paintRect('water', -12, 9, 12, 9),
     { src: P('Dock'), x: 1.5, y: -3.4, z: -10, rotY: 10.9956, scale: 1.494, solid: true },
     // The ship is the way off the island — stand by it and press E.
     { src: P('Ship'), x: -7.5, y: -1.2, z: -12.5, rotY: 0.5, fitHeight: 9, solid: true,
@@ -329,7 +329,6 @@ function fishingVillage(): LevelEntry[] {
   return [
     spawnFlag(0, -1),
     ...paintBlob('sand', 0, -2, 10, rand),
-    ...paintRect('water', -12, 8, 12, 16),
     ...paintRect('road', -8, -6, 8, -6),
     { src: P('Dock'), x: 0, y: -3.4, z: -10, rotY: 10.9956, scale: 1.494, solid: true },
     { src: P('Dock Broken'), x: 8, y: -3.4, z: -9.5, rotY: 10.9956, scale: 1.2, solid: true },
