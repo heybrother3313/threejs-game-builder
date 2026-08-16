@@ -94,6 +94,16 @@ export async function replaceAll(entries: LevelEntry[], label: string) {
   await restore(entries);
 }
 
+/**
+ * Forget everything. Travelling between worlds calls this: an undo recorded
+ * on one island must never restore its entries into another island's save.
+ */
+export function clearHistory() {
+  past.length = 0;
+  future.length = 0;
+  onChange?.();
+}
+
 export async function undo() {
   if (!state || past.length === 0) return null;
   const step = past.pop()!;

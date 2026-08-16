@@ -121,25 +121,55 @@ function scatter(
 /** Keep the spawn point clear so you don't start inside a tree. */
 const spawnClear = () => [{ x: 0, z: 0, r: 3 }];
 
+/** The draggable green flag marking where the player starts and respawns. */
+const spawnFlag = (x = 0, z = 0): LevelEntry => ({ src: 'spawn', x, y: 0, z, rotY: 0 });
+
 function pirateCove(): LevelEntry[] {
   const rand = rng(1337);
   // Structures claim their ground first, or scatter grows a palm through the dock.
   const taken = [...spawnClear(), { x: 1.5, z: -9, r: 3.5 }, { x: -7.5, z: -11, r: 5 },
-    { x: 9, z: -5.5, r: 3 }];
+    { x: 9, z: -5.5, r: 3 }, { x: 8, z: 3, r: 5 }, { x: -8, z: 4, r: 4 }];
+  // The island's reason to exist: a rock climb up to the treasure the captain
+  // asks about. Heights step by ~0.7 — proven jumpable in the original course.
+  const climb: LevelEntry[] = [
+    { src: P('Rock'), x: 4.5, y: 0, z: 2, rotY: 0.4, fitHeight: 1.3, solid: true, trimTop: 0.15 },
+    { src: P('Rock-4vHWF8XUBn'), x: 6.5, y: 0, z: 3.6, rotY: 2.1, fitHeight: 2.0, solid: true, trimTop: 0.15 },
+    { src: P('Rocks-38eDa0gjwZ'), x: 8.6, y: 0, z: 5, rotY: 5.0, fitHeight: 2.7, solid: true, trimTop: 0.15 },
+    { src: P('Rocks'), x: 10.5, y: 0, z: 6.8, rotY: 0.9, fitHeight: 3.4, solid: true, trimTop: 0.2 },
+    // The prize on the summit; y is tuned to the trimmed rock top.
+    { src: P('Chest Gold'), x: 10.5, y: 2.7, z: 6.8, rotY: 2.2, fitHeight: 0.8, solid: false, pickable: true },
+    { src: P('Gem Pink'), x: 8.6, y: 2.15, z: 5, rotY: 1, fitHeight: 0.35, solid: false, pickable: true },
+  ];
   return [
+    spawnFlag(0, -1),
     ...paintBlob('sand', 0, 0, 11, rand),
     ...paintRect('water', -12, 9, 12, 9),
     { src: P('Dock'), x: 1.5, y: -3.4, z: -10, rotY: 10.9956, scale: 1.494, solid: true },
-    { src: P('Ship'), x: -7.5, y: -1.2, z: -12.5, rotY: 0.5, fitHeight: 9, solid: true },
-    { src: P('Rock'), x: 5.5, y: 0, z: -4.5, rotY: 0.4, fitHeight: 1.4, solid: true, trimTop: 0.15 },
-    { src: P('Rocks'), x: -8, y: 0, z: 4, rotY: 0.3, fitHeight: 2.6, solid: true, trimTop: 0.15 },
+    // The ship is the way off the island — stand by it and press E.
+    { src: P('Ship'), x: -7.5, y: -1.2, z: -12.5, rotY: 0.5, fitHeight: 9, solid: true,
+      exitTo: 'fishing-village', exitLabel: 'Sail to the fishing village' },
+    ...climb,
+    // "Bones" guards the climb — the captain's job has a catch. (The pirate
+    // kit's own Skeleton binds lying in a heap, axe on the ground; fitting it
+    // by height inflates the pile. The monsters pack rigs its dead standing.)
+    {
+      src: M('Ghost Skull'), x: 4.2, y: 0, z: 0.2, rotY: 3.5, fitHeight: 1.7, clip: 'Idle',
+      npc: { faction: 'hostile', behavior: 'guard', health: 35, damage: 9, aggroRadius: 6, loot: 'Coins' },
+    },
+    // Palm grove west, with shade clutter.
     { src: P('Palm Tree'), x: -6, y: 0, z: -2, rotY: 1.2, fitHeight: 5.5, solid: true, colliderXZ: 0.5 },
-    { src: P('Palm Tree'), x: 8.5, y: 0, z: 3.5, rotY: 3.4, fitHeight: 4.8, solid: true, colliderXZ: 0.5 },
+    { src: P('Palm Tree'), x: -8.2, y: 0, z: 0.5, rotY: 3.4, fitHeight: 4.6, solid: true, colliderXZ: 0.5 },
+    { src: P('Palm Tree'), x: -4.6, y: 0, z: 1.4, rotY: 5.1, fitHeight: 5, solid: true, colliderXZ: 0.5 },
+    { src: P('Rocks'), x: -8, y: 0, z: 4, rotY: 0.3, fitHeight: 2.6, solid: true, trimTop: 0.15 },
+    // The camp: house, cannon aimed at the sea, powder and provisions.
     { src: P('House'), x: 9, y: 0, z: -5.5, rotY: 3.6, fitHeight: 4.2, solid: true },
+    { src: P('Cannon'), x: 6.3, y: 0, z: -7.2, rotY: 2.9, fitHeight: 1.3, solid: true },
+    { src: P('Bomb'), x: 5.4, y: 0, z: -6.4, rotY: 0, fitHeight: 0.5, pickable: true },
+    { src: P('Bomb'), x: 5.9, y: 0, z: -5.8, rotY: 1, fitHeight: 0.5, pickable: true },
     { src: P('Barrel'), x: 2.2, y: 0, z: -2.4, rotY: 0.6, fitHeight: 0.9, pickable: true },
     { src: P('Barrel'), x: 3.1, y: 0, z: -1.6, rotY: 2.2, fitHeight: 0.9, pickable: true },
-    { src: P('Chest Gold'), x: -3.5, y: 0, z: -6, rotY: 0.9, fitHeight: 0.8, solid: true },
-    { src: P('Cannon'), x: 6.5, y: 0, z: -7, rotY: 2.6, fitHeight: 1.3, solid: true },
+    { src: P('Bucket of Fish'), x: 2.7, y: 0, z: -3.3, rotY: 4, fitHeight: 0.5, pickable: true },
+    { src: P('Wood'), x: 7.6, y: 0, z: -3.8, rotY: 1.4, fitHeight: 0.5, pickable: true },
     {
       src: P('Pirate Captain'), x: -2, y: 0, z: -3.5, rotY: 0.4, fitHeight: 1.7,
       clip: 'Idle', solid: false,
@@ -147,12 +177,20 @@ function pirateCove(): LevelEntry[] {
         faction: 'friendly', behavior: 'idle', speed: 1.6,
         lines: [
           'Ahoy! You look like someone who needs work.',
-          'Rocks to the east, wreck to the west. Mind the crabs.',
-          'Bring me back something shiny and we will talk.',
+          'There is a chest atop the east rocks. Bones guards the path.',
+          'Bring it down and the ship will take you anywhere.',
         ],
         canFollow: true,
       },
     },
+    // Anne works the beach on a loop; the place breathes even if you idle.
+    {
+      src: P('Anne'), x: -3, y: 0, z: 2, rotY: 0, fitHeight: 1.65, clip: 'Walk',
+      speed: 1.1, path: [[-3, 2], [1, 4], [-1, 6], [-6, 5]],
+      npc: { faction: 'friendly', behavior: 'patrol', speed: 1.1,
+        lines: ['The captain talks big. The skeleton is real though.'] },
+    },
+    { src: P('Bird'), x: 1, y: 0, z: -8.4, rotY: 2, fitHeight: 0.35, clip: 'Idle', solid: false },
     ...scatter(
       // Beach dressing only: the nature kit's Bush is autumn red, which reads
       // as a shrub that wandered in from another biome.
@@ -161,56 +199,89 @@ function pirateCove(): LevelEntry[] {
         { src: N('Grass'), height: [0.3, 0.5] },
         { src: N('Pebble Round'), height: [0.15, 0.3] },
         { src: N('Pebble Square'), height: [0.15, 0.3] },
+        { src: N('Clover'), height: [0.15, 0.3] },
       ],
-      24, rand, taken
+      40, rand, taken
     ),
   ];
 }
 
 function jungleOutpost(): LevelEntry[] {
   const rand = rng(90210);
-  const taken = [...spawnClear(), { x: -7, z: -5, r: 3.5 }];
+  const taken = [...spawnClear(), { x: -7, z: -5, r: 3.5 }, { x: 7.5, z: -5.5, r: 3 },
+    // Keep the road itself clear of trees.
+    ...Array.from({ length: 8 }, (_, i) => ({ x: 0, z: -8 + i * 2, r: 1.8 })),
+    { x: 9.5, z: 6.5, r: 3 }];
   return [
+    spawnFlag(0, -7),
     ...paintBlob('jungle', 0, -1, 12, rand),
     ...paintBlob('grass', 2, 3, 6, rand),
     ...paintRect('road', -1, -8, 1, 6),
+    // Gateposts pace the road; passing the second one means you left safety.
+    { src: P('Post'), x: -1.4, y: 0, z: -7.5, rotY: 0, fitHeight: 2.4, solid: true },
+    { src: P('Post'), x: 1.4, y: 0, z: -7.5, rotY: 0, fitHeight: 2.4, solid: true },
+    { src: P('Post'), x: -1.4, y: 0, z: -1, rotY: 0.2, fitHeight: 2.2, solid: true },
+    { src: P('Post'), x: 1.4, y: 0, z: -1, rotY: 6, fitHeight: 2.2, solid: true },
+    // The camp is a composed cluster, not sprinkles: house, woodpile, stores.
     { src: P('House'), x: -7, y: 0, z: -5, rotY: 0.7, fitHeight: 4.4, solid: true },
     { src: P('Sawmill'), x: 7.5, y: 0, z: -5.5, rotY: 4.1, fitMaxDim: 4.5, solid: true },
-    { src: P('Post'), x: 0, y: 0, z: -7.5, rotY: 0, fitHeight: 2.4, solid: true },
     { src: P('Wood'), x: -5, y: 0, z: -1.5, rotY: 1.1, fitHeight: 0.5, pickable: true },
+    { src: P('Wood'), x: -4.4, y: 0, z: -2.2, rotY: 2.6, fitHeight: 0.5, pickable: true },
     { src: P('Barrel'), x: -5.9, y: 0, z: -0.8, rotY: 0.2, fitHeight: 0.9, pickable: true },
+    { src: P('Bucket'), x: -5.2, y: 0, z: -3, rotY: 1, fitHeight: 0.5, pickable: true },
     { src: P('Bomb'), x: 4.5, y: 0, z: 1.2, rotY: 0, fitHeight: 0.5, pickable: true },
+    // The cache: gems in the far clearing, and the thing that owns them.
+    { src: P('Gem Green'), x: 9.5, y: 0, z: 6.5, rotY: 0.4, fitHeight: 0.4, pickable: true },
+    { src: P('Gem Blue'), x: 10.3, y: 0, z: 5.8, rotY: 2, fitHeight: 0.4, pickable: true },
+    { src: P('Gem Pink'), x: 8.8, y: 0, z: 7.2, rotY: 4, fitHeight: 0.4, pickable: true },
+    { src: P('Large Bone'), x: 9.9, y: 0, z: 7.4, rotY: 1.2, fitHeight: 0.4, solid: false },
+    {
+      src: M('Yeti'), x: 9.8, y: 0, z: 5, rotY: 3.6, fitHeight: 2.1, clip: 'Idle',
+      npc: { faction: 'hostile', behavior: 'guard', health: 80, damage: 14,
+        speed: 2.2, aggroRadius: 6, attackRadius: 1.9, loot: 'Chest Gold' },
+    },
     {
       src: MEN('Man'), x: -4.5, y: 0, z: -4, rotY: 2.2, fitHeight: 1.7, clip: 'Idle',
       npc: {
         faction: 'friendly', behavior: 'idle',
         lines: [
           'Camp is safe. The treeline is not.',
-          'Something has been taking the crates at night.',
+          'Gems in the east clearing — and the thing that collects them.',
+          'Take bombs. Do not be brave with your hands.',
         ],
-        guideTo: [7.5, -4], arriveLine: 'This is the mill. Whatever it is, it started here.',
+        guideTo: [7.5, 4], arriveLine: 'Hear that breathing? Good luck.',
       },
     },
+    // Two patrols whose loops CROSS the road at different points, so walking
+    // it means timing them rather than fighting everything at once.
     {
-      src: M('Orc'), x: 8, y: 0, z: 5.5, rotY: 3.1, fitHeight: 1.8, clip: 'Idle',
-      speed: 1.4, path: [[8, 5.5], [3, 7], [-2, 6], [3, 7]],
-      npc: {
-        faction: 'hostile', behavior: 'patrol', health: 40, damage: 9,
-        speed: 1.8, aggroRadius: 8, loot: '/models/quaternius-pirate/Gold Bag.glb',
-      },
+      src: M('Orc'), x: 8, y: 0, z: 5.5, rotY: 3.1, fitHeight: 1.8, clip: 'Walk',
+      speed: 1.4, path: [[8, 3], [3, 4.5], [-3, 3.5], [3, 4.5]],
+      npc: { faction: 'hostile', behavior: 'patrol', health: 40, damage: 9,
+        speed: 1.8, aggroRadius: 5, loot: 'Gold Bag' },
+    },
+    {
+      src: M('Orc Enemy'), x: -6, y: 0, z: 2, rotY: 1, fitHeight: 1.8, clip: 'Walk',
+      speed: 1.2, path: [[-6, 2], [-2, 0.5], [3, -0.5], [-2, 0.5]],
+      npc: { faction: 'hostile', behavior: 'patrol', health: 40, damage: 9,
+        speed: 1.8, aggroRadius: 5, loot: 'Coins' },
     },
     {
       src: M('Mushnub'), x: -8.5, y: 0, z: 5, rotY: 1.4, fitHeight: 1.2, clip: 'Idle',
       speed: 1.1,
-      npc: { faction: 'neutral', behavior: 'wander', health: 20, speed: 1.1 },
+      npc: { faction: 'neutral', behavior: 'wander', health: 20, speed: 1.1, loot: 'Gem Green' },
     },
+    { src: M('Monkroose'), x: 5, y: 0, z: -3, rotY: 2.5, fitHeight: 1.3, clip: 'Idle',
+      npc: { faction: 'neutral', behavior: 'wander', health: 18, speed: 1.4 } },
+    // A dense treeline is what makes it a jungle and not a lawn.
     ...scatter(
       [
         { src: N('Tree'), height: [3.5, 5.5], solid: true },
         { src: N('Pine'), height: [3, 5], solid: true },
         { src: N('Twisted Tree'), height: [3, 4.5], solid: true },
+        { src: N('Dead Tree'), height: [2.5, 3.5], solid: true },
       ],
-      14, rand, taken
+      26, rand, taken
     ),
     ...scatter(
       [
@@ -218,9 +289,11 @@ function jungleOutpost(): LevelEntry[] {
         { src: N('Plant Big'), height: [0.5, 0.8] },
         { src: N('Tall Grass'), height: [0.4, 0.7] },
         { src: N('Mushroom'), height: [0.25, 0.5] },
+        { src: N('Mushroom Laetiporus'), height: [0.3, 0.5] },
         { src: N('Bush with Flowers'), height: [0.5, 0.9] },
+        { src: N('Flower Group'), height: [0.3, 0.5] },
       ],
-      34, rand, taken
+      55, rand, taken
     ),
   ];
 }
@@ -228,6 +301,7 @@ function jungleOutpost(): LevelEntry[] {
 function fishingVillage(): LevelEntry[] {
   const rand = rng(24601);
   const taken = [...spawnClear(), { x: -6, z: -4, r: 3 }, { x: 6, z: -4, r: 3 },
+    { x: 0.5, z: 2.6, r: 3 },
     { x: 0, z: -9, r: 3.5 }, { x: 8, z: -8.5, r: 3 }, { x: -9.5, z: -10, r: 4 }];
   // A reef you can watch from the dock. Fish are non-solid and swim a loop.
   const REEF = ['Clownfish', 'Blue Tang', 'Butterfly Fish', 'Cardinal Fish', 'Cowfish', 'Coral Grouper'];
@@ -241,45 +315,78 @@ function fishingVillage(): LevelEntry[] {
       path: [[x, z], [x + 3, z + 1.5], [x, z + 3], [x - 3, z + 1.5]] as [number, number][],
     };
   });
+  // A market stall is a barrel with produce ON it plus a bucket beside it —
+  // composition sells the place; the same props scattered read as litter.
+  const stall = (x: number, z: number, produce: string): LevelEntry[] => [
+    { src: P('Barrel'), x, y: 0, z, rotY: rand() * 6, fitHeight: 0.9, solid: true },
+    { src: P(produce), x, y: 0.9, z, rotY: rand() * 6, fitHeight: 0.4, pickable: true },
+    { src: P('Bucket'), x: x + 0.8, y: 0, z: z + 0.3, rotY: rand() * 6, fitHeight: 0.5, pickable: true },
+  ];
   return [
+    spawnFlag(0, -1),
     ...paintBlob('sand', 0, -2, 10, rand),
     ...paintRect('water', -12, 8, 12, 16),
     ...paintRect('road', -8, -6, 8, -6),
     { src: P('Dock'), x: 0, y: -3.4, z: -10, rotY: 10.9956, scale: 1.494, solid: true },
     { src: P('Dock Broken'), x: 8, y: -3.4, z: -9.5, rotY: 10.9956, scale: 1.2, solid: true },
+    // Three houses facing the waterfront road, not two lost in space.
     { src: P('House'), x: -6, y: 0, z: -4, rotY: 0.2, fitHeight: 4.2, solid: true },
     { src: P('House'), x: 6, y: 0, z: -4, rotY: 3.3, fitHeight: 3.8, solid: true },
-    { src: P('Small Ship'), x: -9.5, y: -0.6, z: -11, rotY: 1.9, fitMaxDim: 5.5, solid: true },
-    { src: P('Bucket of Fish'), x: -1.4, y: 0, z: -6.2, rotY: 0.5, fitHeight: 0.5, pickable: true },
-    { src: P('Bucket'), x: 1.6, y: 0, z: -6.4, rotY: 2.5, fitHeight: 0.5, pickable: true },
-    { src: P('Barrel'), x: 2.6, y: 0, z: -5.6, rotY: 1.2, fitHeight: 0.9, pickable: true },
+    // Behind the spawn, so starting the level reads as stepping out your door.
+    { src: P('House'), x: 0.5, y: 0, z: 2.6, rotY: 3.2, fitHeight: 3.6, solid: true },
+    // The way back: island hopping is a loop, not a one-way trip.
+    { src: P('Small Ship'), x: -9.5, y: -0.6, z: -11, rotY: 1.9, fitMaxDim: 5.5, solid: true,
+      exitTo: 'pirate-cove', exitLabel: 'Sail to the pirate cove' },
+    // The fish market along the road.
+    ...stall(-2.2, -6.2, 'Fish Tuna'),
+    ...stall(2.4, -6.3, 'Fish Mackerel'),
+    { src: P('Bucket of Fish'), x: 0.2, y: 0, z: -6.6, rotY: 0.5, fitHeight: 0.5, pickable: true },
     { src: P('Anchor'), x: -3.2, y: 0, z: -7.5, rotY: 0.8, fitMaxDim: 1.3, solid: false },
+    { src: P('Lute'), x: 4.2, y: 0, z: -5.7, rotY: 2, fitHeight: 0.7, pickable: true },
+    // Offshore drama: a shark works the bay, a tentacle marks the deep end.
     {
-      src: W('Woman Casual'), x: -2.5, y: 0, z: -3, rotY: 0.6, fitHeight: 1.7, clip: 'Idle',
+      src: P('Shark'), x: -4, y: 0.3, z: 12, rotY: 1, fitHeight: 0.9, solid: false, clip: 'Idle',
+      speed: 2.2, path: [[-4, 12], [4, 13.5], [9, 11.5], [0, 10.5]],
+    },
+    { src: P('Tentacle'), x: 11, y: 0, z: 14.5, rotY: 0.7, fitHeight: 3.2, solid: false, clip: 'Idle' },
+    {
+      src: W('Woman Casual'), x: -2.5, y: 0, z: -3.5, rotY: 0.6, fitHeight: 1.7, clip: 'Idle',
       npc: {
         faction: 'friendly', behavior: 'idle',
-        lines: ['Morning. Catch is thin this week.', 'Try the far reef, past the broken dock.'],
+        lines: ['Morning. Catch is thin this week.',
+          'See the fin out there? That is why.',
+          'Try the far reef, past the broken dock.'],
         guideTo: [8, -8], arriveLine: 'Here. Careful, the boards give.',
       },
     },
     {
-      src: MEN('Man'), x: 3, y: 0, z: -2.4, rotY: 4.1, fitHeight: 1.75, clip: 'Idle',
-      speed: 1.3, path: [[3, -2.4], [3, -6], [-3, -6], [-3, -2.4]],
-      npc: { faction: 'friendly', behavior: 'patrol', speed: 1.3, lines: ['Nets first, questions later.'], canFollow: true },
+      src: MEN('Man'), x: 3, y: 0, z: -3, rotY: 4.1, fitHeight: 1.75, clip: 'Walk',
+      speed: 1.3, path: [[3, -3], [3, -6], [-3, -6], [-3, -3]],
+      npc: { faction: 'friendly', behavior: 'patrol', speed: 1.3,
+        lines: ['Nets first, questions later.'], canFollow: true },
+    },
+    {
+      src: P('Henry'), x: 0.8, y: 0, z: -5.4, rotY: 3.2, fitHeight: 1.65, clip: 'Idle',
+      npc: { faction: 'friendly', behavior: 'idle',
+        lines: ['Fresh tuna! Mackerel! Mind the shark got the rest.',
+          'The lute? Not for sale. Unless you are taking it.'] },
     },
     {
       src: M('Glub'), x: 9, y: 0, z: 4, rotY: 2.2, fitHeight: 1.3, clip: 'Idle',
       npc: { faction: 'neutral', behavior: 'wander', health: 24, speed: 1.2, loot: 'Gem Blue' },
     },
+    { src: P('Bird'), x: -0.5, y: 0, z: -9.6, rotY: 3, fitHeight: 0.35, clip: 'Idle', solid: false },
     ...fish,
     ...scatter(
       [
         { src: P('Palm Tree'), height: [4, 6], solid: true },
         { src: N('Grass Wispy'), height: [0.3, 0.6] },
+        { src: N('Grass'), height: [0.3, 0.5] },
         { src: N('Pebble Square'), height: [0.15, 0.3] },
         { src: N('Rock Medium'), height: [0.5, 1.1] },
+        { src: N('Flower Single'), height: [0.25, 0.4] },
       ],
-      20, rand, taken
+      34, rand, taken
     ),
   ];
 }
@@ -298,22 +405,41 @@ function monsterArena(): LevelEntry[] {
   // Goleling is 4.9 wide and 1.7 tall — a winged sprawl. Sized by height it
   // becomes a five-metre creature, so wide models get fitMaxDim (see above).
   const foes: LevelEntry[] = [
-    { name: 'Orc', hp: 40, dmg: 9, loot: 'Coins', size: 1.9 },
-    { name: 'Blue Demon', hp: 55, dmg: 12, loot: 'Gem Blue', size: 1.8 },
-    { name: 'Yeti', hp: 70, dmg: 14, loot: 'Gold Bag', size: 2 },
+    { name: 'Orc', hp: 35, dmg: 9, loot: 'Coins', size: 1.9 },
+    { name: 'Blue Demon', hp: 50, dmg: 12, loot: 'Gem Blue', size: 1.8 },
     { name: 'Goleling', hp: 30, dmg: 7, loot: 'Gold ore', size: 2.2, wide: true },
   ].map((f, i) => {
-    const a = (i / 4) * Math.PI * 2 + 0.4;
+    const a = (i / 3) * Math.PI * 2 + 0.4;
     return {
       src: M(f.name), x: +(Math.cos(a) * 7).toFixed(2), y: 0,
       z: +(Math.sin(a) * 5).toFixed(2), rotY: a + Math.PI, clip: 'Idle',
       ...(f.wide ? { fitMaxDim: f.size } : { fitHeight: f.size }),
       npc: {
+        // Short leashes: with the player spawning mid-ring, a 9-unit aggro
+        // means the whole arena converges before the first input. Guards with
+        // 4-unit tempers make it a gauntlet you pace yourself.
         faction: 'hostile' as const, behavior: 'guard' as const,
-        health: f.hp, damage: f.dmg, speed: 2, aggroRadius: 9, loot: f.loot,
+        health: f.hp, damage: f.dmg, speed: 2, aggroRadius: 4, loot: f.loot,
       },
     };
   });
+  // The boss holds the middle; the vantage rocks let you fight from above —
+  // combat is height-gated, so climbing IS the tactic the arena teaches.
+  const centre: LevelEntry[] = [
+    // North of spawn, so it's the first thing you see.
+    {
+      src: M('Dragon Evolved'), x: 0, y: 0, z: -4.5, rotY: 0, fitHeight: 2.6, clip: 'Idle',
+      npc: { faction: 'hostile', behavior: 'guard', health: 120, damage: 16,
+        speed: 2.4, aggroRadius: 5, attackRadius: 2, loot: 'Chest Gold' },
+    },
+    { src: P('Rock'), x: -4.5, y: 0, z: -1.5, rotY: 1.2, fitHeight: 1.3, solid: true, trimTop: 0.15 },
+    { src: P('Rock-4vHWF8XUBn'), x: -5.8, y: 0, z: -3.2, rotY: 3.8, fitHeight: 2.0, solid: true, trimTop: 0.15 },
+    { src: P('Rocks-38eDa0gjwZ'), x: -4.6, y: 0, z: -5.2, rotY: 0.6, fitHeight: 2.7, solid: true, trimTop: 0.15 },
+    { src: P('Gem Pink'), x: -4.6, y: 2.15, z: -5.2, rotY: 2, fitHeight: 0.35, pickable: true },
+    { src: P('Skull'), x: 2.5, y: 0, z: -1.8, rotY: 0.8, fitHeight: 0.45, solid: false },
+    { src: P('Large Bone'), x: -1.8, y: 0, z: -2.6, rotY: 2.4, fitHeight: 0.4, solid: false },
+    { src: P('Skull'), x: 1, y: 0, z: -6.8, rotY: 4, fitHeight: 0.45, solid: false },
+  ];
   // Ammunition, within reach of the spawn — the arena is the tutorial for F.
   const ammo: LevelEntry[] = [];
   for (let i = 0; i < 6; i++) {
@@ -325,15 +451,16 @@ function monsterArena(): LevelEntry[] {
     });
   }
   return [
+    spawnFlag(),
     ...paintBlob('rock', 0, 0, 10, rand),
     ...paintBlob('sand', 0, 0, 4, rand),
-    ...ring, ...foes, ...ammo,
+    ...ring, ...foes, ...centre, ...ammo,
   ];
 }
 
 function blankSands(): LevelEntry[] {
   const rand = rng(7);
-  return paintBlob('sand', 0, 0, 12, rand);
+  return [spawnFlag(), ...paintBlob('sand', 0, 0, 12, rand)];
 }
 
 export type Starter = {
@@ -347,25 +474,25 @@ export const STARTERS: Starter[] = [
   {
     id: 'pirate-cove',
     name: 'Pirate cove',
-    blurb: 'Beach, dock and a wreck. A captain with work to offer.',
+    blurb: 'A treasure climb guarded by a skeleton; a ship to sail on.',
     build: pirateCove,
   },
   {
     id: 'jungle-outpost',
     name: 'Jungle outpost',
-    blurb: 'Dense treeline, a camp, and something patrolling it.',
+    blurb: 'A gated road through orc patrols; a yeti hoards gems.',
     build: jungleOutpost,
   },
   {
     id: 'fishing-village',
     name: 'Fishing village',
-    blurb: 'Two huts, two docks, a reef. Friendly, with an escort to follow.',
+    blurb: 'A fish market, a shark in the bay, a ship back to the cove.',
     build: fishingVillage,
   },
   {
     id: 'monster-arena',
     name: 'Monster arena',
-    blurb: 'A rock ring, four enemies, and crates to throw at them.',
+    blurb: 'A dragon and its minions. Climb the rocks; fight from above.',
     build: monsterArena,
   },
   {

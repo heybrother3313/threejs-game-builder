@@ -30,6 +30,7 @@ import { PLAYER_CHOICES, playerModel, setPlayerModel } from './character';
 import { DEFAULTS, resetNpc, resolveLoot, type NpcConfig } from './npc';
 import { canRedo, canUndo, initHistory, mark, redo, redoLabel, replaceAll, undo, undoLabel } from './history';
 import { STARTERS } from './starters';
+import { currentWorldId, destinations, setCurrentWorldId, worldName } from './worlds';
 
 /**
  * The map builder: Tony Hawk park-editor semantics, not a DCC.
@@ -573,6 +574,7 @@ function buildUi() {
       showStarters(false);
       clearSelection();
       setStatus(`Building <b>${starter.name}</b>…`);
+      setCurrentWorldId(starter.id);
       const entries = starter.build();
       await replaceAll(entries, `Load ${starter.name}`);
       setStatus(`<b>${starter.name}</b> — ${entries.length} pieces. ⌘Z to undo.`);
@@ -874,21 +876,54 @@ function layoutRightPanels() {
   }
 }
 
+/** Portal select: shared by the NPC panel and the plain-prop panel. */
+function wirePortal(item: PlacedItem) {
+  const sel = npcEl.querySelector('#n-exit') as HTMLSelectElement | null;
+  if (!sel) return;
+  sel.addEventListener('change', () => {
+    mark('portal');
+    const id = sel.value || undefined;
+    item.entry.exitTo = id;
+    item.entry.exitLabel = id ? `Sail to the ${worldName(id).toLowerCase()}` : undefined;
+    syncMarker(state, item);
+    persist();
+  });
+}
+
 function updateNpcPanel() {
   if (!npcEl) npcEl = ui.querySelector('#b-npc')!;
   const item = selection.length === 1 ? selection[0] : null;
-  const animated = item && (item.clips?.length ?? 0) > 0;
-  npcEl.classList.toggle('on', !!animated);
-  if (!animated || !item) {
+  const animated = !!item && (item.clips?.length ?? 0) > 0;
+  // Any single piece can be a portal; only animated pieces get the NPC half.
+  const show = !!item && !item.entry.paint && item.entry.src !== 'spawn';
+  npcEl.classList.toggle('on', show);
+  if (!show || !item) {
     drawingPath = false;
     layoutRightPanels();
     return;
   }
   const e = item.entry;
   const n: NpcConfig = e.npc ?? {};
+  const portalSection = `
+    <label>Travel portal (E to sail)</label>
+    <select id="n-exit">
+      <option value="">none</option>
+      ${destinations()
+        .filter((d) => d.id !== currentWorldId())
+        .map((d) => `<option value="${d.id}"${e.exitTo === d.id ? ' selected' : ''}>${d.name}</option>`)
+        .join('')}
+    </select>`;
+  if (!animated) {
+    npcEl.innerHTML = `<h3>${nameOf(e.src)}</h3><div class="scroll">${portalSection}</div>`;
+    wirePortal(item);
+    layoutRightPanels();
+    return;
+  }
   npcEl.innerHTML = `
     <h3>${nameOf(e.src)}</h3>
     <div class="scroll">
+    ${portalSection}
+    <hr style="border:none;border-top:2px solid var(--border-quiet);margin:10px 0" />
     <label>Animation</label>
     <select id="n-clip">${clipSegments(item)
       .map((c) => `<option${c === e.clip ? ' selected' : ''}>${c}</option>`)
@@ -953,6 +988,7 @@ function updateNpcPanel() {
     <input id="n-arrive" type="text" placeholder="Here we are!" value="${(n.arriveLine ?? '').replace(/"/g, '&quot;')}" />
     </div>
   `;
+  wirePortal(item);
   npcEl.querySelector('#n-clip')!.addEventListener('change', (ev) => {
     mark('animation');
     setClip(item, (ev.target as HTMLSelectElement).value);
@@ -1057,6 +1093,13 @@ export function toggleBuildMode() {
   buildMode = !buildMode;
   ui.classList.toggle('on', buildMode);
   setPathsVisible(buildMode);
+  // Older saves predate spawn flags; conjure one so it's there to drag.
+  if (buildMode && !placed.some((i) => i.entry.src === 'spawn')) {
+    void instantiate(state, { src: 'spawn', x: 0, y: 0, z: 0, rotY: 0 }).then(() => {
+      setPathsVisible(true);
+      persist();
+    });
+  }
   // Build mode freezes NPC life (unless previewing); play always runs it.
   setAnimationsPlaying(buildMode ? buildAnims : true);
   const hint = document.getElementById('hint');

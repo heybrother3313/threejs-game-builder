@@ -49,6 +49,7 @@ import {
   playerHealth,
   updateNpcs,
 } from './npc';
+import { travelTo, worldName } from './worlds';
 import {
   analyzeAssets,
   beginCarry,
@@ -61,6 +62,7 @@ import {
   setClip,
   updateLevel,
   type PlacedItem,
+  spawnPoint,
 } from './level';
 
 /**
@@ -356,6 +358,42 @@ function spawnAttrs(spec: HeldSpec, x: number, y: number, z: number) {
   };
 }
 
+/** "E — Sail to…" pill, shown while standing by a portal. */
+let travelEl: HTMLDivElement | null = null;
+function showTravelPrompt(label: string | null) {
+  if (!travelEl) {
+    travelEl = document.createElement('div');
+    travelEl.style.cssText =
+      'position:fixed;left:50%;bottom:76px;transform:translateX(-50%);' +
+      'font-family:var(--font-body);font-size:var(--text-label-sm);font-weight:600;' +
+      'color:var(--text-primary);background:var(--surface-face);' +
+      'border:var(--border-w) solid var(--border-strong);border-radius:var(--radius-md);' +
+      'box-shadow:0 var(--press-rest) 0 var(--border-strong);padding:7px 14px;z-index:11;';
+    document.body.appendChild(travelEl);
+  }
+  travelEl.style.display = label ? '' : 'none';
+  if (label) travelEl.textContent = label;
+}
+
+/** The portal the player is standing by, if any. Same reach rules as combat:
+ *  flat distance plus a height gate, so a deck above you isn't "here". */
+function nearbyExit(px: number, py: number, pz: number) {
+  for (const item of placed) {
+    if (!item.entry.exitTo) continue;
+    const d = Math.hypot(item.entry.x - px, item.entry.z - pz);
+    // Portals are big (ships); measure to the near edge, not the centre.
+    const { size } = (() => {
+      const b = new THREE.Box3().setFromObject(item.obj);
+      return { size: b.getSize(new THREE.Vector3()) };
+    })();
+    const reach = Math.max(size.x, size.z) / 2 + 1.6;
+    if (d < reach && Math.abs(item.obj.position.y - py) < 3) return item;
+  }
+  return null;
+}
+
+let travelingNow = false;
+
 /**
  * Pick up (E), put down (E), throw (F). A held object stops being a physics
  * object: it's destroyed and replaced by a render-only stand-in riding the
@@ -439,6 +477,35 @@ const CarrySystem: System = {
       wantsGrab = wantsThrow = false;
       return;
     }
+    // Standing by a portal, E means travel — it outranks pickup because the
+    // portal is a deliberate destination and the barrel next to it isn't.
+    const exit = travelingNow
+      ? null
+      : nearbyExit(Transform.posX[player], Transform.posY[player], Transform.posZ[player]);
+    showTravelPrompt(
+      exit
+        ? `E — ${exit.entry.exitLabel ?? `Travel to ${worldName(exit.entry.exitTo!)}`}`
+        : null
+    );
+    if (wantsGrab && exit) {
+      wantsGrab = wantsThrow = false;
+      if (heldItem) releaseItem(0, 0); // what you carry stays on its island
+      travelingNow = true;
+      const dest = exit.entry.exitTo!;
+      void travelTo(state, dest).then((spawnV) => {
+        travelingNow = false;
+        if (!spawnV) return;
+        for (const p of playerQuery(state.world)) {
+          Body.posX[p] = spawnV.x;
+          Body.posY[p] = spawnV.y;
+          Body.posZ[p] = spawnV.z;
+          Body.velX[p] = Body.velY[p] = Body.velZ[p] = 0;
+        }
+        configurePlayerHooks({ spawn: spawnV });
+      });
+      return;
+    }
+
     if (wantsGrab && heldItem) {
       releaseItem(0, 0);
       wantsGrab = wantsThrow = false;
@@ -676,8 +743,15 @@ withSystem(PlatformSlipSystem)
 
     // NPCs shove and respawn the player through these; the character is a
     // Rapier controller, so position writes are the channel that works.
+    // Start at the level's spawn flag (and go back there on death).
+    const bootSpawn = spawnPoint();
+    for (const p of playerQuery(state.world)) {
+      Body.posX[p] = bootSpawn.x;
+      Body.posY[p] = bootSpawn.y;
+      Body.posZ[p] = bootSpawn.z;
+    }
     configurePlayerHooks({
-      spawn: new THREE.Vector3(0, 1.2, 0),
+      spawn: bootSpawn,
       push: (dx, dz) => {
         for (const p of playerQuery(state.world)) {
           Body.posX[p] += dx;
@@ -737,6 +811,7 @@ withSystem(PlatformSlipSystem)
         // yields a SEPARATE module instance, so flags set there are invisible
         // to the running game.
         npc: { npcKey, npcRuntime, damageNpc, playerHealth, playerMelee, updateNpcs },
+        worlds: { travelTo: (id: string) => travelTo(state, id) },
         history: { mark, undo, redo, canUndo, canRedo },
         selectionInfo,
         selectItems,

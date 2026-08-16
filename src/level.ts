@@ -61,6 +61,11 @@ export type LevelEntry = {
   npc?: NpcConfig;
   /** A painted ground tile rather than a model. */
   paint?: string;
+  /** Walking up and pressing E travels to this world (a starter id or a
+   *  saved world). The piece itself is the portal — a ship, a door, a dock. */
+  exitTo?: string;
+  /** What the travel prompt says. Defaults to the destination's name. */
+  exitLabel?: string;
 };
 
 export type PlacedItem = {
@@ -79,6 +84,9 @@ export type PlacedItem = {
   clips?: THREE.AnimationClip[];
   /** Ring drawn under pickable items so you can see what's interactive. */
   marker?: THREE.Mesh;
+  /** Blue ring under portals — visible in play too; a portal you can't see
+   *  is a wall you happen to walk through. */
+  exitRing?: THREE.Mesh;
   /** Set while the player is carrying this item. */
   carried?: boolean;
   /** In-flight throw: velocity plus the height it should land at.
@@ -581,6 +589,47 @@ function applyEntryTransform(item: PlacedItem) {
   obj.updateMatrixWorld(true);
 }
 
+/**
+ * The spawn flag: where the player starts and respawns. Authoring chrome
+ * like patrol paths — a green pennant you can drag around in build mode,
+ * invisible in play.
+ */
+function instantiateSpawn(state: State, entry: LevelEntry): PlacedItem | null {
+  const scene = getScene(state);
+  if (!scene) return null;
+  const group = new THREE.Group();
+  const mat = new THREE.MeshBasicMaterial({ color: 0x33ff88 });
+  const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 1.8, 8), mat);
+  pole.position.y = 0.9;
+  const flag = new THREE.Mesh(new THREE.ConeGeometry(0.28, 0.5, 4), mat);
+  flag.rotation.z = -Math.PI / 2;
+  flag.position.set(0.3, 1.55, 0);
+  const ringGeo = new THREE.RingGeometry(0.5, 0.62, 24);
+  ringGeo.rotateX(-Math.PI / 2);
+  const ring = new THREE.Mesh(
+    ringGeo,
+    new THREE.MeshBasicMaterial({ color: 0x33ff88, transparent: true, opacity: 0.7, depthWrite: false })
+  );
+  ring.position.y = 0.03;
+  group.add(pole, flag, ring);
+  group.position.set(entry.x, entry.y, entry.z);
+  group.visible = pathsVisible;
+  scene.add(group);
+  const border = makeBorder(scene);
+  const item: PlacedItem = { entry, obj: group, solidEs: [], border, partBorders: [] };
+  placed.push(item);
+  refreshBorder(item);
+  return item;
+}
+
+/** Where the player starts. One flag per level; absent means the origin. */
+export function spawnPoint(): THREE.Vector3 {
+  const flag = placed.find((i) => i.entry.src === 'spawn');
+  return flag
+    ? new THREE.Vector3(flag.entry.x, flag.entry.y + 1.2, flag.entry.z)
+    : new THREE.Vector3(0, 1.2, 0);
+}
+
 /** A flat painted ground tile — the terrain half of the builder. */
 function instantiatePaint(state: State, entry: LevelEntry): PlacedItem | null {
   const scene = getScene(state);
@@ -623,6 +672,7 @@ export async function instantiate(state: State, entry: LevelEntry): Promise<Plac
   const scene = getScene(state);
   if (!scene) return null;
   if (entry.paint) return instantiatePaint(state, entry);
+  if (entry.src === 'spawn') return instantiateSpawn(state, entry);
   let src: THREE.Group;
   let clips: THREE.AnimationClip[] = [];
   try {
@@ -687,6 +737,7 @@ export async function instantiate(state: State, entry: LevelEntry): Promise<Plac
   buildSolid(state, item);
   refreshBorder(item);
   applyMarker(item, scene);
+  applyExitRing(item, scene);
   syncPathLine(item, scene);
   syncBang(item, scene);
 
@@ -762,6 +813,7 @@ export function reapply(state: State, item: PlacedItem) {
   const scene = getScene(state);
   if (scene) {
     applyMarker(item, scene);
+    applyExitRing(item, scene);
     syncPathLine(item, scene);
     syncBang(item, scene);
   }
@@ -788,6 +840,10 @@ export function removeItem(state: State, item: PlacedItem) {
   if (item.bang) {
     scene?.remove(item.bang);
     item.bang = undefined;
+  }
+  if (item.exitRing) {
+    scene?.remove(item.exitRing);
+    item.exitRing = undefined;
   }
   const i = placed.indexOf(item);
   if (i >= 0) placed.splice(i, 1);
@@ -822,9 +878,41 @@ function applyMarker(item: PlacedItem, scene: THREE.Scene) {
   }
 }
 
+/** A blue ring under portals; unlike pickable rings it stays on in play. */
+function applyExitRing(item: PlacedItem, scene: THREE.Scene) {
+  if (item.entry.exitTo && !item.exitRing) {
+    const { size, center } = orientedBox(item);
+    const r = Math.max(size.x, size.z) * 0.68;
+    const geo = new THREE.RingGeometry(r * 0.86, r, 32);
+    geo.rotateX(-Math.PI / 2);
+    const ring = new THREE.Mesh(
+      geo,
+      new THREE.MeshBasicMaterial({
+        color: 0x7cc4ff,
+        transparent: true,
+        opacity: 0.85,
+        depthWrite: false,
+      })
+    );
+    ring.renderOrder = 998;
+    ring.position.set(center.x, center.y - size.y / 2 + 0.04, center.z);
+    scene.add(ring);
+    item.exitRing = ring;
+  } else if (!item.entry.exitTo && item.exitRing) {
+    item.exitRing.parent?.remove(item.exitRing);
+    item.exitRing = undefined;
+  } else if (item.exitRing) {
+    const { size, center } = orientedBox(item);
+    item.exitRing.position.set(center.x, center.y - size.y / 2 + 0.04, center.z);
+  }
+}
+
 export function syncMarker(state: State, item: PlacedItem) {
   const scene = getScene(state);
-  if (scene) applyMarker(item, scene);
+  if (scene) {
+    applyMarker(item, scene);
+    applyExitRing(item, scene);
+  }
 }
 
 /**
@@ -853,6 +941,7 @@ export function setPathsVisible(v: boolean) {
   pathsVisible = v;
   for (const item of placed) {
     if (item.pathLine) item.pathLine.visible = v;
+    if (item.entry.src === 'spawn') item.obj.visible = v;
   }
 }
 
