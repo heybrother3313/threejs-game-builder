@@ -602,6 +602,10 @@
    [
     "Mountain",
     "/models/terrain/Mountain.glb"
+   ],
+   [
+    "Ground (rolling)",
+    "/models/terrain/Ground Rolling.glb"
    ]
   ]
  },

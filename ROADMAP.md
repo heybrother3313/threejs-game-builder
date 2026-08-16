@@ -9,9 +9,15 @@ What we're building toward, roughly ordered. Items graduate off the top.
       rolling mesh can't be its own collider. `woods/Woods Ground.glb` is the
       first floor built this way: measured 2.3m of relief, median step between
       cells 0.13m (walkable; engine autostep is 0.3m).
-- [ ] **More ground pieces**, and pick a house style. Steep banks (steps >0.3m)
-      read as walls you must walk around — fine as terrain design, but the
-      basic floor probably wants gentler relief than the woods diorama.
+- [x] **A basic rolling floor exists**: `terrain/Ground Rolling.glb` (Meshy,
+      9.8k tris) at fitMaxDim 26, y -0.4, groundMesh, flatten 0.3 — 1.18m of
+      relief, p90 step 0.29m (just under autostep). `entry.flatten` squashes
+      terrain height without touching its footprint, which is the knob that
+      turns a mountain into a meadow.
+- [ ] Trim `Ground Rolling` textures: 4x 2048² maps = 7MB. 1024² and dropping
+      metalness (meaningless for dirt) should cut it ~75%.
+- [ ] Meshy licence check — commercial-safe export needs a paid tier.
+- [ ] **More ground pieces** in varied biomes (sand, grass, rock).
 - [ ] Blend the ground piece into the island skirt/shoreline so the seam is hidden.
 - [ ] Lift placed objects onto the ground surface automatically (sample
       groundMesh height at x/z instead of assuming y=0).

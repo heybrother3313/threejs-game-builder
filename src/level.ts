@@ -69,6 +69,13 @@ export type LevelEntry = {
    * you float above at the edges and clip into at the peak.
    */
   groundMesh?: boolean;
+  /**
+   * Vertical squash, 0-1. Terrain is authored at whatever drama its maker
+   * liked; a floor has to stay WALKABLE, and the engine's autostep is 0.3m.
+   * Squashing height without touching the footprint scales every slope by the
+   * same factor, which is the one knob that turns a mountain into a meadow.
+   */
+  flatten?: number;
   /** Walking up and pressing E travels to this world (a starter id or a
    *  saved world). The piece itself is the portal — a ship, a door, a dock. */
   exitTo?: string;
@@ -639,7 +646,7 @@ function applyEntryTransform(item: PlacedItem) {
   const { entry, obj } = item;
   obj.rotation.set(0, entry.rotY, 0);
   const s = entry.scale ?? 1;
-  obj.scale.set(entry.flip ? -s : s, s, s);
+  obj.scale.set(entry.flip ? -s : s, s * (entry.flatten ?? 1), s);
   obj.position.set(0, 0, 0);
   obj.updateMatrixWorld(true);
   const box = new THREE.Box3().setFromObject(obj);
