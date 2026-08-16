@@ -234,6 +234,8 @@ function systemPrompt(cat: Map<string, string[]>): string {
     '             props: false. trimTop 0.15 on climbable rocks.',
     '  pickable   true = player can carry (E) and throw (F). Use for barrels, bombs, props.',
     '  clip       looped animation: "Idle" | "Walk" | "Run" | fish "Swimming_Normal".',
+    '             Fish/sharks belong IN the water: past the beach edge (|z|>9 or |x|>13)',
+    '             AND y about -0.55 so half the body is submerged (water line is -0.3).',
     '  path       [[x,z],...] patrol loop. speed: units/s (walk 1.2-1.8, run 2-3).',
     '  exitTo     world id — piece becomes a travel portal (E to sail):',
     '             pirate-cove | fishing-village | jungle-outpost | monster-arena | blank-sands',

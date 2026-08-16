@@ -369,7 +369,9 @@ function showTravelPrompt(label: string | null) {
     travelEl.style.cssText =
       'position:fixed;left:50%;bottom:76px;transform:translateX(-50%);' +
       'font-family:var(--font-body);font-size:var(--text-label-sm);font-weight:600;' +
-      'color:var(--text-primary);background:var(--surface-face);' +
+      // Portal-blue, matching the ring under the piece — NOT the control
+      // bar's paper, or the prompt disappears into the toolbar below it.
+      'color:var(--text-primary);background:#d6ebfb;' +
       'border:var(--border-w) solid var(--border-strong);border-radius:var(--radius-md);' +
       'box-shadow:0 var(--press-rest) 0 var(--border-strong);padding:7px 14px;z-index:11;';
     document.body.appendChild(travelEl);

@@ -76,8 +76,12 @@ export function initAtmosphere(state: State) {
   shelf.position.y = -0.55; // top at -0.05, a hair under the sand top
   shelf.receiveShadow = true;
   scene.add(shelf);
+  // The shallows double as the LAGOON SURFACE — the water level everything
+  // swimmable floats in. It must cover the whole reef (fish patrol out to
+  // z≈17), or fish cross from shallows (-0.3) to open sea (-0.62) mid-path
+  // and appear to levitate for the deep half of their loop.
   const shallows = new THREE.Mesh(
-    new THREE.BoxGeometry(31.5, 0.5, 23.5),
+    new THREE.BoxGeometry(44, 0.5, 40),
     new THREE.MeshLambertMaterial({ color: 0x5fa3cd })
   );
   shallows.position.y = -0.55; // top at -0.3: above the sea, below the shelf

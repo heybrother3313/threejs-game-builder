@@ -314,7 +314,9 @@ function fishingVillage(): LevelEntry[] {
     const z = +(11 + rand() * 3).toFixed(2);
     return {
       src: `/models/animated-fish-bundle/${name}.glb`,
-      x, y: 0.4, z, rotY: +(rand() * Math.PI * 2).toFixed(3), fitHeight: 0.5, solid: false,
+      // Half-submerged: shallows surface is at -0.3, so a 0.5-tall fish
+      // with its base at -0.55 breaks the water at its midline.
+      x, y: -0.55, z, rotY: +(rand() * Math.PI * 2).toFixed(3), fitHeight: 0.5, solid: false,
       clip: 'Swimming_Normal', speed: 1.2,
       path: [[x, z], [x + 3, z + 1.5], [x, z + 3], [x - 3, z + 1.5]] as [number, number][],
     };
@@ -348,10 +350,10 @@ function fishingVillage(): LevelEntry[] {
     { src: P('Lute'), x: 4.2, y: 0, z: -5.7, rotY: 2, fitHeight: 0.7, pickable: true },
     // Offshore drama: a shark works the bay, a tentacle marks the deep end.
     {
-      src: P('Shark'), x: -4, y: 0.3, z: 12, rotY: 1, fitHeight: 0.9, solid: false, clip: 'Idle',
+      src: P('Shark'), x: -4, y: -0.75, z: 12, rotY: 1, fitHeight: 0.9, solid: false, clip: 'Idle',
       speed: 2.2, path: [[-4, 12], [4, 13.5], [9, 11.5], [0, 10.5]],
     },
-    { src: P('Tentacle'), x: 11, y: 0, z: 14.5, rotY: 0.7, fitHeight: 3.2, solid: false, clip: 'Idle' },
+    { src: P('Tentacle'), x: 11, y: -0.6, z: 14.5, rotY: 0.7, fitHeight: 3.2, solid: false, clip: 'Idle' },
     {
       src: W('Woman Casual'), x: -2.5, y: 0, z: -3.5, rotY: 0.6, fitHeight: 1.7, clip: 'Idle',
       npc: {

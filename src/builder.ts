@@ -307,6 +307,11 @@ function buildUi() {
       #builder .bar { position:absolute; top:16px; left:50%; transform:translateX(-50%);
         padding: var(--space-xs) var(--space-md); pointer-events:auto;
         display:flex; gap: var(--space-sm); align-items:center; }
+      /* Labels never wrap: a bar of mixed one- and two-line buttons reads
+         as clutter. One line each, equal heights. */
+      #builder .bar { white-space: nowrap; }
+      #builder .bar button { white-space: nowrap; }
+      #builder .bar .eyebrow { white-space: nowrap; }
       #builder .bar .eyebrow { font-family: var(--font-display); font-weight:600;
         font-size: var(--text-label-sm); letter-spacing: var(--tracking-eyebrow);
         text-transform: uppercase; }
@@ -452,7 +457,7 @@ function buildUi() {
     </style>
     <div class="bar plinth">
       <span class="eyebrow">Build mode</span>
-      <button id="b-save" class="accent">Save level.json</button>
+      <button id="b-save" class="accent" title="Download level.json">Save</button>
       <button id="b-undo" title="Undo (⌘Z)">↶</button>
       <button id="b-redo" title="Redo (⇧⌘Z)">↷</button>
       <button id="b-new">New from starter…</button>

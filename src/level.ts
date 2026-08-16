@@ -959,7 +959,8 @@ function syncPathLine(item: PlacedItem, scene: THREE.Scene) {
   }
   const path = item.entry.path;
   if (!path || path.length < 2) return;
-  const pts = [...path, path[0]].map(([x, z]) => new THREE.Vector3(x, item.entry.y + 0.06, z));
+  const yLine = Math.max(item.entry.y + 0.06, -0.2); // never under the lagoon
+  const pts = [...path, path[0]].map(([x, z]) => new THREE.Vector3(x, yLine, z));
   const line = new THREE.Line(
     new THREE.BufferGeometry().setFromPoints(pts),
     new THREE.LineDashedMaterial({ color: 0xfd9b9b, dashSize: 0.3, gapSize: 0.18, depthTest: false })
@@ -1303,6 +1304,23 @@ export function importLevel(json: string) {
   location.reload();
 }
 
+/**
+ * Saved worlds predate the real sea: fish were parked at y≈0.4 to sit on a
+ * painted water slab that no longer exists, so they hover in mid-air. Sink
+ * anything that swims to the lagoon line. Docks and boats in the fish pack
+ * are NOT swimmers — match on the swimming clip and the known sea creatures.
+ */
+export function migrateSwimmers(entries: LevelEntry[]) {
+  for (const e of entries) {
+    const name = e.src.split('/').pop()?.replace('.glb', '') ?? '';
+    const swims =
+      e.clip?.startsWith('Swimming') ||
+      name === 'Shark' || name === 'Fish Mackerel' || name === 'Fish Tuna';
+    if (swims && e.y > -0.3) e.y = name === 'Shark' ? -0.75 : -0.55;
+    if (name === 'Tentacle' && e.y > -0.3) e.y = -0.6;
+  }
+}
+
 export async function loadLevel(state: State) {
   let entries: LevelEntry[] = SEED;
   const saved = localStorage.getItem(STORAGE_KEY);
@@ -1314,5 +1332,6 @@ export async function loadLevel(state: State) {
       console.warn('[level] saved level unreadable — using seed');
     }
   }
+  migrateSwimmers(entries);
   await Promise.all(entries.map((e) => instantiate(state, { ...e })));
 }
