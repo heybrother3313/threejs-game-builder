@@ -23,7 +23,8 @@ What we're building toward, roughly ordered. Items graduate off the top.
       `entry.y` now means height ABOVE THE GROUND, so saves survive the
       terrain changing under them. Terrain hides painted tiles (flat quads
       hovering over relief look worse than no paint).
-- [ ] Starters should ship with terrain instead of a flat slab.
+- [ ] Starters could place *extra* terrain pieces (mountains, ground props) on
+      top of the generated floor for silhouette variety.
 - [ ] Blend the terrain edge into the shoreline skirt — the seam still shows.
 - [ ] Terraced paint tiles were tried and rejected — square hills, wrong shape
       for this world. Don't revisit.
@@ -57,14 +58,14 @@ What we're building toward, roughly ordered. Items graduate off the top.
 - [ ] Quest boards (see main town island) and multi-step quest chains.
 
 ## Builder & library
-- [ ] **Re-sort and consolidate the asset library** into categories and
-      subcategories:
-      - nature → trees, bushes, flowers, grass…
-      - terrain → rocks, mountains, hills…
-      - characters → people, monsters, animals, fish
-      Palette UI needs nested groups (or filter chips) to match.
-- [ ] Run the collider analyzer over the new packs (`kenney-survival`,
-      `terrain`) so their colliders are fitted, not bounding boxes.
+- [x] **Library re-sorted** into groups/subgroups (Terrain/Nature/Characters/
+      Structures/Items), generated from the pack manifests by rule so a new
+      zip lands in the right drawer.
+- [x] Collider analyzer run over the new packs (meta 71 → 132). Lookups key on
+      full path now — several packs ship a Barrel/Rock/Tree and bare-name keys
+      let one pack's collider describe another's.
+- [ ] `Hill.glb` was removed: broken at source (2.3M-unit plane). Find a
+      replacement hill asset.
 - [ ] Palette category icons.
 - [ ] "Build your character" creator.
 - [ ] **Better border/collider detection pipeline.** Current: vertex-quantile
