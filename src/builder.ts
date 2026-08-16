@@ -185,6 +185,17 @@ export function selectionInfo() {
   return selection.map((i) => i.entry.src.split('/').pop());
 }
 
+/**
+ * Select items programmatically. Exists because driving selection through
+ * synthetic clicks is unreliable — the raycast depends on a camera that lags
+ * badly in a throttled preview — and selection bugs have been the most common
+ * class here, so they need to be testable directly.
+ */
+export function selectItems(items: PlacedItem[]) {
+  select(null, false);
+  for (const it of items) select(it, true);
+}
+
 let state: State;
 let getCameraEntity: () => number | undefined;
 /** Shift-click adds to this; every edit applies to the whole selection. */
@@ -1005,7 +1016,10 @@ export function toggleBuildMode() {
   if (!buildMode) {
     disarm();
     clearSelection();
-    if (allBorders) toggleBorders();
+    allBorders = false;
+    // Belt and braces: outlines are authoring chrome and must never survive
+    // into play, whatever state the builder was left in.
+    hideAllBorders();
   }
 }
 
@@ -1478,20 +1492,42 @@ function nameOf(src: string) {
   return src === 'paint' ? 'Ground paint' : src.split('/').pop()!.replace('.glb', '');
 }
 
+/**
+ * Show or hide a piece's outline, collider boxes included.
+ *
+ * The per-collider wireframes used to be set once when created and never
+ * again, so they outlived the selection that spawned them and hung around in
+ * play mode. Visibility now flows through here, and nothing else touches
+ * `.visible` on a border.
+ */
+function setBorderVisible(item: PlacedItem, visible: boolean, selected = false) {
+  const colour = selected ? 0xffd747 : item.entry.solid ? 0x33ff88 : 0x8899aa;
+  item.border.visible = visible;
+  (item.border.material as THREE.LineBasicMaterial).color.set(colour);
+  for (const w of item.partBorders) {
+    w.visible = visible;
+    (w.material as THREE.LineBasicMaterial).color.set(colour);
+  }
+}
+
+/** Hide every outline in the level — used when leaving build mode. */
+function hideAllBorders() {
+  for (const i of placed) setBorderVisible(i, false);
+}
+
 function select(item: PlacedItem | null, additive: boolean) {
   if (!additive) {
-    for (const s of selection) if (!allBorders) s.border.visible = false;
+    for (const s of selection) if (!allBorders) setBorderVisible(s, false);
     selection = [];
   }
   if (item) {
     if (selection.includes(item)) {
       selection = selection.filter((s) => s !== item); // shift-click toggles off
-      if (!allBorders) item.border.visible = false;
+      setBorderVisible(item, allBorders);
     } else {
       selection.push(item);
-      item.border.visible = true;
-      (item.border.material as THREE.LineBasicMaterial).color.set(0xffd747);
       refreshBorder(item);
+      setBorderVisible(item, true, true);
     }
   }
   placeGizmo();
@@ -1505,11 +1541,9 @@ function clearSelection() {
 function toggleBorders() {
   allBorders = !allBorders;
   for (const i of placed) {
-    (i.border.material as THREE.LineBasicMaterial).color.set(
-      selection.includes(i) ? 0xffd747 : i.entry.solid ? 0x33ff88 : 0x8899aa
-    );
-    i.border.visible = allBorders || selection.includes(i);
-    if (i.border.visible) refreshBorder(i);
+    const on = allBorders || selection.includes(i);
+    if (on) refreshBorder(i);
+    setBorderVisible(i, on, selection.includes(i));
   }
 }
 
@@ -1627,7 +1661,14 @@ function onKeyDown(ev: KeyboardEvent) {
   else if (ev.code === 'BracketRight')
     apply((e) => (e.trimTop = +((e.trimTop ?? 0) + 0.1).toFixed(2)));
   else if (ev.code === 'KeyX') apply((e) => (e.flip = !e.flip));
-  else if (ev.code === 'KeyT') apply((e) => (e.solid = !e.solid));
+  else if (ev.code === 'KeyT') {
+    // Make a mixed selection agree rather than inverting each piece: if any of
+    // them still collide, the whole group turns solid off; press again to turn
+    // them all on. Flipping individually leaves you toggling forever trying to
+    // get a hillside of grass to match.
+    const anySolid = selection.some((it) => it.entry.solid);
+    apply((e) => (e.solid = !anySolid));
+  }
   else if (ev.code === 'KeyP') apply((e) => (e.pickable = !e.pickable));
   else if (ev.code === 'Backspace' || ev.code === 'Delete') {
     for (const it of [...selection]) removeItem(state, it);

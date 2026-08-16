@@ -65,6 +65,8 @@ type Runtime = {
   state: RtState;
   t: number;
   cooldown: number;
+  /** Time until the in-flight swing actually connects. */
+  swing: number;
   home: THREE.Vector3;
   wanderTarget?: THREE.Vector3;
   bar?: THREE.Sprite;
@@ -95,6 +97,9 @@ const CLIPS: Record<string, string[]> = {
   hit: ['HitReact', 'HitRecieve', 'Hit', 'Idle_HitReact_Left', 'Spider_HitReact', 'Hit_A'],
   death: ['Death', 'Die', 'Spider_Death', 'Death_A'],
 };
+
+/** How far into a swing the blow actually connects, seconds. */
+export const SWING_CONTACT = 0.32;
 
 export const DEFAULTS: Required<Pick<NpcConfig, 'health' | 'damage' | 'speed' | 'aggroRadius' | 'attackRadius'>> = {
   health: 30,
@@ -333,6 +338,7 @@ export function npcRuntime(item: PlacedItem): Runtime {
       state: 'idle',
       t: 0,
       cooldown: 0,
+      swing: 0,
       home: item.obj.position.clone(),
       following: false,
       guiding: false,
@@ -352,7 +358,10 @@ export function resetNpc(item: PlacedItem) {
 
 function play(item: PlacedItem, action: keyof typeof CLIPS, once = false) {
   const r = npcRuntime(item);
-  if (!item.mixer || !item.clips || r.actionName === action) return;
+  if (!item.mixer || !item.clips) return;
+  // One-shots (hit, attack) must replay even if already the current action —
+  // otherwise the second punch in a row produces no visible reaction at all.
+  if (r.actionName === action && !once) return;
   const clip =
     CLIPS[action].map((n) => findClip(item.clips!, n)).find(Boolean) ?? null;
   if (!clip) return;
@@ -612,6 +621,12 @@ export function updateNpcs(
     item.npcDriving = false;
     r.t += dt;
     r.cooldown = Math.max(0, r.cooldown - dt);
+    if (r.swing > 0) {
+      r.swing = Math.max(0, r.swing - dt);
+      if (r.swing === 0 && r.state !== 'dead' && toPlayer <= reach + 0.4) {
+        hurtPlayer(cfg.damage ?? DEFAULTS.damage, p.x, p.z, playerPos.x, playerPos.z);
+      }
+    }
 
     if (r.state === 'dead') {
       drawHealthBar(item);
@@ -665,11 +680,13 @@ export function updateNpcs(
         break;
 
       case 'attack':
-        play(item, 'attack', true);
         item.obj.rotation.y = Math.atan2(playerPos.x - p.x, playerPos.z - p.z);
         if (r.cooldown === 0) {
+          // Wind up now, connect partway through the animation. Damage on the
+          // first frame of a swing reads as being hit before the arm moves.
+          play(item, 'attack', true);
           r.cooldown = 1.1;
-          hurtPlayer(cfg.damage ?? DEFAULTS.damage, p.x, p.z, playerPos.x, playerPos.z);
+          r.swing = SWING_CONTACT;
         }
         break;
 

@@ -417,8 +417,15 @@ const CHARACTER_DIRS = [
   'ultimate-modular-women-pack',
   'ultimate-monsters',
 ];
-/** Widest a character's collider gets, in metres — roughly a torso. */
-const CHARACTER_GIRTH = 0.7;
+/**
+ * Widest a character's collider gets, in metres.
+ *
+ * This is what sets how close two characters can stand, and it compounds: the
+ * player's own capsule plus this radius is the gap you see when you walk up to
+ * someone. At 0.7 you couldn't get within punching distance without it looking
+ * like an invisible barrier; 0.42 is about a torso and lets a fight close.
+ */
+const CHARACTER_GIRTH = 0.42;
 function isCharacterLike(src: string) {
   return CHARACTER_DIRS.some((d) => src.includes(d));
 }
@@ -729,7 +736,7 @@ export function refreshBorder(item: PlacedItem) {
       new THREE.LineBasicMaterial({ color: 0x33ff88, depthTest: false, transparent: true, opacity: 0.9 })
     );
     w.renderOrder = 998;
-    w.visible = item.border.visible;
+    w.visible = item.border.visible; // builder re-syncs colour/visibility
     scene.add(w);
     item.partBorders.push(w);
   }

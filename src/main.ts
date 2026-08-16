@@ -21,7 +21,13 @@ import {
   threeCameras,
 } from 'vibegame/rendering';
 import { Transform, WorldTransform } from 'vibegame/transforms';
-import { buildMode, initBuilder, selectionInfo, toggleBuildMode } from './builder';
+import {
+  buildMode,
+  initBuilder,
+  selectItems,
+  selectionInfo,
+  toggleBuildMode,
+} from './builder';
 import { setPlayerPosProvider } from './assistant';
 import { canRedo, canUndo, mark, redo, undo } from './history';
 import {
@@ -35,6 +41,7 @@ import {
   configurePlayerHooks,
   damageNpc,
   isTalking,
+  SWING_CONTACT,
   playerIsDead,
   playerMelee,
   npcKey,
@@ -122,6 +129,9 @@ let heldSpec: HeldSpec | null = null;
 let heldItem: PlacedItem | null = null;
 let wantsGrab = false;
 let wantsThrow = false;
+
+/** A thrown punch waiting to connect. */
+let pendingPunch: { t: number; fx: number; fz: number } | null = null;
 
 /** Last drawn player position, for input handlers that run outside systems. */
 const lastPlayerPos = new THREE.Vector3();
@@ -422,8 +432,10 @@ const CarrySystem: System = {
     // Empty-handed F is a punch. Same button, context decides — you either
     // throw what you're carrying or swing at what's in front of you.
     if (wantsThrow && heldItem === null && heldEntity === null) {
+      // Swing now, connect partway through — matching how NPC blows land, and
+      // how it reads on screen.
       playerSwing();
-      playerMelee(state, Transform.posX[player], Transform.posZ[player], fx, fz);
+      pendingPunch = { t: SWING_CONTACT, fx, fz };
       wantsGrab = wantsThrow = false;
       return;
     }
@@ -596,6 +608,19 @@ const VisualsSystem: System = {
     const dt = Math.min(state.time.deltaTime, 0.05);
     updateLevel(state, dt, playerPos);
     if (playerPos) lastPlayerPos.copy(playerPos);
+    if (pendingPunch && p0 !== undefined) {
+      pendingPunch.t -= dt;
+      if (pendingPunch.t <= 0) {
+        playerMelee(
+          state,
+          Transform.posX[p0],
+          Transform.posZ[p0],
+          pendingPunch.fx,
+          pendingPunch.fz
+        );
+        pendingPunch = null;
+      }
+    }
     updateNpcs(state, dt, playerPos, !buildMode);
     const players = playerQuery(state.world);
     if (players.length > 0) updateCharacterVisual(state, players[0]);
@@ -712,6 +737,7 @@ withSystem(PlatformSlipSystem)
         npc: { npcKey, npcRuntime, damageNpc, playerHealth },
         history: { mark, undo, redo, canUndo, canRedo },
         selectionInfo,
+        selectItems,
       };
     }
   });
