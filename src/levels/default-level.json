@@ -1,0 +1,202 @@
+[
+ {
+  "src": "/models/quaternius-pirate/Rock-4vHWF8XUBn.glb",
+  "x": 8.02,
+  "y": -0.8,
+  "z": 0.1,
+  "rotY": 5,
+  "solid": true,
+  "scale": 4.822367298464708
+ },
+ {
+  "src": "/models/quaternius-pirate/Rock.glb",
+  "x": 2.96,
+  "y": -0.5,
+  "z": -5.33,
+  "rotY": 0.4,
+  "solid": true,
+  "scale": 2.2992401180972526
+ },
+ {
+  "src": "/models/quaternius-pirate/Dock.glb",
+  "x": 1.47,
+  "y": -3.4,
+  "z": -10.01,
+  "rotY": 10.9956,
+  "solid": true,
+  "scale": 1.49368243325522
+ },
+ {
+  "src": "/models/quaternius-pirate/Rocks.glb",
+  "x": -8,
+  "y": 0,
+  "z": 4,
+  "rotY": 0.3,
+  "solid": true,
+  "scale": 4.115372550230852
+ },
+ {
+  "src": "/models/quaternius-pirate/Palm Tree.glb",
+  "x": -6,
+  "y": 0,
+  "z": 7.5,
+  "rotY": 1.1,
+  "solid": true,
+  "colliderXZ": 0.5,
+  "scale": 1.0035239106886442
+ },
+ {
+  "src": "/models/quaternius-pirate/Rocks-38eDa0gjwZ.glb",
+  "x": 8.32,
+  "y": -0.4,
+  "z": -3.11,
+  "rotY": 2.1,
+  "solid": true,
+  "scale": 0.34834731524949314
+ },
+ {
+  "src": "/models/quaternius-pirate/Palm Tree-A6cKJYFsIb.glb",
+  "x": 9.5,
+  "y": 0,
+  "z": 6.5,
+  "rotY": 3.9,
+  "solid": true,
+  "colliderXZ": 0.5,
+  "scale": 1.7558
+ },
+ {
+  "src": "/models/quaternius-pirate/Ship.glb",
+  "x": 1.74,
+  "y": -1.4,
+  "z": 13.69,
+  "rotY": 5.3416,
+  "solid": true,
+  "scale": 1.0967
+ },
+ {
+  "src": "/models/quaternius-pirate/Rocks-IFU6cm2Xow.glb",
+  "x": -11.72,
+  "y": -0.6,
+  "z": 3.41,
+  "rotY": 1.2,
+  "solid": true,
+  "scale": 0.41952761446562997
+ },
+ {
+  "src": "/models/quaternius-pirate/House-2kytqGs4rH.glb",
+  "x": -9.73,
+  "y": -0.2,
+  "z": -3.14,
+  "rotY": 1.6781,
+  "solid": true,
+  "scale": 1.4007
+ },
+ {
+  "src": "/models/quaternius-pirate/Rock-6cytS1cPiL.glb",
+  "x": -12.05,
+  "y": -1.1,
+  "z": 6.98,
+  "rotY": 2.2708,
+  "solid": true,
+  "scale": 5.763231259649625
+ },
+ {
+  "src": "/models/quaternius-pirate/Barrel.glb",
+  "x": -7.59,
+  "y": 0,
+  "z": -6.94,
+  "rotY": 0.9,
+  "solid": true,
+  "scale": 1.2880530683706293
+ },
+ {
+  "src": "/models/quaternius-pirate/Chest Gold.glb",
+  "x": 10.81,
+  "y": 0,
+  "z": 7.24,
+  "rotY": 4.7562,
+  "solid": true,
+  "scale": 0.5836529941425344
+ },
+ {
+  "src": "/models/quaternius-pirate/Palm Tree-P0tgwyXBgr.glb",
+  "x": 11.17,
+  "y": 0,
+  "z": 4.53,
+  "rotY": 5.6,
+  "solid": true,
+  "colliderXZ": 0.5,
+  "scale": 1.3347
+ },
+ {
+  "src": "/models/quaternius-pirate/Cannon.glb",
+  "x": -8.56,
+  "y": 0,
+  "z": -7.85,
+  "rotY": 1.3635,
+  "solid": true,
+  "scale": 1.1104
+ },
+ {
+  "src": "/models/quaternius-pirate/Anchor.glb",
+  "x": -8.16,
+  "y": 0,
+  "z": 7.38,
+  "rotY": 0.9,
+  "solid": true,
+  "scale": 1.3673645901722553
+ },
+ {
+  "src": "/models/quaternius-pirate/Skull.glb",
+  "x": -6.66,
+  "y": 0,
+  "z": -0.51,
+  "rotY": 2.1927,
+  "scale": 1.3609583480889917
+ },
+ {
+  "src": "/models/quaternius-pirate/Rocks-fy3szRMvuE.glb",
+  "x": 5.46,
+  "y": 0,
+  "z": -7.96,
+  "rotY": 0,
+  "solid": true,
+  "scale": 0.2714644159567433
+ },
+ {
+  "src": "/models/quaternius-pirate/Rocks-e1rgb5i2kF.glb",
+  "x": 7.71,
+  "y": -0.3,
+  "z": -5.86,
+  "rotY": 0,
+  "solid": true,
+  "scale": 0.5060693623000203
+ },
+ {
+  "src": "/models/quaternius-pirate/Chest Closed.glb",
+  "x": -9.05,
+  "y": -0.1,
+  "z": 1.94,
+  "rotY": 4.7124,
+  "solid": true,
+  "scale": 1.7021275023990163
+ },
+ {
+  "src": "/models/quaternius-pirate/Bucket of Fish.glb",
+  "x": -7.14,
+  "y": 0,
+  "z": -4.78,
+  "rotY": 0,
+  "solid": true,
+  "scale": 1.5683
+ },
+ {
+  "src": "/models/quaternius-pirate/Bucket.glb",
+  "x": -6.95,
+  "y": 0,
+  "z": -5.88,
+  "rotY": 0,
+  "solid": true,
+  "scale": 1.5712
+ }
+]

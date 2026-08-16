@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Island Levels — gameplay sandbox</title>
+    <link rel="stylesheet" href="/plinth.css" />
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        background: #000;
+        font-family: var(--font-body);
+      }
+      /* The engine sizes the drawing buffer from clientWidth/clientHeight but
+         never styles the element (setSize(..., false)). Without CSS the layout
+         size freezes at boot-time dimensions; with it, the element tracks the
+         viewport and the engine's resize handler follows. */
+      #game-canvas {
+        position: fixed;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
+      /* Plinth: a light face on an ink base, matching the build-mode chrome. */
+      #hint {
+        position: fixed;
+        left: 50%;
+        bottom: 18px;
+        transform: translateX(-50%);
+        display: flex;
+        gap: var(--space-sm);
+        align-items: center;
+        color: var(--text-secondary);
+        background: var(--surface-face);
+        border: var(--border-w) solid var(--border-strong);
+        border-radius: var(--radius-md);
+        box-shadow: 0 var(--press-rest) 0 var(--border-strong);
+        padding: 7px var(--space-md);
+        font-size: var(--text-label-sm);
+        pointer-events: none;
+        z-index: 10;
+      }
+      /* Keycaps get the pressed-plinth treatment so they read as physical. */
+      #hint kbd {
+        font-family: var(--font-display);
+        font-weight: 600;
+        font-size: var(--text-label-sm);
+        color: var(--text-primary);
+        background: var(--surface-page);
+        border: var(--border-w-hair) solid var(--border-strong);
+        border-radius: var(--radius-sm);
+        box-shadow: 0 2px 0 var(--border-strong);
+        padding: 1px 6px;
+        margin-right: 3px;
+      }
+      #hint .sep {
+        width: var(--border-w-hair);
+        height: 14px;
+        background: var(--border-quiet);
+      }
+    </style>
+  </head>
+
+  <body>
+    <!--
+      A beach-flavored jump course to feel out gameplay: start on the sand,
+      hop the rocks, ride the drifting raft, climb the cliff ledges.
+      Palette borrowed from the island POC so the two read as one project.
+    -->
+    <world canvas="#game-canvas" sky="#9ed4e8">
+      <!-- Declared explicitly (rather than auto-created) only to shrink the
+           controller's collision skin: the engine bakes that value in when it
+           builds the controller, so it can't be changed from script later. The
+           stock 0.08 reads as hovering on the thin raft deck. -->
+      <player pos="0 1 0" character-controller="offset: 0.02"></player>
+      <!-- Sand base -->
+      <static-part pos="0 -0.5 0" shape="box" size="26 1 18" color="#e8d6a0"></static-part>
+      <!-- Shallow water aprons past the sand edge -->
+      <static-part pos="0 -0.75 14" shape="box" size="26 0.5 10" color="#3f7fb2"></static-part>
+      <static-part pos="0 -0.75 -14" shape="box" size="26 0.5 10" color="#3f7fb2"></static-part>
+
+      <!-- Rocks, climb, and summit are Quaternius models loaded from main.ts;
+           their colliders are auto-generated from each model's bounds. -->
+
+    </world>
+
+    <div id="hint">
+      <span><kbd>W</kbd><kbd>S</kbd>drive</span>
+      <span><kbd>A</kbd><kbd>D</kbd>steer</span>
+      <span><kbd>Space</kbd>jump</span>
+      <i class="sep"></i>
+      <span><kbd>E</kbd>pick up / put down</span>
+      <span><kbd>F</kbd>throw</span>
+      <i class="sep"></i>
+      <span><kbd>Tab</kbd>build mode</span>
+    </div>
+    <canvas id="game-canvas"></canvas>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

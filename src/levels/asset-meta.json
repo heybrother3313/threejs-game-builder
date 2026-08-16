@@ -1,0 +1,854 @@
+{
+ "Anchor": {
+  "baseXZFrac": [
+   1,
+   1
+  ],
+  "height": 0.0932,
+  "sizeXZ": [
+   0.7807,
+   0.9507
+  ],
+  "standYFrac": 0.9833
+ },
+ "Anne": {
+  "baseXZFrac": [
+   1.2157,
+   0.9269
+  ],
+  "height": 1.6032,
+  "sizeXZ": [
+   1.5783,
+   1.3405
+  ],
+  "standYFrac": 1
+ },
+ "Axe": {
+  "baseXZFrac": [
+   1,
+   1
+  ],
+  "height": 1.0466,
+  "sizeXZ": [
+   0.4467,
+   0.1247
+  ],
+  "standYFrac": 0.8833
+ },
+ "Axe Rifle": {
+  "baseXZFrac": [
+   1,
+   1
+  ],
+  "height": 0.6328,
+  "sizeXZ": [
+   2.3205,
+   0.2822
+  ],
+  "standYFrac": 0.9
+ },
+ "Axe-FkzZ6I1zjT": {
+  "baseXZFrac": [
+   1,
+   1
+  ],
+  "height": 0.8573,
+  "sizeXZ": [
+   0.6021,
+   0.6562
+  ],
+  "standYFrac": 0.9833
+ },
+ "Barrel": {
+  "baseXZFrac": [
+   1,
+   1
+  ],
+  "height": 0.6599,
+  "sizeXZ": [
+   0.7147,
+   0.7147
+  ],
+  "standYFrac": 1
+ },
+ "Bird": {
+  "baseXZFrac": [
+   1,
+   1
+  ],
+  "height": 0.3863,
+  "sizeXZ": [
+   0.7646,
+   0.6347
+  ],
+  "standYFrac": 0.9833
+ },
+ "Bomb": {
+  "baseXZFrac": [
+   0.9226,
+   1
+  ],
+  "height": 0.6954,
+  "sizeXZ": [
+   0.456,
+   0.4272
+  ],
+  "standYFrac": 0.7167
+ },
+ "Bucket": {
+  "baseXZFrac": [
+   0.951,
+   1
+  ],
+  "height": 0.6795,
+  "sizeXZ": [
+   0.7596,
+   0.7147
+  ],
+  "standYFrac": 0.6333
+ },
+ "Bucket of Fish": {
+  "baseXZFrac": [
+   1,
+   1
+  ],
+  "height": 0.6808,
+  "sizeXZ": [
+   0.8598,
+   1.153
+  ],
+  "standYFrac": 0.8833
+ },
+ "Cannon": {
+  "baseXZFrac": [
+   1,
+   1
+  ],
+  "height": 1.1297,
+  "sizeXZ": [
+   1.039,
+   1.4827
+  ],
+  "standYFrac": 0.9667
+ },
+ "Chest Closed": {
+  "baseXZFrac": [
+   1,
+   1
+  ],
+  "height": 0.8813,
+  "sizeXZ": [
+   1.3948,
+   0.8874
+  ],
+  "standYFrac": 0.5333
+ },
+ "Chest Gold": {
+  "baseXZFrac": [
+   1,
+   1
+  ],
+  "height": 1.285,
+  "sizeXZ": [
+   1.817,
+   1.5883
+  ],
+  "standYFrac": 1
+ },
+ "Chicken Leg": {
+  "baseXZFrac": [
+   1,
+   1
+  ],
+  "height": 0.4997,
+  "sizeXZ": [
+   0.5041,
+   0.539
+  ],
+  "standYFrac": 0.9667
+ },
+ "Coins": {
+  "baseXZFrac": [
+   1,
+   1
+  ],
+  "height": 0.3439,
+  "sizeXZ": [
+   0.4567,
+   0.6354
+  ],
+  "standYFrac": 1
+ },
+ "Cutlass": {
+  "baseXZFrac": [
+   0.4091,
+   1
+  ],
+  "height": 0.9741,
+  "sizeXZ": [
+   0.8174,
+   0.3183
+  ],
+  "standYFrac": 0.3167
+ },
+ "Dagger": {
+  "baseXZFrac": [
+   1,
+   1
+  ],
+  "height": 1.3184,
+  "sizeXZ": [
+   0.2028,
+   0.2028
+  ],
+  "standYFrac": 0.4
+ },
+ "Dock": {
+  "baseXZFrac": [
+   0.9578,
+   0.9359
+  ],
+  "height": 3.0127,
+  "sizeXZ": [
+   2.1842,
+   2.6568
+  ],
+  "standYFrac": 0.8333
+ },
+ "Dock Broken": {
+  "baseXZFrac": [
+   0.9614,
+   0.9359
+  ],
+  "height": 3.0127,
+  "sizeXZ": [
+   2.3846,
+   2.6568
+  ],
+  "standYFrac": 0.85
+ },
+ "Fish Mackerel": {
+  "baseXZFrac": [
+   1,
+   1
+  ],
+  "height": 0.6294,
+  "sizeXZ": [
+   1.5642,
+   0.2494
+  ],
+  "standYFrac": 0.8
+ },
+ "Fish Tuna": {
+  "baseXZFrac": [
+   1,
+   1
+  ],
+  "height": 0.9759,
+  "sizeXZ": [
+   2.1289,
+   0.2367
+  ],
+  "standYFrac": 0.65
+ },
+ "Gem Blue": {
+  "baseXZFrac": [
+   1,
+   1
+  ],
+  "height": 0.7892,
+  "sizeXZ": [
+   0.369,
+   0.2608
+  ],
+  "standYFrac": 1
+ },
+ "Gem Green": {
+  "baseXZFrac": [
+   1,
+   1
+  ],
+  "height": 0.5657,
+  "sizeXZ": [
+   0.5602,
+   0.5602
+  ],
+  "standYFrac": 1
+ },
+ "Gem Pink": {
+  "baseXZFrac": [
+   1,
+   1
+  ],
+  "height": 0.7251,
+  "sizeXZ": [
+   0.4229,
+   0.4229
+  ],
+  "standYFrac": 1
+ },
+ "Gold Bag": {
+  "baseXZFrac": [
+   1,
+   1
+  ],
+  "height": 0.6153,
+  "sizeXZ": [
+   0.6661,
+   0.5187
+  ],
+  "standYFrac": 0.95
+ },
+ "Gold ore": {
+  "baseXZFrac": [
+   1,
+   1
+  ],
+  "height": 0.4168,
+  "sizeXZ": [
+   0.3996,
+   0.4139
+  ],
+  "standYFrac": 1
+ },
+ "Henry": {
+  "baseXZFrac": [
+   1.1699,
+   0.9876
+  ],
+  "height": 1.5415,
+  "sizeXZ": [
+   1.6401,
+   1.4374
+  ],
+  "standYFrac": 1
+ },
+ "House": {
+  "baseXZFrac": [
+   1,
+   1
+  ],
+  "height": 9.3763,
+  "sizeXZ": [
+   3.7728,
+   3.742
+  ],
+  "standYFrac": 0.3833
+ },
+ "House-2kytqGs4rH": {
+  "baseXZFrac": [
+   1,
+   1
+  ],
+  "height": 10.6427,
+  "sizeXZ": [
+   8.4566,
+   3.7778
+  ],
+  "standYFrac": 0.4167
+ },
+ "House-g7eSJLFi4V": {
+  "baseXZFrac": [
+   1,
+   1
+  ],
+  "height": 6.7741,
+  "sizeXZ": [
+   13.5424,
+   4.5948
+  ],
+  "standYFrac": 0.8333
+ },
+ "Large Bone": {
+  "baseXZFrac": [
+   1,
+   1
+  ],
+  "height": 3.4315,
+  "sizeXZ": [
+   6.5037,
+   6.6197
+  ],
+  "standYFrac": 0.8667
+ },
+ "Lute": {
+  "baseXZFrac": [
+   1,
+   1
+  ],
+  "height": 1.3336,
+  "sizeXZ": [
+   0.4987,
+   0.3096
+  ],
+  "standYFrac": 1
+ },
+ "Mako": {
+  "baseXZFrac": [
+   1.3801,
+   0.995
+  ],
+  "height": 1.444,
+  "sizeXZ": [
+   1.7781,
+   1.3757
+  ],
+  "standYFrac": 1
+ },
+ "Palm Tree": {
+  "baseXZFrac": [
+   1,
+   1
+  ],
+  "height": 3.5874,
+  "sizeXZ": [
+   2.6097,
+   2.5182
+  ],
+  "standYFrac": 0.9833
+ },
+ "Palm Tree-A6cKJYFsIb": {
+  "baseXZFrac": [
+   1,
+   1
+  ],
+  "height": 2.6887,
+  "sizeXZ": [
+   2.8628,
+   2.7534
+  ],
+  "standYFrac": 0.9833
+ },
+ "Palm Tree-P0tgwyXBgr": {
+  "baseXZFrac": [
+   1,
+   1
+  ],
+  "height": 2.6853,
+  "sizeXZ": [
+   2.6363,
+   2.5777
+  ],
+  "standYFrac": 0.9667
+ },
+ "Paper": {
+  "baseXZFrac": [
+   1,
+   1
+  ],
+  "height": 0.5156,
+  "sizeXZ": [
+   0.5096,
+   0.3065
+  ],
+  "standYFrac": 0.9833
+ },
+ "Pirate Captain": {
+  "baseXZFrac": [
+   1.2356,
+   0.988
+  ],
+  "height": 1.7121,
+  "sizeXZ": [
+   1.5927,
+   1.4724
+  ],
+  "standYFrac": 1
+ },
+ "Pistol": {
+  "baseXZFrac": [
+   1,
+   1
+  ],
+  "height": 0.6451,
+  "sizeXZ": [
+   1.2436,
+   0.3341
+  ],
+  "standYFrac": 0.95
+ },
+ "Post": {
+  "baseXZFrac": [
+   1,
+   1
+  ],
+  "height": 3.0127,
+  "sizeXZ": [
+   0.3665,
+   0.376
+  ],
+  "standYFrac": 1
+ },
+ "Prop Bottle": {
+  "baseXZFrac": [
+   1,
+   1
+  ],
+  "height": 0.4659,
+  "sizeXZ": [
+   0.3079,
+   0.3079
+  ],
+  "standYFrac": 1
+ },
+ "Prop Bottle-uRzqB8lopZ": {
+  "baseXZFrac": [
+   1,
+   1
+  ],
+  "height": 0.8631,
+  "sizeXZ": [
+   0.2344,
+   0.2344
+  ],
+  "standYFrac": 1
+ },
+ "Red X": {
+  "baseXZFrac": [
+   1,
+   1
+  ],
+  "height": 0.1064,
+  "sizeXZ": [
+   1.0958,
+   1.1144
+  ],
+  "standYFrac": 1
+ },
+ "Rifle": {
+  "baseXZFrac": [
+   1,
+   1
+  ],
+  "height": 0.6856,
+  "sizeXZ": [
+   2.8981,
+   0.2849
+  ],
+  "standYFrac": 0.9167
+ },
+ "Rock": {
+  "baseXZFrac": [
+   1,
+   1
+  ],
+  "height": 0.5872,
+  "sizeXZ": [
+   0.6881,
+   0.6574
+  ],
+  "standYFrac": 0.9833
+ },
+ "Rock-4vHWF8XUBn": {
+  "baseXZFrac": [
+   1,
+   1
+  ],
+  "height": 0.6117,
+  "sizeXZ": [
+   0.77,
+   0.5839
+  ],
+  "standYFrac": 0.9833
+ },
+ "Rock-6cytS1cPiL": {
+  "baseXZFrac": [
+   1,
+   1
+  ],
+  "height": 0.7114,
+  "sizeXZ": [
+   0.7628,
+   0.746
+  ],
+  "standYFrac": 1
+ },
+ "Rock-BvlfuHFAuI": {
+  "baseXZFrac": [
+   1,
+   1
+  ],
+  "height": 1.0496,
+  "sizeXZ": [
+   0.7832,
+   0.7585
+  ],
+  "standYFrac": 1
+ },
+ "Rock-KvXSMwoftt": {
+  "baseXZFrac": [
+   1,
+   1
+  ],
+  "height": 0.4062,
+  "sizeXZ": [
+   0.4043,
+   0.3903
+  ],
+  "standYFrac": 0.9833
+ },
+ "Rock-cg6yBEddtZ": {
+  "baseXZFrac": [
+   1,
+   1
+  ],
+  "height": 0.6046,
+  "sizeXZ": [
+   0.6053,
+   0.5856
+  ],
+  "standYFrac": 0.9833
+ },
+ "Rocks": {
+  "baseXZFrac": [
+   1,
+   1
+  ],
+  "height": 0.4131,
+  "sizeXZ": [
+   0.4073,
+   0.2855
+  ],
+  "standYFrac": 0.9833
+ },
+ "Rocks-38eDa0gjwZ": {
+  "baseXZFrac": [
+   1,
+   1
+  ],
+  "height": 6.172,
+  "sizeXZ": [
+   6.8558,
+   5.946
+  ],
+  "standYFrac": 0.65
+ },
+ "Rocks-IFU6cm2Xow": {
+  "baseXZFrac": [
+   1,
+   1
+  ],
+  "height": 6.9125,
+  "sizeXZ": [
+   8.0041,
+   7.1099
+  ],
+  "standYFrac": 0.7333
+ },
+ "Rocks-e1rgb5i2kF": {
+  "baseXZFrac": [
+   1,
+   1
+  ],
+  "height": 2.964,
+  "sizeXZ": [
+   5.6254,
+   5.4082
+  ],
+  "standYFrac": 0.9833
+ },
+ "Rocks-fy3szRMvuE": {
+  "baseXZFrac": [
+   1,
+   1
+  ],
+  "height": 5.5256,
+  "sizeXZ": [
+   7.3757,
+   7.1166
+  ],
+  "standYFrac": 0.4333
+ },
+ "Sawmill": {
+  "baseXZFrac": [
+   1,
+   1
+  ],
+  "height": 0.5934,
+  "sizeXZ": [
+   2.0678,
+   2.0648
+  ],
+  "standYFrac": 0.9
+ },
+ "Shark": {
+  "baseXZFrac": [
+   1.0113,
+   0.9705
+  ],
+  "height": 2.0134,
+  "sizeXZ": [
+   2.2736,
+   5.5614
+  ],
+  "standYFrac": 0.65
+ },
+ "Sharky": {
+  "baseXZFrac": [
+   1.3373,
+   1.0108
+  ],
+  "height": 1.4177,
+  "sizeXZ": [
+   1.4349,
+   1.5269
+  ],
+  "standYFrac": 0.9833
+ },
+ "Ship": {
+  "baseXZFrac": [
+   0.9964,
+   1
+  ],
+  "height": 11.479,
+  "sizeXZ": [
+   15.433,
+   5.3006
+  ],
+  "standYFrac": 0.3167
+ },
+ "Shotgun": {
+  "baseXZFrac": [
+   1,
+   1
+  ],
+  "height": 0.6987,
+  "sizeXZ": [
+   1.578,
+   0.3802
+  ],
+  "standYFrac": 0.9
+ },
+ "Skeleton": {
+  "baseXZFrac": [
+   1.2449,
+   0.9234
+  ],
+  "height": 1.0274,
+  "sizeXZ": [
+   1.5334,
+   1.0711
+  ],
+  "standYFrac": 1
+ },
+ "Skeleton-yq5ATpujSt": {
+  "baseXZFrac": [
+   1.3235,
+   0.9708
+  ],
+  "height": 1.3522,
+  "sizeXZ": [
+   1.4423,
+   1.2283
+  ],
+  "standYFrac": 1
+ },
+ "Skull": {
+  "baseXZFrac": [
+   1,
+   1
+  ],
+  "height": 0.4409,
+  "sizeXZ": [
+   0.4838,
+   0.5148
+  ],
+  "standYFrac": 0.9833
+ },
+ "Skull-VGtSTNRf2O": {
+  "baseXZFrac": [
+   1,
+   1
+  ],
+  "height": 3.8091,
+  "sizeXZ": [
+   4.1379,
+   4.4387
+  ],
+  "standYFrac": 1
+ },
+ "Small Ship": {
+  "baseXZFrac": [
+   0.9349,
+   1
+  ],
+  "height": 1.9921,
+  "sizeXZ": [
+   5.1491,
+   3.6012
+  ],
+  "standYFrac": 0.4333
+ },
+ "Sword": {
+  "baseXZFrac": [
+   0.8045,
+   1
+  ],
+  "height": 1.2975,
+  "sizeXZ": [
+   0.3391,
+   0.1434
+  ],
+  "standYFrac": 0.4167
+ },
+ "Sword-Ds2bJiNI5w": {
+  "baseXZFrac": [
+   0.8198,
+   1
+  ],
+  "height": 1.3686,
+  "sizeXZ": [
+   0.2753,
+   0.1367
+  ],
+  "standYFrac": 0.3
+ },
+ "Swords": {
+  "baseXZFrac": [
+   1,
+   1
+  ],
+  "height": 0.4655,
+  "sizeXZ": [
+   0.5067,
+   0.0776
+  ],
+  "standYFrac": 0.5
+ },
+ "Tentacle": {
+  "baseXZFrac": [
+   0.7483,
+   0.3966
+  ],
+  "height": 15.669,
+  "sizeXZ": [
+   3.6727,
+   5.5016
+  ],
+  "standYFrac": 0.9833
+ },
+ "Wheat Icon": {
+  "baseXZFrac": [
+   1,
+   1
+  ],
+  "height": 0.5008,
+  "sizeXZ": [
+   0.5065,
+   0.1066
+  ],
+  "standYFrac": 0.9833
+ },
+ "Wood": {
+  "baseXZFrac": [
+   1,
+   1
+  ],
+  "height": 0.4678,
+  "sizeXZ": [
+   0.5581,
+   0.5338
+  ],
+  "standYFrac": 0.95
+ }
+}
