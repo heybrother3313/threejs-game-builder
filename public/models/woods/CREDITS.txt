@@ -1,0 +1,4 @@
+Cut from "Walk in the Woods" by Don Carson, CC-BY, via poly.pizza
+(https://poly.pizza/m/38m6Q1H12DU). Split into individual ground, tree,
+grove, rock and bush pieces; each re-centred with its base at the origin
+and scaled 10x to game units.

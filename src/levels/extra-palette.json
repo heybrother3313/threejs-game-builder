@@ -782,5 +782,75 @@
     "/models/kenney-survival/Workbench Grind.glb"
    ]
   ]
+ },
+ {
+  "name": "Woods (cut)",
+  "clip": null,
+  "items": [
+   [
+    "Boulder",
+    "/models/woods/Woods Boulder.glb"
+   ],
+   [
+    "Boulder Flat",
+    "/models/woods/Woods Boulder Flat.glb"
+   ],
+   [
+    "Bush",
+    "/models/woods/Woods Bush.glb"
+   ],
+   [
+    "Bush Small",
+    "/models/woods/Woods Bush Small.glb"
+   ],
+   [
+    "Ground",
+    "/models/woods/Woods Ground.glb"
+   ],
+   [
+    "Grove",
+    "/models/woods/Woods Grove.glb"
+   ],
+   [
+    "Grove Large",
+    "/models/woods/Woods Grove Large.glb"
+   ],
+   [
+    "Grove Small",
+    "/models/woods/Woods Grove Small.glb"
+   ],
+   [
+    "Rock",
+    "/models/woods/Woods Rock.glb"
+   ],
+   [
+    "Rock Cluster",
+    "/models/woods/Woods Rock Cluster.glb"
+   ],
+   [
+    "Tree A",
+    "/models/woods/Woods Tree A.glb"
+   ],
+   [
+    "Tree B",
+    "/models/woods/Woods Tree B.glb"
+   ],
+   [
+    "Tree C",
+    "/models/woods/Woods Tree C.glb"
+   ],
+   [
+    "Tree D",
+    "/models/woods/Woods Tree D.glb"
+   ],
+   [
+    "Tree E",
+    "/models/woods/Woods Tree E.glb"
+   ],
+   [
+    "Tree F",
+    "/models/woods/Woods Tree F.glb"
+   ]
+  ]
  }
 ]

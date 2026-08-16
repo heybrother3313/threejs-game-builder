@@ -62,6 +62,13 @@ export type LevelEntry = {
   npc?: NpcConfig;
   /** A painted ground tile rather than a model. */
   paint?: string;
+  /**
+   * Treat this model as walkable TERRAIN: instead of a few oriented boxes,
+   * sample its surface on a grid and lay one thin collider per cell. Rolling
+   * ground needs this — slab decomposition flattens a hill into one plateau
+   * you float above at the edges and clip into at the peak.
+   */
+  groundMesh?: boolean;
   /** Walking up and pressing E travels to this world (a starter id or a
    *  saved world). The piece itself is the portal — a ship, a door, a dock. */
   exitTo?: string;
@@ -254,9 +261,63 @@ function destroySolid(state: State, item: PlacedItem) {
   item.solidEs = [];
 }
 
+/**
+ * A collision proxy for terrain: raycast the surface on a grid and drop one
+ * thin box per cell at the height found there.
+ *
+ * The engine builds only cuboid/ball/capsule colliders — Rapier's heightfield
+ * and trimesh aren't exposed — so a rolling mesh cannot BE its own collider.
+ * A grid of thin boxes is the honest approximation: cells are small enough
+ * that neighbouring steps stay under the controller's step height, so it
+ * walks like a slope rather than a staircase.
+ */
+const GROUND_CELL = 1.5;
+
+function buildGroundProxy(state: State, item: PlacedItem) {
+  const box = new THREE.Box3().setFromObject(item.obj);
+  const ray = new THREE.Raycaster();
+  const down = new THREE.Vector3(0, -1, 0);
+  const from = new THREE.Vector3();
+  const nx = Math.max(1, Math.ceil((box.max.x - box.min.x) / GROUND_CELL));
+  const nz = Math.max(1, Math.ceil((box.max.z - box.min.z) / GROUND_CELL));
+  const cx = (box.max.x - box.min.x) / nx;
+  const cz = (box.max.z - box.min.z) / nz;
+  for (let i = 0; i < nx; i++) {
+    for (let j = 0; j < nz; j++) {
+      const x = box.min.x + cx * (i + 0.5);
+      const z = box.min.z + cz * (j + 0.5);
+      from.set(x, box.max.y + 1, z);
+      ray.set(from, down);
+      const hit = ray.intersectObject(item.obj, true)[0];
+      if (!hit) continue;
+      // A shallow slab hanging under the sampled surface point.
+      const thick = 0.6;
+      const cy = hit.point.y - thick / 2;
+      const e = state.createEntity();
+      state.addComponent(e, Transform, {
+        posX: x, posY: cy, posZ: z,
+        rotY: 0, rotW: 1, eulerY: 0, scaleX: 1, scaleY: 1, scaleZ: 1,
+      });
+      state.addComponent(e, Body, {
+        type: BodyType.Fixed,
+        posX: x, posY: cy, posZ: z,
+        rotY: 0, rotW: 1, eulerY: 0, mass: 0, gravityScale: 0,
+      });
+      state.addComponent(e, Collider, {
+        shape: 0, sizeX: cx * 1.02, sizeY: thick, sizeZ: cz * 1.02,
+      });
+      item.solidEs.push(e);
+    }
+  }
+}
+
 function buildSolid(state: State, item: PlacedItem) {
   destroySolid(state, item);
   if (!item.entry.solid) return;
+  if (item.entry.groundMesh) {
+    buildGroundProxy(state, item);
+    return;
+  }
   for (const { size, center, yaw } of colliderBoxes(item)) {
     const qy = Math.sin(yaw / 2);
     const qw = Math.cos(yaw / 2);
