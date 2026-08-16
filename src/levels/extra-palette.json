@@ -1,594 +1,786 @@
 [
-{
-"name": "Nature Kit",
-"clip": null,
-"items": [
-[
-"Bush",
-"/models/stylized-nature-megakit/Bush.glb"
-],
-[
-"Bush with Flowers",
-"/models/stylized-nature-megakit/Bush with Flowers.glb"
-],
-[
-"Clover",
-"/models/stylized-nature-megakit/Clover.glb"
-],
-[
-"Clover (2)",
-"/models/stylized-nature-megakit/Clover-u5SOgBFiut.glb"
-],
-[
-"Dead Tree",
-"/models/stylized-nature-megakit/Dead Tree.glb"
-],
-[
-"Dead Tree (2)",
-"/models/stylized-nature-megakit/Dead Tree-CD4edbPSGm.glb"
-],
-[
-"Dead Tree (3)",
-"/models/stylized-nature-megakit/Dead Tree-Mcd2zYqyww.glb"
-],
-[
-"Dead Tree (4)",
-"/models/stylized-nature-megakit/Dead Tree-MlmK5488ou.glb"
-],
-[
-"Dead Tree (5)",
-"/models/stylized-nature-megakit/Dead Tree-n8FhMgMldD.glb"
-],
-[
-"Fern",
-"/models/stylized-nature-megakit/Fern.glb"
-],
-[
-"Flower Group",
-"/models/stylized-nature-megakit/Flower Group.glb"
-],
-[
-"Flower Group (2)",
-"/models/stylized-nature-megakit/Flower Group-LqTljN6Wg2.glb"
-],
-[
-"Flower Petal",
-"/models/stylized-nature-megakit/Flower Petal.glb"
-],
-[
-"Flower Petal (2)",
-"/models/stylized-nature-megakit/Flower Petal-LqvxG9OBOU.glb"
-],
-[
-"Flower Petal (3)",
-"/models/stylized-nature-megakit/Flower Petal-eVE0j49ux9.glb"
-],
-[
-"Flower Petal (4)",
-"/models/stylized-nature-megakit/Flower Petal-niuBUEJdvM.glb"
-],
-[
-"Flower Petal (5)",
-"/models/stylized-nature-megakit/Flower Petal-tzG4JcqYWs.glb"
-],
-[
-"Flower Single",
-"/models/stylized-nature-megakit/Flower Single.glb"
-],
-[
-"Flower Single (2)",
-"/models/stylized-nature-megakit/Flower Single-GvfHo0roi3.glb"
-],
-[
-"Grass",
-"/models/stylized-nature-megakit/Grass.glb"
-],
-[
-"Grass Wispy",
-"/models/stylized-nature-megakit/Grass Wispy.glb"
-],
-[
-"Grass Wispy (2)",
-"/models/stylized-nature-megakit/Grass Wispy-Msr9zx66VU.glb"
-],
-[
-"Mushroom",
-"/models/stylized-nature-megakit/Mushroom.glb"
-],
-[
-"Mushroom Laetiporus",
-"/models/stylized-nature-megakit/Mushroom Laetiporus.glb"
-],
-[
-"Pebble Round",
-"/models/stylized-nature-megakit/Pebble Round.glb"
-],
-[
-"Pebble Round (2)",
-"/models/stylized-nature-megakit/Pebble Round-KYtJ6JNXh2.glb"
-],
-[
-"Pebble Round (3)",
-"/models/stylized-nature-megakit/Pebble Round-icVsN3lmVy.glb"
-],
-[
-"Pebble Round (4)",
-"/models/stylized-nature-megakit/Pebble Round-kAMfq1uJUY.glb"
-],
-[
-"Pebble Round (5)",
-"/models/stylized-nature-megakit/Pebble Round-nMf8LHOsbM.glb"
-],
-[
-"Pebble Square",
-"/models/stylized-nature-megakit/Pebble Square.glb"
-],
-[
-"Pebble Square (2)",
-"/models/stylized-nature-megakit/Pebble Square-2YtLzwgsWp.glb"
-],
-[
-"Pebble Square (3)",
-"/models/stylized-nature-megakit/Pebble Square-6juX57sLHe.glb"
-],
-[
-"Pebble Square (4)",
-"/models/stylized-nature-megakit/Pebble Square-Mm4RMgwNO8.glb"
-],
-[
-"Pebble Square (5)",
-"/models/stylized-nature-megakit/Pebble Square-l5XiYQj1oD.glb"
-],
-[
-"Pebble Square (6)",
-"/models/stylized-nature-megakit/Pebble Square-s71L3q1nXN.glb"
-],
-[
-"Pine",
-"/models/stylized-nature-megakit/Pine.glb"
-],
-[
-"Pine (2)",
-"/models/stylized-nature-megakit/Pine-699sFuLCN2.glb"
-],
-[
-"Pine (3)",
-"/models/stylized-nature-megakit/Pine-79gmlLnweB.glb"
-],
-[
-"Pine (4)",
-"/models/stylized-nature-megakit/Pine-Zt62gceKXZ.glb"
-],
-[
-"Pine (5)",
-"/models/stylized-nature-megakit/Pine-rfnxJv0Rqa.glb"
-],
-[
-"Plant",
-"/models/stylized-nature-megakit/Plant.glb"
-],
-[
-"Plant Big",
-"/models/stylized-nature-megakit/Plant Big.glb"
-],
-[
-"Plant Big (2)",
-"/models/stylized-nature-megakit/Plant Big-MbhbP7JrTI.glb"
-],
-[
-"Plant (2)",
-"/models/stylized-nature-megakit/Plant-xH5gNlQxAZ.glb"
-],
-[
-"Rock Medium",
-"/models/stylized-nature-megakit/Rock Medium.glb"
-],
-[
-"Rock Medium (2)",
-"/models/stylized-nature-megakit/Rock Medium-JQxF95498B.glb"
-],
-[
-"Rock Medium (3)",
-"/models/stylized-nature-megakit/Rock Medium-s1OJ3bBzqc.glb"
-],
-[
-"Rock Path Round Small",
-"/models/stylized-nature-megakit/Rock Path Round Small.glb"
-],
-[
-"Rock Path Round Small (2)",
-"/models/stylized-nature-megakit/Rock Path Round Small-GMttpOEFKT.glb"
-],
-[
-"Rock Path Round Small (3)",
-"/models/stylized-nature-megakit/Rock Path Round Small-yHEdadj5I0.glb"
-],
-[
-"Rock Path Round Thin",
-"/models/stylized-nature-megakit/Rock Path Round Thin.glb"
-],
-[
-"Rock Path Round Wide",
-"/models/stylized-nature-megakit/Rock Path Round Wide.glb"
-],
-[
-"Rock Path Square Smal",
-"/models/stylized-nature-megakit/Rock Path Square Smal.glb"
-],
-[
-"Rock Path Square Smal (2)",
-"/models/stylized-nature-megakit/Rock Path Square Smal-cI9XBpVijV.glb"
-],
-[
-"Rock Path Square Smal (3)",
-"/models/stylized-nature-megakit/Rock Path Square Smal-w4TKZMjjcw.glb"
-],
-[
-"Rock Path Square Thin",
-"/models/stylized-nature-megakit/Rock Path Square Thin.glb"
-],
-[
-"Rock Path Square Wide",
-"/models/stylized-nature-megakit/Rock Path Square Wide.glb"
-],
-[
-"Tall Grass",
-"/models/stylized-nature-megakit/Tall Grass.glb"
-],
-[
-"Tree",
-"/models/stylized-nature-megakit/Tree.glb"
-],
-[
-"Tree (2)",
-"/models/stylized-nature-megakit/Tree-QVOop92WmG.glb"
-],
-[
-"Tree (3)",
-"/models/stylized-nature-megakit/Tree-aVOxaHRPWe.glb"
-],
-[
-"Tree (4)",
-"/models/stylized-nature-megakit/Tree-qZtx0AHhcy.glb"
-],
-[
-"Tree (5)",
-"/models/stylized-nature-megakit/Tree-t9KbsfYdXz.glb"
-],
-[
-"Twisted Tree",
-"/models/stylized-nature-megakit/Twisted Tree.glb"
-],
-[
-"Twisted Tree (2)",
-"/models/stylized-nature-megakit/Twisted Tree-7PDBpElkQr.glb"
-],
-[
-"Twisted Tree (3)",
-"/models/stylized-nature-megakit/Twisted Tree-8oraKn9m0x.glb"
-],
-[
-"Twisted Tree (4)",
-"/models/stylized-nature-megakit/Twisted Tree-9aWlx82xUf.glb"
-],
-[
-"Twisted Tree (5)",
-"/models/stylized-nature-megakit/Twisted Tree-GVTsMmuzv7.glb"
-]
-]
-},
-{
-"name": "People",
-"clip": "Idle",
-"items": [
-[
-"Adventurer",
-"/models/ultimate-modular-women-pack/Adventurer.glb"
-],
-[
-"Animated Woman",
-"/models/ultimate-modular-women-pack/Animated Woman.glb"
-],
-[
-"Animated Woman (2)",
-"/models/ultimate-modular-women-pack/Animated Woman-nIItLV9nxS.glb"
-],
-[
-"Medieval",
-"/models/ultimate-modular-women-pack/Medieval.glb"
-],
-[
-"Punk",
-"/models/ultimate-modular-women-pack/Punk.glb"
-],
-[
-"Sci Fi Character",
-"/models/ultimate-modular-women-pack/Sci Fi Character.glb"
-],
-[
-"Soldier",
-"/models/ultimate-modular-women-pack/Soldier.glb"
-],
-[
-"Suit",
-"/models/ultimate-modular-women-pack/Suit.glb"
-],
-[
-"Witch",
-"/models/ultimate-modular-women-pack/Witch.glb"
-],
-[
-"Worker",
-"/models/ultimate-modular-women-pack/Worker.glb"
-],
-[
-"Adventurer",
-"/models/ultimate-modular-men-pack/Adventurer.glb"
-],
-[
-"Astronaut",
-"/models/ultimate-modular-men-pack/Astronaut.glb"
-],
-[
-"Beach Character",
-"/models/ultimate-modular-men-pack/Beach Character.glb"
-],
-[
-"Business Man",
-"/models/ultimate-modular-men-pack/Business Man.glb"
-],
-[
-"Casual Character",
-"/models/ultimate-modular-men-pack/Casual Character.glb"
-],
-[
-"Farmer",
-"/models/ultimate-modular-men-pack/Farmer.glb"
-],
-[
-"Hoodie Character",
-"/models/ultimate-modular-men-pack/Hoodie Character.glb"
-],
-[
-"King",
-"/models/ultimate-modular-men-pack/King.glb"
-],
-[
-"Punk",
-"/models/ultimate-modular-men-pack/Punk.glb"
-],
-[
-"Swat",
-"/models/ultimate-modular-men-pack/Swat.glb"
-],
-[
-"Worker",
-"/models/ultimate-modular-men-pack/Worker.glb"
-]
-]
-},
-{
-"name": "Animated People",
-"clip": "Idle",
-"items": [
-[
-"Man",
-"/models/animated-men-pack/Man.glb"
-],
-[
-"Man in Long Sleeves",
-"/models/animated-men-pack/Man in Long Sleeves.glb"
-],
-[
-"Man in Suit",
-"/models/animated-men-pack/Man in Suit.glb"
-],
-[
-"Man-fjHyMd5Wxw",
-"/models/animated-men-pack/Man-fjHyMd5Wxw.glb"
-],
-[
-"Woman",
-"/models/animated-women-pack/Woman.glb"
-],
-[
-"Woman Casual",
-"/models/animated-women-pack/Woman Casual.glb"
-],
-[
-"Woman in Dress",
-"/models/animated-women-pack/Woman in Dress.glb"
-],
-[
-"Woman in Tank Top",
-"/models/animated-women-pack/Woman in Tank Top.glb"
-]
-]
-},
-{
-"name": "Monsters",
-"clip": "Idle",
-"items": [
-[
-"Alien",
-"/models/ultimate-monsters/Alien.glb"
-],
-[
-"Alien (2)",
-"/models/ultimate-monsters/Alien-RRliSQBP7r.glb"
-],
-[
-"Alpaking",
-"/models/ultimate-monsters/Alpaking.glb"
-],
-[
-"Alpaking Evolved",
-"/models/ultimate-monsters/Alpaking Evolved.glb"
-],
-[
-"Armabee",
-"/models/ultimate-monsters/Armabee.glb"
-],
-[
-"Armabee Evolved",
-"/models/ultimate-monsters/Armabee Evolved.glb"
-],
-[
-"Birb",
-"/models/ultimate-monsters/Birb.glb"
-],
-[
-"Blue Demon",
-"/models/ultimate-monsters/Blue Demon.glb"
-],
-[
-"Bunny",
-"/models/ultimate-monsters/Bunny.glb"
-],
-[
-"Cactoro",
-"/models/ultimate-monsters/Cactoro.glb"
-],
-[
-"Cactoro (2)",
-"/models/ultimate-monsters/Cactoro-IGn9lhdama.glb"
-],
-[
-"Cat",
-"/models/ultimate-monsters/Cat.glb"
-],
-[
-"Chicken",
-"/models/ultimate-monsters/Chicken.glb"
-],
-[
-"Demon",
-"/models/ultimate-monsters/Demon.glb"
-],
-[
-"Demon (2)",
-"/models/ultimate-monsters/Demon-LnfIziKv4o.glb"
-],
-[
-"Dino",
-"/models/ultimate-monsters/Dino.glb"
-],
-[
-"Dragon",
-"/models/ultimate-monsters/Dragon.glb"
-],
-[
-"Dragon Evolved",
-"/models/ultimate-monsters/Dragon Evolved.glb"
-],
-[
-"Fish",
-"/models/ultimate-monsters/Fish.glb"
-],
-[
-"Fish (2)",
-"/models/ultimate-monsters/Fish-ypEYhCImAB.glb"
-],
-[
-"Frog",
-"/models/ultimate-monsters/Frog.glb"
-],
-[
-"Ghost",
-"/models/ultimate-monsters/Ghost.glb"
-],
-[
-"Ghost Skull",
-"/models/ultimate-monsters/Ghost Skull.glb"
-],
-[
-"Glub",
-"/models/ultimate-monsters/Glub.glb"
-],
-[
-"Glub Evolved",
-"/models/ultimate-monsters/Glub Evolved.glb"
-],
-[
-"Goleling",
-"/models/ultimate-monsters/Goleling.glb"
-],
-[
-"Goleling Evolved",
-"/models/ultimate-monsters/Goleling Evolved.glb"
-],
-[
-"Green Blob",
-"/models/ultimate-monsters/Green Blob.glb"
-],
-[
-"Green Spiky Blob",
-"/models/ultimate-monsters/Green Spiky Blob.glb"
-],
-[
-"Hywirl",
-"/models/ultimate-monsters/Hywirl.glb"
-],
-[
-"Monkroose",
-"/models/ultimate-monsters/Monkroose.glb"
-],
-[
-"Mushnub",
-"/models/ultimate-monsters/Mushnub.glb"
-],
-[
-"Mushnub Evolved",
-"/models/ultimate-monsters/Mushnub Evolved.glb"
-],
-[
-"Mushroom King",
-"/models/ultimate-monsters/Mushroom King.glb"
-],
-[
-"Ninja",
-"/models/ultimate-monsters/Ninja.glb"
-],
-[
-"Ninja (2)",
-"/models/ultimate-monsters/Ninja-xGYmeDpfTu.glb"
-],
-[
-"Orc",
-"/models/ultimate-monsters/Orc.glb"
-],
-[
-"Orc Enemy",
-"/models/ultimate-monsters/Orc Enemy.glb"
-],
-[
-"Pigeon",
-"/models/ultimate-monsters/Pigeon.glb"
-],
-[
-"Pink Blob",
-"/models/ultimate-monsters/Pink Blob.glb"
-],
-[
-"Squidle",
-"/models/ultimate-monsters/Squidle.glb"
-],
-[
-"Tribal",
-"/models/ultimate-monsters/Tribal.glb"
-],
-[
-"Wizard",
-"/models/ultimate-monsters/Wizard.glb"
-],
-[
-"Yeti",
-"/models/ultimate-monsters/Yeti.glb"
-],
-[
-"Yeti (2)",
-"/models/ultimate-monsters/Yeti-ceRHrn8HHE.glb"
-]
-]
-}
+ {
+  "name": "Nature Kit",
+  "clip": null,
+  "items": [
+   [
+    "Bush",
+    "/models/stylized-nature-megakit/Bush.glb"
+   ],
+   [
+    "Bush with Flowers",
+    "/models/stylized-nature-megakit/Bush with Flowers.glb"
+   ],
+   [
+    "Clover",
+    "/models/stylized-nature-megakit/Clover.glb"
+   ],
+   [
+    "Clover (2)",
+    "/models/stylized-nature-megakit/Clover-u5SOgBFiut.glb"
+   ],
+   [
+    "Dead Tree",
+    "/models/stylized-nature-megakit/Dead Tree.glb"
+   ],
+   [
+    "Dead Tree (2)",
+    "/models/stylized-nature-megakit/Dead Tree-CD4edbPSGm.glb"
+   ],
+   [
+    "Dead Tree (3)",
+    "/models/stylized-nature-megakit/Dead Tree-Mcd2zYqyww.glb"
+   ],
+   [
+    "Dead Tree (4)",
+    "/models/stylized-nature-megakit/Dead Tree-MlmK5488ou.glb"
+   ],
+   [
+    "Dead Tree (5)",
+    "/models/stylized-nature-megakit/Dead Tree-n8FhMgMldD.glb"
+   ],
+   [
+    "Fern",
+    "/models/stylized-nature-megakit/Fern.glb"
+   ],
+   [
+    "Flower Group",
+    "/models/stylized-nature-megakit/Flower Group.glb"
+   ],
+   [
+    "Flower Group (2)",
+    "/models/stylized-nature-megakit/Flower Group-LqTljN6Wg2.glb"
+   ],
+   [
+    "Flower Petal",
+    "/models/stylized-nature-megakit/Flower Petal.glb"
+   ],
+   [
+    "Flower Petal (2)",
+    "/models/stylized-nature-megakit/Flower Petal-LqvxG9OBOU.glb"
+   ],
+   [
+    "Flower Petal (3)",
+    "/models/stylized-nature-megakit/Flower Petal-eVE0j49ux9.glb"
+   ],
+   [
+    "Flower Petal (4)",
+    "/models/stylized-nature-megakit/Flower Petal-niuBUEJdvM.glb"
+   ],
+   [
+    "Flower Petal (5)",
+    "/models/stylized-nature-megakit/Flower Petal-tzG4JcqYWs.glb"
+   ],
+   [
+    "Flower Single",
+    "/models/stylized-nature-megakit/Flower Single.glb"
+   ],
+   [
+    "Flower Single (2)",
+    "/models/stylized-nature-megakit/Flower Single-GvfHo0roi3.glb"
+   ],
+   [
+    "Grass",
+    "/models/stylized-nature-megakit/Grass.glb"
+   ],
+   [
+    "Grass Wispy",
+    "/models/stylized-nature-megakit/Grass Wispy.glb"
+   ],
+   [
+    "Grass Wispy (2)",
+    "/models/stylized-nature-megakit/Grass Wispy-Msr9zx66VU.glb"
+   ],
+   [
+    "Mushroom",
+    "/models/stylized-nature-megakit/Mushroom.glb"
+   ],
+   [
+    "Mushroom Laetiporus",
+    "/models/stylized-nature-megakit/Mushroom Laetiporus.glb"
+   ],
+   [
+    "Pebble Round",
+    "/models/stylized-nature-megakit/Pebble Round.glb"
+   ],
+   [
+    "Pebble Round (2)",
+    "/models/stylized-nature-megakit/Pebble Round-KYtJ6JNXh2.glb"
+   ],
+   [
+    "Pebble Round (3)",
+    "/models/stylized-nature-megakit/Pebble Round-icVsN3lmVy.glb"
+   ],
+   [
+    "Pebble Round (4)",
+    "/models/stylized-nature-megakit/Pebble Round-kAMfq1uJUY.glb"
+   ],
+   [
+    "Pebble Round (5)",
+    "/models/stylized-nature-megakit/Pebble Round-nMf8LHOsbM.glb"
+   ],
+   [
+    "Pebble Square",
+    "/models/stylized-nature-megakit/Pebble Square.glb"
+   ],
+   [
+    "Pebble Square (2)",
+    "/models/stylized-nature-megakit/Pebble Square-2YtLzwgsWp.glb"
+   ],
+   [
+    "Pebble Square (3)",
+    "/models/stylized-nature-megakit/Pebble Square-6juX57sLHe.glb"
+   ],
+   [
+    "Pebble Square (4)",
+    "/models/stylized-nature-megakit/Pebble Square-Mm4RMgwNO8.glb"
+   ],
+   [
+    "Pebble Square (5)",
+    "/models/stylized-nature-megakit/Pebble Square-l5XiYQj1oD.glb"
+   ],
+   [
+    "Pebble Square (6)",
+    "/models/stylized-nature-megakit/Pebble Square-s71L3q1nXN.glb"
+   ],
+   [
+    "Pine",
+    "/models/stylized-nature-megakit/Pine.glb"
+   ],
+   [
+    "Pine (2)",
+    "/models/stylized-nature-megakit/Pine-699sFuLCN2.glb"
+   ],
+   [
+    "Pine (3)",
+    "/models/stylized-nature-megakit/Pine-79gmlLnweB.glb"
+   ],
+   [
+    "Pine (4)",
+    "/models/stylized-nature-megakit/Pine-Zt62gceKXZ.glb"
+   ],
+   [
+    "Pine (5)",
+    "/models/stylized-nature-megakit/Pine-rfnxJv0Rqa.glb"
+   ],
+   [
+    "Plant",
+    "/models/stylized-nature-megakit/Plant.glb"
+   ],
+   [
+    "Plant Big",
+    "/models/stylized-nature-megakit/Plant Big.glb"
+   ],
+   [
+    "Plant Big (2)",
+    "/models/stylized-nature-megakit/Plant Big-MbhbP7JrTI.glb"
+   ],
+   [
+    "Plant (2)",
+    "/models/stylized-nature-megakit/Plant-xH5gNlQxAZ.glb"
+   ],
+   [
+    "Rock Medium",
+    "/models/stylized-nature-megakit/Rock Medium.glb"
+   ],
+   [
+    "Rock Medium (2)",
+    "/models/stylized-nature-megakit/Rock Medium-JQxF95498B.glb"
+   ],
+   [
+    "Rock Medium (3)",
+    "/models/stylized-nature-megakit/Rock Medium-s1OJ3bBzqc.glb"
+   ],
+   [
+    "Rock Path Round Small",
+    "/models/stylized-nature-megakit/Rock Path Round Small.glb"
+   ],
+   [
+    "Rock Path Round Small (2)",
+    "/models/stylized-nature-megakit/Rock Path Round Small-GMttpOEFKT.glb"
+   ],
+   [
+    "Rock Path Round Small (3)",
+    "/models/stylized-nature-megakit/Rock Path Round Small-yHEdadj5I0.glb"
+   ],
+   [
+    "Rock Path Round Thin",
+    "/models/stylized-nature-megakit/Rock Path Round Thin.glb"
+   ],
+   [
+    "Rock Path Round Wide",
+    "/models/stylized-nature-megakit/Rock Path Round Wide.glb"
+   ],
+   [
+    "Rock Path Square Smal",
+    "/models/stylized-nature-megakit/Rock Path Square Smal.glb"
+   ],
+   [
+    "Rock Path Square Smal (2)",
+    "/models/stylized-nature-megakit/Rock Path Square Smal-cI9XBpVijV.glb"
+   ],
+   [
+    "Rock Path Square Smal (3)",
+    "/models/stylized-nature-megakit/Rock Path Square Smal-w4TKZMjjcw.glb"
+   ],
+   [
+    "Rock Path Square Thin",
+    "/models/stylized-nature-megakit/Rock Path Square Thin.glb"
+   ],
+   [
+    "Rock Path Square Wide",
+    "/models/stylized-nature-megakit/Rock Path Square Wide.glb"
+   ],
+   [
+    "Tall Grass",
+    "/models/stylized-nature-megakit/Tall Grass.glb"
+   ],
+   [
+    "Tree",
+    "/models/stylized-nature-megakit/Tree.glb"
+   ],
+   [
+    "Tree (2)",
+    "/models/stylized-nature-megakit/Tree-QVOop92WmG.glb"
+   ],
+   [
+    "Tree (3)",
+    "/models/stylized-nature-megakit/Tree-aVOxaHRPWe.glb"
+   ],
+   [
+    "Tree (4)",
+    "/models/stylized-nature-megakit/Tree-qZtx0AHhcy.glb"
+   ],
+   [
+    "Tree (5)",
+    "/models/stylized-nature-megakit/Tree-t9KbsfYdXz.glb"
+   ],
+   [
+    "Twisted Tree",
+    "/models/stylized-nature-megakit/Twisted Tree.glb"
+   ],
+   [
+    "Twisted Tree (2)",
+    "/models/stylized-nature-megakit/Twisted Tree-7PDBpElkQr.glb"
+   ],
+   [
+    "Twisted Tree (3)",
+    "/models/stylized-nature-megakit/Twisted Tree-8oraKn9m0x.glb"
+   ],
+   [
+    "Twisted Tree (4)",
+    "/models/stylized-nature-megakit/Twisted Tree-9aWlx82xUf.glb"
+   ],
+   [
+    "Twisted Tree (5)",
+    "/models/stylized-nature-megakit/Twisted Tree-GVTsMmuzv7.glb"
+   ]
+  ]
+ },
+ {
+  "name": "People",
+  "clip": "Idle",
+  "items": [
+   [
+    "Adventurer",
+    "/models/ultimate-modular-women-pack/Adventurer.glb"
+   ],
+   [
+    "Animated Woman",
+    "/models/ultimate-modular-women-pack/Animated Woman.glb"
+   ],
+   [
+    "Animated Woman (2)",
+    "/models/ultimate-modular-women-pack/Animated Woman-nIItLV9nxS.glb"
+   ],
+   [
+    "Medieval",
+    "/models/ultimate-modular-women-pack/Medieval.glb"
+   ],
+   [
+    "Punk",
+    "/models/ultimate-modular-women-pack/Punk.glb"
+   ],
+   [
+    "Sci Fi Character",
+    "/models/ultimate-modular-women-pack/Sci Fi Character.glb"
+   ],
+   [
+    "Soldier",
+    "/models/ultimate-modular-women-pack/Soldier.glb"
+   ],
+   [
+    "Suit",
+    "/models/ultimate-modular-women-pack/Suit.glb"
+   ],
+   [
+    "Witch",
+    "/models/ultimate-modular-women-pack/Witch.glb"
+   ],
+   [
+    "Worker",
+    "/models/ultimate-modular-women-pack/Worker.glb"
+   ],
+   [
+    "Adventurer",
+    "/models/ultimate-modular-men-pack/Adventurer.glb"
+   ],
+   [
+    "Astronaut",
+    "/models/ultimate-modular-men-pack/Astronaut.glb"
+   ],
+   [
+    "Beach Character",
+    "/models/ultimate-modular-men-pack/Beach Character.glb"
+   ],
+   [
+    "Business Man",
+    "/models/ultimate-modular-men-pack/Business Man.glb"
+   ],
+   [
+    "Casual Character",
+    "/models/ultimate-modular-men-pack/Casual Character.glb"
+   ],
+   [
+    "Farmer",
+    "/models/ultimate-modular-men-pack/Farmer.glb"
+   ],
+   [
+    "Hoodie Character",
+    "/models/ultimate-modular-men-pack/Hoodie Character.glb"
+   ],
+   [
+    "King",
+    "/models/ultimate-modular-men-pack/King.glb"
+   ],
+   [
+    "Punk",
+    "/models/ultimate-modular-men-pack/Punk.glb"
+   ],
+   [
+    "Swat",
+    "/models/ultimate-modular-men-pack/Swat.glb"
+   ],
+   [
+    "Worker",
+    "/models/ultimate-modular-men-pack/Worker.glb"
+   ]
+  ]
+ },
+ {
+  "name": "Animated People",
+  "clip": "Idle",
+  "items": [
+   [
+    "Man",
+    "/models/animated-men-pack/Man.glb"
+   ],
+   [
+    "Man in Long Sleeves",
+    "/models/animated-men-pack/Man in Long Sleeves.glb"
+   ],
+   [
+    "Man in Suit",
+    "/models/animated-men-pack/Man in Suit.glb"
+   ],
+   [
+    "Man-fjHyMd5Wxw",
+    "/models/animated-men-pack/Man-fjHyMd5Wxw.glb"
+   ],
+   [
+    "Woman",
+    "/models/animated-women-pack/Woman.glb"
+   ],
+   [
+    "Woman Casual",
+    "/models/animated-women-pack/Woman Casual.glb"
+   ],
+   [
+    "Woman in Dress",
+    "/models/animated-women-pack/Woman in Dress.glb"
+   ],
+   [
+    "Woman in Tank Top",
+    "/models/animated-women-pack/Woman in Tank Top.glb"
+   ]
+  ]
+ },
+ {
+  "name": "Monsters",
+  "clip": "Idle",
+  "items": [
+   [
+    "Alien",
+    "/models/ultimate-monsters/Alien.glb"
+   ],
+   [
+    "Alien (2)",
+    "/models/ultimate-monsters/Alien-RRliSQBP7r.glb"
+   ],
+   [
+    "Alpaking",
+    "/models/ultimate-monsters/Alpaking.glb"
+   ],
+   [
+    "Alpaking Evolved",
+    "/models/ultimate-monsters/Alpaking Evolved.glb"
+   ],
+   [
+    "Armabee",
+    "/models/ultimate-monsters/Armabee.glb"
+   ],
+   [
+    "Armabee Evolved",
+    "/models/ultimate-monsters/Armabee Evolved.glb"
+   ],
+   [
+    "Birb",
+    "/models/ultimate-monsters/Birb.glb"
+   ],
+   [
+    "Blue Demon",
+    "/models/ultimate-monsters/Blue Demon.glb"
+   ],
+   [
+    "Bunny",
+    "/models/ultimate-monsters/Bunny.glb"
+   ],
+   [
+    "Cactoro",
+    "/models/ultimate-monsters/Cactoro.glb"
+   ],
+   [
+    "Cactoro (2)",
+    "/models/ultimate-monsters/Cactoro-IGn9lhdama.glb"
+   ],
+   [
+    "Cat",
+    "/models/ultimate-monsters/Cat.glb"
+   ],
+   [
+    "Chicken",
+    "/models/ultimate-monsters/Chicken.glb"
+   ],
+   [
+    "Demon",
+    "/models/ultimate-monsters/Demon.glb"
+   ],
+   [
+    "Demon (2)",
+    "/models/ultimate-monsters/Demon-LnfIziKv4o.glb"
+   ],
+   [
+    "Dino",
+    "/models/ultimate-monsters/Dino.glb"
+   ],
+   [
+    "Dragon",
+    "/models/ultimate-monsters/Dragon.glb"
+   ],
+   [
+    "Dragon Evolved",
+    "/models/ultimate-monsters/Dragon Evolved.glb"
+   ],
+   [
+    "Fish",
+    "/models/ultimate-monsters/Fish.glb"
+   ],
+   [
+    "Fish (2)",
+    "/models/ultimate-monsters/Fish-ypEYhCImAB.glb"
+   ],
+   [
+    "Frog",
+    "/models/ultimate-monsters/Frog.glb"
+   ],
+   [
+    "Ghost",
+    "/models/ultimate-monsters/Ghost.glb"
+   ],
+   [
+    "Ghost Skull",
+    "/models/ultimate-monsters/Ghost Skull.glb"
+   ],
+   [
+    "Glub",
+    "/models/ultimate-monsters/Glub.glb"
+   ],
+   [
+    "Glub Evolved",
+    "/models/ultimate-monsters/Glub Evolved.glb"
+   ],
+   [
+    "Goleling",
+    "/models/ultimate-monsters/Goleling.glb"
+   ],
+   [
+    "Goleling Evolved",
+    "/models/ultimate-monsters/Goleling Evolved.glb"
+   ],
+   [
+    "Green Blob",
+    "/models/ultimate-monsters/Green Blob.glb"
+   ],
+   [
+    "Green Spiky Blob",
+    "/models/ultimate-monsters/Green Spiky Blob.glb"
+   ],
+   [
+    "Hywirl",
+    "/models/ultimate-monsters/Hywirl.glb"
+   ],
+   [
+    "Monkroose",
+    "/models/ultimate-monsters/Monkroose.glb"
+   ],
+   [
+    "Mushnub",
+    "/models/ultimate-monsters/Mushnub.glb"
+   ],
+   [
+    "Mushnub Evolved",
+    "/models/ultimate-monsters/Mushnub Evolved.glb"
+   ],
+   [
+    "Mushroom King",
+    "/models/ultimate-monsters/Mushroom King.glb"
+   ],
+   [
+    "Ninja",
+    "/models/ultimate-monsters/Ninja.glb"
+   ],
+   [
+    "Ninja (2)",
+    "/models/ultimate-monsters/Ninja-xGYmeDpfTu.glb"
+   ],
+   [
+    "Orc",
+    "/models/ultimate-monsters/Orc.glb"
+   ],
+   [
+    "Orc Enemy",
+    "/models/ultimate-monsters/Orc Enemy.glb"
+   ],
+   [
+    "Pigeon",
+    "/models/ultimate-monsters/Pigeon.glb"
+   ],
+   [
+    "Pink Blob",
+    "/models/ultimate-monsters/Pink Blob.glb"
+   ],
+   [
+    "Squidle",
+    "/models/ultimate-monsters/Squidle.glb"
+   ],
+   [
+    "Tribal",
+    "/models/ultimate-monsters/Tribal.glb"
+   ],
+   [
+    "Wizard",
+    "/models/ultimate-monsters/Wizard.glb"
+   ],
+   [
+    "Yeti",
+    "/models/ultimate-monsters/Yeti.glb"
+   ],
+   [
+    "Yeti (2)",
+    "/models/ultimate-monsters/Yeti-ceRHrn8HHE.glb"
+   ]
+  ]
+ },
+ {
+  "name": "Hills & mountains",
+  "clip": null,
+  "items": [
+   [
+    "Hill",
+    "/models/terrain/Hill.glb"
+   ],
+   [
+    "Mountain",
+    "/models/terrain/Mountain.glb"
+   ]
+  ]
+ },
+ {
+  "name": "Survival kit",
+  "clip": null,
+  "items": [
+   [
+    "Barrel",
+    "/models/kenney-survival/Barrel.glb"
+   ],
+   [
+    "Barrel Open",
+    "/models/kenney-survival/Barrel Open.glb"
+   ],
+   [
+    "Bedroll",
+    "/models/kenney-survival/Bedroll.glb"
+   ],
+   [
+    "Bedroll Frame",
+    "/models/kenney-survival/Bedroll Frame.glb"
+   ],
+   [
+    "Bedroll (2)",
+    "/models/kenney-survival/Bedroll-efwd5fjuMU.glb"
+   ],
+   [
+    "Box",
+    "/models/kenney-survival/Box.glb"
+   ],
+   [
+    "Box Open",
+    "/models/kenney-survival/Box Open.glb"
+   ],
+   [
+    "Campfire",
+    "/models/kenney-survival/Campfire.glb"
+   ],
+   [
+    "Chest",
+    "/models/kenney-survival/Chest.glb"
+   ],
+   [
+    "Fence Fortified",
+    "/models/kenney-survival/Fence Fortified.glb"
+   ],
+   [
+    "Fence Frame",
+    "/models/kenney-survival/Fence Frame.glb"
+   ],
+   [
+    "Fish",
+    "/models/kenney-survival/Fish.glb"
+   ],
+   [
+    "Fishing Stand",
+    "/models/kenney-survival/Fishing Stand.glb"
+   ],
+   [
+    "Floor",
+    "/models/kenney-survival/Floor.glb"
+   ],
+   [
+    "Grass",
+    "/models/kenney-survival/Grass.glb"
+   ],
+   [
+    "Grass (2)",
+    "/models/kenney-survival/Grass-uEgE0AfnPF.glb"
+   ],
+   [
+    "Pickaxe",
+    "/models/kenney-survival/Pickaxe.glb"
+   ],
+   [
+    "Resource Stone",
+    "/models/kenney-survival/Resource Stone.glb"
+   ],
+   [
+    "Rock",
+    "/models/kenney-survival/Rock.glb"
+   ],
+   [
+    "Rock Flat",
+    "/models/kenney-survival/Rock Flat.glb"
+   ],
+   [
+    "Rock Flat Grass",
+    "/models/kenney-survival/Rock Flat Grass.glb"
+   ],
+   [
+    "Rock (2)",
+    "/models/kenney-survival/Rock-cBqdRdLDDL.glb"
+   ],
+   [
+    "Rock (3)",
+    "/models/kenney-survival/Rock-iEKF2FGasY.glb"
+   ],
+   [
+    "Shovel",
+    "/models/kenney-survival/Shovel.glb"
+   ],
+   [
+    "Signpost",
+    "/models/kenney-survival/Signpost.glb"
+   ],
+   [
+    "Signpost Single",
+    "/models/kenney-survival/Signpost Single.glb"
+   ],
+   [
+    "Structure",
+    "/models/kenney-survival/Structure.glb"
+   ],
+   [
+    "Structure Base",
+    "/models/kenney-survival/Structure Base.glb"
+   ],
+   [
+    "Structure Cloth",
+    "/models/kenney-survival/Structure Cloth.glb"
+   ],
+   [
+    "Structure Roof",
+    "/models/kenney-survival/Structure Roof.glb"
+   ],
+   [
+    "Tent",
+    "/models/kenney-survival/Tent.glb"
+   ],
+   [
+    "Tent Frame",
+    "/models/kenney-survival/Tent Frame.glb"
+   ],
+   [
+    "Tent Half",
+    "/models/kenney-survival/Tent Half.glb"
+   ],
+   [
+    "Tool Axe",
+    "/models/kenney-survival/Tool Axe.glb"
+   ],
+   [
+    "Tool Hoe",
+    "/models/kenney-survival/Tool Hoe.glb"
+   ],
+   [
+    "Tree",
+    "/models/kenney-survival/Tree.glb"
+   ],
+   [
+    "Tree Fall",
+    "/models/kenney-survival/Tree Fall.glb"
+   ],
+   [
+    "Tree Fall Large",
+    "/models/kenney-survival/Tree Fall Large.glb"
+   ],
+   [
+    "Tree Large",
+    "/models/kenney-survival/Tree Large.glb"
+   ],
+   [
+    "Twig",
+    "/models/kenney-survival/Twig.glb"
+   ],
+   [
+    "Workbench",
+    "/models/kenney-survival/Workbench.glb"
+   ],
+   [
+    "Workbench Anvil",
+    "/models/kenney-survival/Workbench Anvil.glb"
+   ],
+   [
+    "Workbench Grind",
+    "/models/kenney-survival/Workbench Grind.glb"
+   ]
+  ]
+ }
 ]

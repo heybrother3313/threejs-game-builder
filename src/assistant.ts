@@ -122,6 +122,8 @@ const MODEL_DIRS: { dir: string; hint: string }[] = [
   { dir: 'animated-animal-pack', hint: 'animated wildlife (fox, deer, wolf, horse…)' },
   { dir: 'animated-fish-bundle', hint: 'animated fish (clip "Swimming_Normal") plus docks and boats' },
   { dir: 'stylized-nature-megakit', hint: 'trees, rocks, plants, flowers — scenery, no rigs' },
+  { dir: 'terrain', hint: 'Hill and Mountain — big landscape pieces, solid, fitHeight 2-6' },
+  { dir: 'kenney-survival', hint: 'ground platforms (Rock Flat, Rock Flat Grass, Floor), camp gear, tools, tents' },
   { dir: 'ultimate-modular-men-pack', hint: 'animated male people' },
   { dir: 'ultimate-modular-women-pack', hint: 'animated female people' },
   { dir: 'animated-men-pack', hint: 'animated men with jump/death clips' },

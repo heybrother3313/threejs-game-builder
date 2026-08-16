@@ -418,6 +418,16 @@ function play(item: PlacedItem, action: keyof typeof CLIPS, once = false) {
   item.currentAction = next;
 }
 
+/** Water-bound: anything animated by a swimming clip lives IN the sea. */
+function isSwimmer(item: PlacedItem) {
+  return !!item.entry.clip?.startsWith('Swimming');
+}
+
+/** True if (x, z) is on the island slab — land, as far as a fish cares. */
+function onLand(x: number, z: number) {
+  return Math.abs(x) < 13.8 && Math.abs(z) < 9.8;
+}
+
 function faceAndStep(item: PlacedItem, tx: number, tz: number, speed: number, dt: number) {
   const p = item.obj.position;
   const dx = tx - p.x;
@@ -425,8 +435,16 @@ function faceAndStep(item: PlacedItem, tx: number, tz: number, speed: number, dt
   const dist = Math.hypot(dx, dz);
   if (dist < 1e-3) return 0;
   const step = Math.min(speed * dt, dist);
-  p.x += (dx / dist) * step;
-  p.z += (dz / dist) * step;
+  const nx = p.x + (dx / dist) * step;
+  const nz = p.z + (dz / dist) * step;
+  // A provoked fish must not beach itself: swimmers refuse any step onto the
+  // island. They turn along the coast instead of climbing it.
+  if (isSwimmer(item) && onLand(nx, nz)) {
+    item.obj.rotation.y = Math.atan2(dx, dz);
+    return dist;
+  }
+  p.x = nx;
+  p.z = nz;
   item.obj.rotation.y = Math.atan2(dx, dz);
   return dist;
 }
@@ -528,7 +546,14 @@ export function damageNpc(state: State, item: PlacedItem, amount: number, fromX:
   r.t = 0;
   r.cooldown = Math.max(r.cooldown, 0.5); // a stagger costs them their next swing
   play(item, 'hit', true);
-  // Being hit makes anyone hostile.
+  // Being hit makes anyone hostile — except swimmers, who flee. A clownfish
+  // that takes up arms and chases you up the beach is the wrong kind of funny.
+  if (isSwimmer(item)) {
+    if (!item.entry.npc) item.entry.npc = {};
+    item.entry.npc.faction = 'neutral';
+    item.entry.npc.behavior = 'flee';
+    return;
+  }
   if (item.entry.npc && item.entry.npc.faction !== 'hostile') {
     item.entry.npc.faction = 'hostile';
   }
@@ -714,6 +739,11 @@ export function updateNpcs(
     }
 
     if (r.state === 'dead') {
+      // The sea buries its own: after the death clip has played out, a dead
+      // swimmer settles slowly below the surface and out of sight.
+      if (isSwimmer(item) && r.t > 1.2 && item.obj.position.y > -1.6) {
+        item.obj.position.y -= dt * 0.25;
+      }
       drawHealthBar(item);
       continue;
     }
