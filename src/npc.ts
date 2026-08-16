@@ -442,6 +442,8 @@ export function updateNpcs(
     const reach = cfg.attackRadius ?? DEFAULTS.attackRadius;
     const p = item.obj.position;
     const toPlayer = Math.hypot(playerPos.x - p.x, playerPos.z - p.z);
+    // Assume path-walking owns the transform unless a state below takes over.
+    item.npcDriving = false;
     r.t += dt;
     r.cooldown = Math.max(0, r.cooldown - dt);
 
@@ -470,6 +472,7 @@ export function updateNpcs(
 
     // Conversation freezes the speaker so they don't wander off mid-sentence.
     if (talking?.item === item) {
+      item.npcDriving = true;
       play(item, 'idle');
       item.obj.rotation.y = Math.atan2(playerPos.x - p.x, playerPos.z - p.z);
       drawHealthBar(item);
@@ -489,6 +492,13 @@ export function updateNpcs(
     else if (cfg.behavior === 'wander') r.state = 'wander';
     else if (item.entry.path?.length) r.state = 'patrol';
     else r.state = 'idle';
+
+    if (
+      r.state === 'chase' || r.state === 'attack' || r.state === 'flee' ||
+      r.state === 'follow' || r.state === 'guide' || r.state === 'wander'
+    ) {
+      item.npcDriving = true;
+    }
 
     switch (r.state) {
       case 'chase':

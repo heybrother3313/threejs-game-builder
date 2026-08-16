@@ -91,6 +91,14 @@ export type PlacedItem = {
   pathLine?: THREE.Line;
   /** "!" sprite over NPCs that have dialog. */
   bang?: THREE.Sprite;
+  /**
+   * True while npc.ts is steering this item (chasing, following, guiding,
+   * fleeing, wandering, talking). Path-walking must stand down when it is:
+   * otherwise level.ts moves the NPC along its patrol while npc.ts spins it to
+   * face the player, and you get a character orbiting a circle while staring
+   * at the middle of it.
+   */
+  npcDriving?: boolean;
   currentAction?: THREE.AnimationAction;
 };
 
@@ -886,7 +894,15 @@ export function updateLevel(state: State, dt: number, playerPos?: THREE.Vector3)
     // Patrol: walk the authored loop, facing along it. Motion is applied as an
     // offset from the item's authored position so nothing is persisted.
     const path = item.entry.path;
-    if (animationsPlaying && path && path.length >= 2 && item.homePos && !item.carried && !item.flight) {
+    if (
+      animationsPlaying &&
+      !item.npcDriving &&
+      path &&
+      path.length >= 2 &&
+      item.homePos &&
+      !item.carried &&
+      !item.flight
+    ) {
       const pts = [...path, path[0]];
       const lens: number[] = [];
       let total = 0;
