@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import type { State } from 'vibegame';
 import { grantLoot, setLootTrayVisible, spendLoot } from './loot';
-import { findClip, instantiate, loadModel, placed, type PlacedItem } from './level';
+import { findClip, instantiate, loadModel, persist, placed, syncMarker, type PlacedItem } from './level';
 
 /**
  * NPC behaviour, combat, and conversation.
@@ -52,6 +52,8 @@ export type NpcConfig = {
   thanksLine?: string;
   /** Loot kind granted on delivery, straight to the inventory. */
   reward?: string;
+  /** Set once the fetch quest is completed — survives saves and travel. */
+  delivered?: boolean;
 };
 
 type RtState =
@@ -342,8 +344,19 @@ function endTalk() {
 
 function linesOf(item: PlacedItem): string[] {
   const cfg = item.entry.npc;
-  if (cfg?.lines?.length) return cfg.lines;
-  return item.entry.dialog ? [item.entry.dialog] : [];
+  const base = cfg?.lines?.length
+    ? [...cfg.lines]
+    : item.entry.dialog
+      ? [item.entry.dialog]
+      : [];
+  // The ask is automatic: an NPC that wants something SAYS so, without the
+  // author scripting it — and stops asking once it's been delivered.
+  if (cfg?.wantsItem && !cfg.delivered) {
+    base.push(
+      `I am looking for a ${cfg.wantsItem}. Bring it to me and I will make it worth your while.`
+    );
+  }
+  return base;
 }
 
 /* ------------------------------------------------------------ runtime --- */
@@ -681,6 +694,8 @@ export function updateNpcs(
     const heightGap = Math.abs(playerPos.y - p.y);
     const canReach = heightGap < REACH_HEIGHT;
     const canNotice = heightGap < NOTICE_HEIGHT;
+    // A completed quest hands its gold "!" back for a plain coral one.
+    if (item.bangStyle === 'gold' && cfg.delivered) syncMarker(state, item);
     // Conversation is a ceasefire: nothing presses an attack while a dialog
     // is open, and blows already in flight are called off.
     if (talking && (r.state === 'chase' || r.state === 'attack')) {
@@ -907,8 +922,10 @@ export function npcKey(code: string, playerPos: THREE.Vector3 | undefined): bool
       const cfg = best.entry.npc ?? {};
       // Fetch quest: if they want something and you're holding it, delivery
       // IS the conversation — hand it over, take the reward, hear the thanks.
-      if (cfg.wantsItem && !r.rewarded && spendLoot(cfg.wantsItem)) {
+      if (cfg.wantsItem && !cfg.delivered && spendLoot(cfg.wantsItem)) {
         r.rewarded = true;
+        cfg.delivered = true; // survives saves: a paid quest stays paid
+        persist();
         if (cfg.reward) grantLoot(cfg.reward);
         ensureUi();
         if (dialogEl) {

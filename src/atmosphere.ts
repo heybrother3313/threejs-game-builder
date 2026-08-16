@@ -24,6 +24,8 @@ const OCEAN = new THREE.Color('#3f7fb2');
 
 let fog: THREE.Fog | null = null;
 let sceneRef: THREE.Scene | null = null;
+let water: THREE.Mesh | null = null;
+let waterBase: Float32Array | null = null;
 
 export function initAtmosphere(state: State) {
   const scene = getScene(state);
@@ -52,15 +54,16 @@ export function initAtmosphere(state: State) {
   dome.renderOrder = -1;
   scene.add(dome);
 
-  // Endless ocean, with everything below it hidden — the skirt and any
-  // underwater geometry end at this plane instead of hanging in a void.
-  const ocean = new THREE.Mesh(
+  // Backstop plane far below the fog line, so the animated sheet can be
+  // finite without the sky ever peeking through at a glancing angle.
+  const backstop = new THREE.Mesh(
     new THREE.PlaneGeometry(1600, 1600),
-    new THREE.MeshLambertMaterial({ color: OCEAN })
+    new THREE.MeshLambertMaterial({ color: 0x34689b })
   );
-  ocean.rotation.x = -Math.PI / 2;
-  ocean.position.y = -0.62;
-  scene.add(ocean);
+  backstop.rotation.x = -Math.PI / 2;
+  backstop.position.y = -0.7;
+  scene.add(backstop);
+  void OCEAN;
 
   // The island skirt. The playfield is a rectangular slab, and a slab over
   // water is a floating table from any downward camera angle. The skirt must
@@ -76,16 +79,43 @@ export function initAtmosphere(state: State) {
   shelf.position.y = -0.55; // top at -0.05, a hair under the sand top
   shelf.receiveShadow = true;
   scene.add(shelf);
-  // The shallows double as the LAGOON SURFACE — the water level everything
-  // swimmable floats in. It must cover the whole reef (fish patrol out to
-  // z≈17), or fish cross from shallows (-0.3) to open sea (-0.62) mid-path
-  // and appear to levitate for the deep half of their loop.
-  const shallows = new THREE.Mesh(
-    new THREE.BoxGeometry(44, 0.5, 40),
-    new THREE.MeshLambertMaterial({ color: 0x5fa3cd })
+  // THE water: one animated sheet instead of two flat slabs. A vertex-colour
+  // gradient runs shore→deep (light aqua over the reef, deep blue past it),
+  // and a gentle multi-axis swell rolls the surface. The scene is lit mostly
+  // by ambient, which flattens lighting-based facets — so each facet carries
+  // its own baked ±6% tone variation. That sparkle is the whole difference
+  // between "water" and "blue linoleum".
+  const geo = new THREE.PlaneGeometry(320, 320, 96, 96);
+  geo.rotateX(-Math.PI / 2);
+  const wpos = geo.getAttribute('position') as THREE.BufferAttribute;
+  const shoreC = new THREE.Color('#8fd4ea');
+  const midC = new THREE.Color('#5fa3cd');
+  const deepC = new THREE.Color('#34689b');
+  const wcolors = new Float32Array(wpos.count * 3);
+  const wc = new THREE.Color();
+  for (let i = 0; i < wpos.count; i++) {
+    // Distance from the island's rectangle, not its centre — the gradient
+    // should hug the coast on all sides equally.
+    const dx = Math.max(Math.abs(wpos.getX(i)) - 15, 0);
+    const dz = Math.max(Math.abs(wpos.getZ(i)) - 11, 0);
+    const d = Math.hypot(dx, dz);
+    wc.copy(shoreC)
+      .lerp(midC, Math.min(d / 10, 1))
+      .lerp(deepC, Math.max(0, Math.min((d - 10) / 30, 1)));
+    const sparkle =
+      0.94 + 0.12 * Math.abs(Math.sin(wpos.getX(i) * 91.7 + wpos.getZ(i) * 47.9));
+    wcolors[i * 3] = wc.r * sparkle;
+    wcolors[i * 3 + 1] = wc.g * sparkle;
+    wcolors[i * 3 + 2] = wc.b * sparkle;
+  }
+  geo.setAttribute('color', new THREE.BufferAttribute(wcolors, 3));
+  water = new THREE.Mesh(
+    geo,
+    new THREE.MeshLambertMaterial({ vertexColors: true, flatShading: true })
   );
-  shallows.position.y = -0.55; // top at -0.3: above the sea, below the shelf
-  scene.add(shallows);
+  water.position.y = -0.35;
+  scene.add(water);
+  waterBase = Float32Array.from(wpos.array as Float32Array);
 
   // Far islands: dark low lumps half-swallowed by the fog. Cones are enough —
   // at that distance silhouette is all that survives.
@@ -112,6 +142,29 @@ export function initAtmosphere(state: State) {
       cam.updateProjectionMatrix();
     }
   }
+}
+
+/**
+ * Roll the swell. Call once per rendered frame (draw group). Amplitude is
+ * small on purpose: fish bob at the surface, and a heavy sea would swallow
+ * and expose them comically.
+ */
+export function updateWater() {
+  if (!water || !waterBase) return;
+  const t = performance.now() / 1000;
+  const geo = water.geometry as THREE.PlaneGeometry;
+  const pos = geo.getAttribute('position') as THREE.BufferAttribute;
+  const arr = pos.array as Float32Array;
+  for (let i = 0; i < pos.count; i++) {
+    const x = waterBase[i * 3];
+    const z = waterBase[i * 3 + 2];
+    arr[i * 3 + 1] =
+      Math.sin(x * 0.7 + t * 1.1) * 0.085 +
+      Math.cos(z * 0.55 + t * 0.8) * 0.085 +
+      Math.sin((x + z) * 0.32 + t * 0.5) * 0.04;
+  }
+  pos.needsUpdate = true;
+  geo.computeVertexNormals();
 }
 
 /** Builder switch: haze helps play, hinders authoring. */

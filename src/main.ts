@@ -51,7 +51,7 @@ import {
 } from './npc';
 import { travelTo, worldName } from './worlds';
 import { grantLoot, lootCounts, updateLootPickup } from './loot';
-import { initAtmosphere } from './atmosphere';
+import { initAtmosphere, updateWater } from './atmosphere';
 import { aiConfig, runAssistant } from './assistant';
 import {
   analyzeAssets,
@@ -683,6 +683,7 @@ const playerPosScratch = new THREE.Vector3();
 const VisualsSystem: System = {
   group: 'draw',
   update: (state: State) => {
+    updateWater();
     const p0 = playerQuery(state.world)[0];
     const playerPos =
       p0 !== undefined

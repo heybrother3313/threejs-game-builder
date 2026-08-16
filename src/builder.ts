@@ -28,6 +28,7 @@ import extraPalette from './levels/extra-palette.json';
 import { QUICK_PROMPTS, aiConfig, listModels, runAssistant, saveAiConfig } from './assistant';
 import { PLAYER_CHOICES, playerModel, setPlayerModel } from './character';
 import { DEFAULTS, resetNpc, resolveLoot, type NpcConfig } from './npc';
+import { COLLECTIBLE_NAMES } from './loot';
 import { canRedo, canUndo, initHistory, mark, redo, redoLabel, replaceAll, undo, undoLabel } from './history';
 import { STARTERS } from './starters';
 import { currentWorldId, destinations, setCurrentWorldId, worldName } from './worlds';
@@ -995,21 +996,20 @@ function updateNpcPanel() {
     <hr style="border:none;border-top:2px solid var(--border-quiet);margin:10px 0" />
     <label>Wants item (fetch quest)</label>
     <select id="n-wants">
-      ${LOOT_CHOICES.map((l) => {
-        const name = l.src.split('/').pop()?.replace('.glb', '') ?? '';
-        const val = l.label === 'nothing' ? '' : name;
-        return `<option value="${val}"${(n.wantsItem ?? '') === val ? ' selected' : ''}>${l.label}</option>`;
-      }).join('')}
+      <option value="">nothing</option>
+      ${COLLECTIBLE_NAMES.map(
+        (name) => `<option value="${name}"${(n.wantsItem ?? '') === name ? ' selected' : ''}>${name}</option>`
+      ).join('')}
     </select>
+    ${n.wantsItem && n.delivered ? '<div class="note" style="color:var(--text-secondary);font-size:11px">✓ delivered — quest complete</div>' : ''}
     <label>Thanks line</label>
     <input id="n-thanks" type="text" placeholder="Exactly what I needed!" value="${(n.thanksLine ?? '').replace(/"/g, '&quot;')}" />
     <label>Reward</label>
     <select id="n-reward">
-      ${LOOT_CHOICES.map((l) => {
-        const name = l.src.split('/').pop()?.replace('.glb', '') ?? '';
-        const val = l.label === 'nothing' ? '' : name;
-        return `<option value="${val}"${(n.reward ?? '') === val ? ' selected' : ''}>${l.label}</option>`;
-      }).join('')}
+      <option value="">nothing</option>
+      ${COLLECTIBLE_NAMES.map(
+        (name) => `<option value="${name}"${(n.reward ?? '') === name ? ' selected' : ''}>${name}</option>`
+      ).join('')}
     </select>
     </div>
   `;
@@ -1079,7 +1079,9 @@ function updateNpcPanel() {
   const lootEl = npcEl.querySelector('#n-loot') as HTMLSelectElement;
   lootEl.addEventListener('change', () => commit({ loot: lootEl.value || undefined }));
   const wantsEl = npcEl.querySelector('#n-wants') as HTMLSelectElement;
-  wantsEl.addEventListener('change', () => commit({ wantsItem: wantsEl.value || undefined }));
+  wantsEl.addEventListener('change', () =>
+    commit({ wantsItem: wantsEl.value || undefined, delivered: undefined })
+  );
   const thanksEl = npcEl.querySelector('#n-thanks') as HTMLInputElement;
   thanksEl.addEventListener('keydown', (ev) => ev.stopPropagation());
   thanksEl.addEventListener('change', () => commit({ thanksLine: thanksEl.value.trim() || undefined }));

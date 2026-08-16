@@ -101,6 +101,8 @@ export type PlacedItem = {
   pathLine?: THREE.Line;
   /** "!" sprite over NPCs that have dialog. */
   bang?: THREE.Sprite;
+  /** Which flavour the current bang was drawn with ('talk' | 'gold'). */
+  bangStyle?: string;
   /**
    * True while npc.ts is steering this item (chasing, following, guiding,
    * fleeing, wandering, talking). Path-walking must stand down when it is:
@@ -916,6 +918,7 @@ export function syncMarker(state: State, item: PlacedItem) {
   if (scene) {
     applyMarker(item, scene);
     applyExitRing(item, scene);
+    syncBang(item, scene);
   }
 }
 
@@ -974,15 +977,22 @@ function syncPathLine(item: PlacedItem, scene: THREE.Scene) {
 
 /** "!" above NPCs that have something to say. */
 function syncBang(item: PlacedItem, scene: THREE.Scene) {
-  if (item.bang && !item.entry.dialog) {
+  // Anything you can talk to gets the "!", and a pending fetch quest turns
+  // it gold — the universal "this one has a job for you" signal.
+  const n = item.entry.npc;
+  const questPending = !!(n?.wantsItem && !n.delivered);
+  const talkable =
+    !!item.entry.dialog || !!(n?.lines?.length && n.faction !== 'hostile') || questPending;
+  const wantStyle = questPending ? 'gold' : 'talk';
+  if (item.bang && (!talkable || item.bangStyle !== wantStyle)) {
     scene.remove(item.bang);
     item.bang = undefined;
-    return;
   }
-  if (!item.entry.dialog || item.bang) {
+  if (!talkable || item.bang) {
     if (item.bang) positionBang(item);
     return;
   }
+  item.bangStyle = wantStyle;
   const canvas = document.createElement('canvas');
   canvas.width = 64;
   canvas.height = 64;
@@ -991,7 +1001,7 @@ function syncBang(item: PlacedItem, scene: THREE.Scene) {
   ctx.beginPath();
   ctx.arc(32, 32, 30, 0, Math.PI * 2);
   ctx.fill();
-  ctx.fillStyle = '#fd9b9b';
+  ctx.fillStyle = wantStyle === 'gold' ? '#ffd34d' : '#fd9b9b';
   ctx.font = 'bold 44px Arial';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';

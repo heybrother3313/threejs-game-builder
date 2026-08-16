@@ -15,10 +15,17 @@ import { thumbFor } from './thumbs';
  * gone from the world you're in, but a rebuilt starter grows them back.
  */
 
-/** What auto-collects. Everything else pickable stays carry-and-throw. */
-const LOOT_NAMES = new Set([
-  'Coins', 'Gold Bag', 'Gold ore', 'Gem Blue', 'Gem Green', 'Gem Pink', 'Chest Gold',
-]);
+/**
+ * What auto-collects — the single source of truth. The builder's quest
+ * dropdowns derive from this list, so an NPC can never want something the
+ * inventory can't hold (a Skull quest was undeliverable for exactly that
+ * mismatch: the dropdown offered it, the scoop ignored it).
+ */
+export const COLLECTIBLE_NAMES = [
+  'Coins', 'Gold Bag', 'Gold ore', 'Gem Blue', 'Gem Green', 'Gem Pink',
+  'Chest Gold', 'Skull', 'Prop Bottle',
+] as const;
+const LOOT_NAMES = new Set<string>(COLLECTIBLE_NAMES);
 
 const KEY = 'sandbox-inventory-v1';
 
