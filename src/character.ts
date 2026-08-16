@@ -77,6 +77,16 @@ let currentState = -1;
 let dead = false;
 /** Seconds left in a melee swing; the state machine is ignored while it runs. */
 let swingT = 0;
+/**
+ * True only while a MELEE SWING owns the rig (not a flinch).
+ *
+ * Your own attack outranks being hit. Standing close enough to trade blows
+ * meant the enemy's hit landed mid-punch, HitReact took the rig, and the
+ * swing visibly died halfway — which reads as the punch failing to fire, not
+ * as a flinch. The blow still lands and the damage still applies; only the
+ * flinch animation is skipped.
+ */
+let swinging = false;
 
 let player: THREE.Group | null = null;
 let baseOffsetY = 0;
@@ -224,6 +234,7 @@ export function playerSwing(): number {
   current?.fadeOut(0.06);
   current = a;
   swingT = a.getClip().duration;
+  swinging = true;
   currentState = -1; // force a re-read of the movement state when the swing ends
   return swingT;
 }
@@ -232,6 +243,7 @@ export function playerSwing(): number {
 export function playerHitReact() {
   const a = actions['HitReact'];
   if (!a || dead) return;
+  if (swinging) return; // a swing in progress is not interrupted by chip damage
   a.reset().fadeIn(0.05).play();
   current?.fadeOut(0.05);
   current = a;
@@ -239,9 +251,19 @@ export function playerHitReact() {
   currentState = -1;
 }
 
+/** What the rig is doing right now — for diagnosing animation aborts. */
+export function playerAnimDebug() {
+  return {
+    clip: current?.getClip().name.split('|').pop() ?? null,
+    swingT: +swingT.toFixed(3),
+    dead,
+  };
+}
+
 /** Play (or clear) the death animation; the rig ignores movement while dead. */
 export function setPlayerDead(v: boolean) {
   dead = v;
+  swinging = false; // death outranks everything, including your own swing
   if (v) {
     const d = actions['Death'];
     if (d) {
@@ -281,6 +303,7 @@ export function updateCharacterVisual(state: State, playerEntity: number) {
   // to abort — which is exactly why the *final* punch was the one that broke.
   const dt = Math.min(clock.getDelta(), 0.05);
   swingT = Math.max(0, swingT - dt);
+  if (swingT === 0) swinging = false;
   if (!dead && swingT <= 0 && ac !== null && st !== currentState) {
     currentState = st;
     play(STATE_CLIP[st] ?? 'Idle');

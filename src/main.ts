@@ -34,6 +34,7 @@ import {
   initCharacterVisual,
   playerHitReact,
   playerSwing,
+  playerAnimDebug,
   setPlayerDead,
   updateCharacterVisual,
 } from './character';
@@ -855,6 +856,7 @@ withSystem(PlatformSlipSystem)
         npc: { npcKey, npcRuntime, damageNpc, playerHealth, playerMelee, updateNpcs },
         worlds: { travelTo: (id: string) => travelTo(state, id) },
         ai: { run: (req: string) => runAssistant(state, aiConfig(), req) },
+        anim: { debug: playerAnimDebug },
         loot: { grantLoot, lootCounts, updateLootPickup: (x: number, y: number, z: number) => updateLootPickup(state, x, y, z) },
         history: { mark, undo, redo, canUndo, canRedo },
         selectionInfo,
