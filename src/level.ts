@@ -868,6 +868,9 @@ function applyMarker(item: PlacedItem, scene: THREE.Scene) {
     );
     marker.renderOrder = 998;
     marker.position.set(center.x, center.y - size.y / 2 + 0.03, center.z);
+    // Authoring chrome, like patrol paths: helpful while building, clutter
+    // while playing (loot self-collects, so play mode needs no hint).
+    marker.visible = pathsVisible;
     scene.add(marker);
     item.marker = marker;
   } else if (!item.entry.pickable && item.marker) {
@@ -942,6 +945,7 @@ export function setPathsVisible(v: boolean) {
   pathsVisible = v;
   for (const item of placed) {
     if (item.pathLine) item.pathLine.visible = v;
+    if (item.marker) item.marker.visible = v;
     if (item.entry.src === 'spawn') item.obj.visible = v;
   }
 }

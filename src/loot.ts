@@ -128,6 +128,26 @@ export function setLootTrayVisible(v: boolean) {
   if (tray) tray.style.display = v ? '' : 'none';
 }
 
+/** Take n of a kind out of the inventory (fetch quests). False if short. */
+export function spendLoot(name: string, n = 1): boolean {
+  if ((counts[name] ?? 0) < n) return false;
+  counts[name] -= n;
+  localStorage.setItem(KEY, JSON.stringify(counts));
+  ensureTray();
+  const slot = tray?.querySelector<HTMLDivElement>(`[data-loot="${name}"]`);
+  if (slot && !counts[name]) slot.remove();
+  else renderTray(name);
+  return true;
+}
+
+/** Put loot straight into the inventory — quest rewards skip the floor. */
+export function grantLoot(name: string, n = 1) {
+  counts[name] = (counts[name] ?? 0) + n;
+  localStorage.setItem(KEY, JSON.stringify(counts));
+  ensureTray();
+  renderTray(name);
+}
+
 /** For tests and the AI panel: current counts, read-only. */
 export function lootCounts(): Readonly<Record<string, number>> {
   return counts;

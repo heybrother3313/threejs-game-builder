@@ -178,9 +178,13 @@ function pirateCove(): LevelEntry[] {
         lines: [
           'Ahoy! You look like someone who needs work.',
           'There is a chest atop the east rocks. Bones guards the path.',
-          'Bring it down and the ship will take you anywhere.',
+          'Bring it to ME, mind — and the reward is yours.',
         ],
         canFollow: true,
+        // The island's loop: climb past Bones, scoop the chest, deliver it.
+        wantsItem: 'Chest Gold',
+        thanksLine: 'HA! The chest itself! A bag of gold, as promised — the ship sails where you point it.',
+        reward: 'Gold Bag',
       },
     },
     // Anne works the beach on a loop; the place breathes even if you idle.

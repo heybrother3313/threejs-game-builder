@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import type { State } from 'vibegame';
-import { setLootTrayVisible } from './loot';
+import { grantLoot, setLootTrayVisible, spendLoot } from './loot';
 import { findClip, instantiate, loadModel, placed, type PlacedItem } from './level';
 
 /**
@@ -45,6 +45,13 @@ export type NpcConfig = {
   arriveLine?: string;
   /** Asset dropped when defeated, e.g. "/models/quaternius-pirate/Coins.glb". */
   loot?: string;
+  /** Fetch quest: loot kind this NPC wants (e.g. "Chest Gold"). Talking with
+   *  it in your inventory hands it over — once. */
+  wantsItem?: string;
+  /** What they say when you deliver. */
+  thanksLine?: string;
+  /** Loot kind granted on delivery, straight to the inventory. */
+  reward?: string;
 };
 
 type RtState =
@@ -82,6 +89,8 @@ type Runtime = {
    */
   parked: boolean;
   spokeTo: boolean;
+  /** Fetch quest delivered; wantsItem stops matching. */
+  rewarded: boolean;
 };
 
 const rt = new WeakMap<PlacedItem, Runtime>();
@@ -359,6 +368,7 @@ export function npcRuntime(item: PlacedItem): Runtime {
       guiding: false,
       parked: false,
       spokeTo: false,
+      rewarded: false,
     };
     rt.set(item, r);
   }
@@ -671,13 +681,19 @@ export function updateNpcs(
     const heightGap = Math.abs(playerPos.y - p.y);
     const canReach = heightGap < REACH_HEIGHT;
     const canNotice = heightGap < NOTICE_HEIGHT;
+    // Conversation is a ceasefire: nothing presses an attack while a dialog
+    // is open, and blows already in flight are called off.
+    if (talking && (r.state === 'chase' || r.state === 'attack')) {
+      r.state = 'idle';
+      r.swing = 0;
+    }
     // Assume path-walking owns the transform unless a state below takes over.
     item.npcDriving = false;
     r.t += dt;
     r.cooldown = Math.max(0, r.cooldown - dt);
     if (r.swing > 0) {
       r.swing = Math.max(0, r.swing - dt);
-      if (r.swing === 0 && r.state !== 'dead' && toPlayer <= reach + 0.4 && canReach) {
+      if (r.swing === 0 && r.state !== 'dead' && toPlayer <= reach + 0.4 && canReach && !talking) {
         hurtPlayer(cfg.damage ?? DEFAULTS.damage, p.x, p.z, playerPos.x, playerPos.z);
       }
     }
@@ -711,7 +727,7 @@ export function updateNpcs(
 
     if (r.following) r.state = 'follow';
     else if (r.guiding) r.state = 'guide';
-    else if (cfg.faction === 'hostile' && toPlayer < aggro && canNotice)
+    else if (cfg.faction === 'hostile' && toPlayer < aggro && canNotice && !talking)
       r.state = toPlayer <= reach && canReach ? 'attack' : 'chase';
     else if (r.parked) r.state = 'idle';
     else if (cfg.behavior === 'flee' && toPlayer < aggro && canNotice) r.state = 'flee';
@@ -875,7 +891,7 @@ export function npcKey(code: string, playerPos: THREE.Vector3 | undefined): bool
     let best: PlacedItem | null = null;
     let bestD = 3;
     for (const item of placed) {
-      if (!linesOf(item).length) continue;
+      if (!linesOf(item).length && !item.entry.npc?.wantsItem) continue;
       if (item.entry.npc?.faction === 'hostile') continue;
       if (npcRuntime(item).state === 'dead') continue;
       if (Math.abs(item.obj.position.y - playerPos.y) > REACH_HEIGHT) continue;
@@ -886,7 +902,26 @@ export function npcKey(code: string, playerPos: THREE.Vector3 | undefined): bool
       }
     }
     if (best) {
-      npcRuntime(best).spokeTo = true;
+      const r = npcRuntime(best);
+      r.spokeTo = true;
+      const cfg = best.entry.npc ?? {};
+      // Fetch quest: if they want something and you're holding it, delivery
+      // IS the conversation — hand it over, take the reward, hear the thanks.
+      if (cfg.wantsItem && !r.rewarded && spendLoot(cfg.wantsItem)) {
+        r.rewarded = true;
+        if (cfg.reward) grantLoot(cfg.reward);
+        ensureUi();
+        if (dialogEl) {
+          talking = { item: best, index: Number.MAX_SAFE_INTEGER };
+          dialogEl.innerHTML =
+            `<div class="who">${nameOf(best)}</div>` +
+            `<div class="line">${cfg.thanksLine ?? 'Exactly what I needed! Take this.'}` +
+            `${cfg.reward ? ` <b>(+1 ${cfg.reward})</b>` : ''}</div>` +
+            `<div class="opts"><span class="opt">[E] Goodbye</span></div>`;
+          dialogEl.style.display = 'block';
+        }
+        return true;
+      }
       showDialog(best, 0);
       return true;
     }

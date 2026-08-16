@@ -986,6 +986,25 @@ function updateNpcPanel() {
     </div>
     <label>Arrival line</label>
     <input id="n-arrive" type="text" placeholder="Here we are!" value="${(n.arriveLine ?? '').replace(/"/g, '&quot;')}" />
+    <hr style="border:none;border-top:2px solid var(--border-quiet);margin:10px 0" />
+    <label>Wants item (fetch quest)</label>
+    <select id="n-wants">
+      ${LOOT_CHOICES.map((l) => {
+        const name = l.src.split('/').pop()?.replace('.glb', '') ?? '';
+        const val = l.label === 'nothing' ? '' : name;
+        return `<option value="${val}"${(n.wantsItem ?? '') === val ? ' selected' : ''}>${l.label}</option>`;
+      }).join('')}
+    </select>
+    <label>Thanks line</label>
+    <input id="n-thanks" type="text" placeholder="Exactly what I needed!" value="${(n.thanksLine ?? '').replace(/"/g, '&quot;')}" />
+    <label>Reward</label>
+    <select id="n-reward">
+      ${LOOT_CHOICES.map((l) => {
+        const name = l.src.split('/').pop()?.replace('.glb', '') ?? '';
+        const val = l.label === 'nothing' ? '' : name;
+        return `<option value="${val}"${(n.reward ?? '') === val ? ' selected' : ''}>${l.label}</option>`;
+      }).join('')}
+    </select>
     </div>
   `;
   wirePortal(item);
@@ -1053,6 +1072,13 @@ function updateNpcPanel() {
 
   const lootEl = npcEl.querySelector('#n-loot') as HTMLSelectElement;
   lootEl.addEventListener('change', () => commit({ loot: lootEl.value || undefined }));
+  const wantsEl = npcEl.querySelector('#n-wants') as HTMLSelectElement;
+  wantsEl.addEventListener('change', () => commit({ wantsItem: wantsEl.value || undefined }));
+  const thanksEl = npcEl.querySelector('#n-thanks') as HTMLInputElement;
+  thanksEl.addEventListener('keydown', (ev) => ev.stopPropagation());
+  thanksEl.addEventListener('change', () => commit({ thanksLine: thanksEl.value.trim() || undefined }));
+  const rewardEl = npcEl.querySelector('#n-reward') as HTMLSelectElement;
+  rewardEl.addEventListener('change', () => commit({ reward: rewardEl.value || undefined }));
 
   const linesEl = npcEl.querySelector('#n-lines') as HTMLTextAreaElement;
   linesEl.addEventListener('keydown', (ev) => ev.stopPropagation());

@@ -50,7 +50,7 @@ import {
   updateNpcs,
 } from './npc';
 import { travelTo, worldName } from './worlds';
-import { updateLootPickup } from './loot';
+import { grantLoot, lootCounts, updateLootPickup } from './loot';
 import {
   analyzeAssets,
   beginCarry,
@@ -817,6 +817,7 @@ withSystem(PlatformSlipSystem)
         // to the running game.
         npc: { npcKey, npcRuntime, damageNpc, playerHealth, playerMelee, updateNpcs },
         worlds: { travelTo: (id: string) => travelTo(state, id) },
+        loot: { grantLoot, lootCounts, updateLootPickup: (x: number, y: number, z: number) => updateLootPickup(state, x, y, z) },
         history: { mark, undo, redo, canUndo, canRedo },
         selectionInfo,
         selectItems,
