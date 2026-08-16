@@ -501,6 +501,22 @@ function hurtPlayer(amount: number, fromX: number, fromZ: number, px: number, pz
  * Melee: hit every living NPC inside a short cone in front of the player.
  * Returns how many connected, so callers can tell a real hit from a whiff.
  */
+/**
+ * Anything with an animation rig counts as alive.
+ *
+ * Damage used to require an explicit npc config, so a character dropped from
+ * the palette was invulnerable scenery until you set a Role — which reads as
+ * "hits only land on hostiles". Living things now get a neutral config the
+ * first time something tries to hurt them, and neutral means exactly that:
+ * it won't start a fight, but it can be in one.
+ */
+function ensureAlive(item: PlacedItem): boolean {
+  if (item.entry.npc) return true;
+  if ((item.clips?.length ?? 0) === 0) return false; // a rock is not alive
+  item.entry.npc = { faction: 'neutral' };
+  return true;
+}
+
 export function playerMelee(
   state: State,
   px: number,
@@ -512,7 +528,7 @@ export function playerMelee(
 ) {
   let hits = 0;
   for (const item of placed) {
-    if (!item.entry.npc) continue;
+    if (!ensureAlive(item)) continue;
     const r = npcRuntime(item);
     if (r.state === 'dead') continue;
     const dx = item.obj.position.x - px;
@@ -564,6 +580,25 @@ export function updateNpcs(
 
   let prompt: string | null = null;
 
+  // Thrown props hurt anything alive, configured or not — checked before the
+  // brain loop so a character with no Role can still be knocked about.
+  for (const proj of placed) {
+    if (!proj.flight) continue;
+    for (const target of placed) {
+      if (target === proj || !ensureAlive(target)) continue;
+      if (npcRuntime(target).state === 'dead') continue;
+      const d = Math.hypot(
+        proj.obj.position.x - target.obj.position.x,
+        proj.obj.position.z - target.obj.position.z
+      );
+      if (d < 1.1 && Math.abs(proj.obj.position.y - target.obj.position.y) < 2) {
+        proj.flight = undefined;
+        damageNpc(state, target, 12, proj.obj.position.x, proj.obj.position.z);
+        break;
+      }
+    }
+  }
+
   for (const item of placed) {
     const cfg = item.entry.npc;
     if (!cfg) continue;
@@ -577,16 +612,6 @@ export function updateNpcs(
     item.npcDriving = false;
     r.t += dt;
     r.cooldown = Math.max(0, r.cooldown - dt);
-
-    // A thrown prop that reaches an NPC hurts it.
-    for (const proj of placed) {
-      if (!proj.flight) continue;
-      const d = Math.hypot(proj.obj.position.x - p.x, proj.obj.position.z - p.z);
-      if (d < 1.1 && Math.abs(proj.obj.position.y - p.y) < 2) {
-        proj.flight = undefined;
-        damageNpc(state, item, 12, proj.obj.position.x, proj.obj.position.z);
-      }
-    }
 
     if (r.state === 'dead') {
       drawHealthBar(item);

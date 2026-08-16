@@ -180,6 +180,10 @@ for (const cat of extraPalette as { name: string; clip: string | null; items: [s
 }
 
 export let buildMode = false;
+/** Read-only view of the current selection, for tests and diagnostics. */
+export function selectionInfo() {
+  return selection.map((i) => i.entry.src.split('/').pop());
+}
 
 let state: State;
 let getCameraEntity: () => number | undefined;
@@ -209,8 +213,11 @@ let pickingGuide = false;
 /** One history entry per paint stroke, not per tile. */
 let paintedThisStroke = false;
 let orbiting = false;
-/** Shift-drag on empty space slides the view instead of orbiting it. */
+/** Alt-drag on empty space slides the view instead of orbiting it. */
 let panning = false;
+/** Shift-drag on empty space rubber-bands a selection. */
+let marquee: { x0: number; y0: number; x1: number; y1: number } | null = null;
+let marqueeEl: HTMLDivElement | null = null;
 let painting = false;
 const orbitPrev = new THREE.Vector2();
 let savedDistance = 0;
@@ -241,6 +248,7 @@ export function initBuilder(gameState: State, cameraEntityFn: () => number | und
   window.addEventListener('pointermove', onPointerMove);
   window.addEventListener('pointerdown', onPointerDown);
   window.addEventListener('pointerup', () => {
+    if (marquee) commitMarquee();
     paintedThisStroke = false;
     if (pendingCollapse && !dragging) {
       select(pendingCollapse, false);
@@ -374,6 +382,11 @@ function buildUi() {
       #builder .settings .row button { flex:1; }
       #builder .settings .chips { display:flex; flex-wrap:wrap; gap:5px; }
       #builder .settings .chips button { flex:0 0 auto; padding:4px 9px; font-size:11px; }
+      #builder .settings .recipes { margin-top: var(--space-xs); font-size:11px;
+        color: var(--text-secondary); }
+      #builder .settings .recipes summary { cursor:pointer; font-weight:600;
+        color: var(--text-primary); font-family: var(--font-display); }
+      #builder .settings .recipes p { margin: 6px 0; line-height:1.45; }
       #builder .settings #ai-out { font-size: var(--text-label-sm);
         color: var(--text-secondary); margin-top: var(--space-xs);
         max-height:140px; overflow-y:auto; white-space:pre-wrap; }
@@ -436,6 +449,22 @@ function buildUi() {
       </div>
       <label>Quick scenarios</label>
       <div class="chips" id="ai-quick"></div>
+      <details class="recipes">
+        <summary>Recipes — how things behave</summary>
+        <p><b>Anything with an animation</b> can be punched (F) or hit by a
+        thrown prop. It doesn't need a Role.</p>
+        <p><b>Role</b> decides who starts fights: <i>hostile</i> chases and
+        attacks you; <i>neutral</i> only fights back once struck;
+        <i>friendly</i> never attacks. <i>none</i> = scenery.</p>
+        <p><b>Talk</b> needs Dialogue lines. Add <i>can follow</i> for
+        "[F] Follow me", or a <i>guide target</i> for "[G] Lead the way".</p>
+        <p><b>Throwables</b> need <i>pickable</i> — E picks up, F throws.</p>
+        <p><b>Loot</b> drops when an NPC is defeated.</p>
+        <p><b>Patrol</b>: draw a path. It walks the loop until a brain state
+        (chase, follow, guide) takes over.</p>
+        <p><b>No collider</b>: press <b>T</b> to toggle solid. Grass, flowers
+        and pebbles are placed non-solid automatically.</p>
+      </details>
       <label>Ask for level changes</label>
       <textarea id="ai-prompt" rows="4"
         placeholder="Add five pine trees along the west beach and a fox patrolling between them"></textarea>
@@ -552,6 +581,62 @@ function wireAiPanel() {
       outEl.textContent = `Failed: ${(err as Error).message}`;
     }
   });
+}
+
+function drawMarquee() {
+  if (!marqueeEl) {
+    marqueeEl = document.createElement('div');
+    marqueeEl.style.cssText =
+      'position:fixed;z-index:22;pointer-events:none;border:2px dashed var(--border-strong,#111);' +
+      'background:rgba(253,155,155,.18);border-radius:4px;display:none;';
+    document.body.appendChild(marqueeEl);
+  }
+  if (!marquee) {
+    marqueeEl.style.display = 'none';
+    return;
+  }
+  const x = Math.min(marquee.x0, marquee.x1);
+  const y = Math.min(marquee.y0, marquee.y1);
+  marqueeEl.style.left = `${x}px`;
+  marqueeEl.style.top = `${y}px`;
+  marqueeEl.style.width = `${Math.abs(marquee.x1 - marquee.x0)}px`;
+  marqueeEl.style.height = `${Math.abs(marquee.y1 - marquee.y0)}px`;
+  marqueeEl.style.display = 'block';
+}
+
+/** Select everything whose on-screen position falls inside the rubber band. */
+function commitMarquee() {
+  const box = marquee;
+  marquee = null;
+  drawMarquee();
+  if (!box) return;
+  const cam = cameraObject();
+  const canvas = document.getElementById('game-canvas');
+  if (!cam || !canvas) return;
+  // A click without a drag is not a marquee.
+  if (Math.abs(box.x1 - box.x0) < 6 && Math.abs(box.y1 - box.y0) < 6) return;
+
+  const r = canvas.getBoundingClientRect();
+  const lo = { x: Math.min(box.x0, box.x1), y: Math.min(box.y0, box.y1) };
+  const hi = { x: Math.max(box.x0, box.x1), y: Math.max(box.y0, box.y1) };
+  const v = new THREE.Vector3();
+  let added = 0;
+  for (const item of placed) {
+    if (item.entry.follow) continue;
+    v.copy(item.border.position).project(cam);
+    if (v.z > 1) continue; // behind the camera
+    const sx = r.left + ((v.x + 1) / 2) * r.width;
+    const sy = r.top + (1 - (v.y + 1) / 2) * r.height;
+    if (sx < lo.x || sx > hi.x || sy < lo.y || sy > hi.y) continue;
+    select(item, true);
+    added++;
+  }
+  setStatus(
+    added
+      ? `<b class="piece">${selection.length} selected</b><i class="sep"></i>` +
+          cap(['drag'], 'move together') + cap(['⌘C'], 'copy')
+      : IDLE_STATUS
+  );
 }
 
 function refreshHistoryButtons() {
@@ -1133,6 +1218,13 @@ function onPointerMove(ev: PointerEvent) {
   // ground instead of swinging the camera around it. Screen right/up become
   // world directions from the camera's yaw, and the step scales with zoom so a
   // drag covers the same screen distance whether you're close in or far out.
+  if (marquee) {
+    marquee.x1 = ev.clientX;
+    marquee.y1 = ev.clientY;
+    drawMarquee();
+    return;
+  }
+
   if (panning) {
     const cam = getCameraEntity();
     if (cam !== undefined) {
@@ -1258,7 +1350,7 @@ function onPointerDown(ev: PointerEvent) {
       z: +hit.z.toFixed(2),
       rotY: 0,
       fitHeight: 1.5,
-      solid: true,
+      solid: defaultSolidFor(armed.src),
       ...(armed.clip ? { clip: armed.clip } : {}),
     };
     mark('place');
@@ -1300,8 +1392,13 @@ function onPointerDown(ev: PointerEvent) {
     }
     if (selection[0]) setStatus(describe(selection[0]));
   } else {
-    // Empty space: shift-drag slides the board, plain drag orbits it.
+    // Empty space. Shift rubber-bands a selection, Option/Alt slides the view,
+    // a plain drag orbits. Marquee wins the shift chord because selecting many
+    // things is the more common need; panning moves to Alt.
     if (ev.shiftKey) {
+      marquee = { x0: ev.clientX, y0: ev.clientY, x1: ev.clientX, y1: ev.clientY };
+      drawMarquee();
+    } else if (ev.altKey) {
       panning = true;
     } else {
       clearSelection();
@@ -1360,6 +1457,23 @@ function onWheel(ev: WheelEvent) {
 }
 
 /* ----------------------------------------------------------- selection --- */
+
+/**
+ * Whether a freshly placed piece should collide.
+ *
+ * Ground cover is the common case for "no border": grass, flowers, ferns and
+ * pebbles are scattered by the dozen and colliding with any of them makes the
+ * ground feel like a minefield. Everything else defaults to solid, and T flips
+ * it for anything (including a whole selection at once).
+ */
+const NON_SOLID_PATTERNS = [
+  'grass', 'flower', 'clover', 'fern', 'mushroom', 'petal', 'pebble',
+  'plant', 'wheat', 'paper', 'coin', 'gem', 'lure',
+];
+function defaultSolidFor(src: string) {
+  const name = src.split('/').pop()!.toLowerCase();
+  return !NON_SOLID_PATTERNS.some((p) => name.includes(p));
+}
 
 function nameOf(src: string) {
   return src === 'paint' ? 'Ground paint' : src.split('/').pop()!.replace('.glb', '');
@@ -1430,7 +1544,8 @@ const IDLE_STATUS =
   cap(['⌘C', '⌘V'], 'copy · paste') +
   cap(['⌘Z'], 'undo') +
   cap(['drag'], 'orbit') +
-  cap(['⇧drag'], 'pan') +
+  cap(['⇧drag'], 'box-select') +
+  cap(['⌥drag'], 'pan') +
   `<i class="sep"></i>` +
   cap(['B'], 'borders') +
   cap(['Tab'], 'play');

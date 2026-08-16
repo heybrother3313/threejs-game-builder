@@ -21,7 +21,7 @@ import {
   threeCameras,
 } from 'vibegame/rendering';
 import { Transform, WorldTransform } from 'vibegame/transforms';
-import { buildMode, initBuilder, toggleBuildMode } from './builder';
+import { buildMode, initBuilder, selectionInfo, toggleBuildMode } from './builder';
 import { setPlayerPosProvider } from './assistant';
 import { canRedo, canUndo, mark, redo, undo } from './history';
 import {
@@ -711,6 +711,7 @@ withSystem(PlatformSlipSystem)
         // to the running game.
         npc: { npcKey, npcRuntime, damageNpc, playerHealth },
         history: { mark, undo, redo, canUndo, canRedo },
+        selectionInfo,
       };
     }
   });
