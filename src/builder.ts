@@ -26,6 +26,7 @@ import {
 import { cachedThumb, thumbFor } from './thumbs';
 import extraPalette from './levels/extra-palette.json';
 import { aiConfig, listModels, runAssistant, saveAiConfig } from './assistant';
+import { DEFAULTS, resetNpc, type NpcConfig } from './npc';
 
 /**
  * The map builder: Tony Hawk park-editor semantics, not a DCC.
@@ -201,6 +202,8 @@ let pendingCollapse: PlacedItem | null = null;
 let drawingPath = false;
 /** Whether NPC life keeps running inside build mode (off = editable). */
 let buildAnims = false;
+/** While true, the next ground click sets the selected NPC's guide target. */
+let pickingGuide = false;
 let orbiting = false;
 let painting = false;
 const orbitPrev = new THREE.Vector2();
@@ -618,6 +621,7 @@ function updateNpcPanel() {
     return;
   }
   const e = item.entry;
+  const n: NpcConfig = e.npc ?? {};
   npcEl.innerHTML = `
     <h3>${nameOf(e.src)}</h3>
     <label>Animation</label>
@@ -632,8 +636,51 @@ function updateNpcPanel() {
       }</button>
       <button id="n-clearpath">Clear</button>
     </div>
-    <label>Dialog (shows a ! overhead)</label>
-    <input id="n-dialog" type="text" placeholder="Ahoy there!" value="${(e.dialog ?? '').replace(/"/g, '&quot;')}" />
+    <hr style="border:none;border-top:2px solid var(--border-quiet);margin:10px 0" />
+    <label>Role</label>
+    <select id="n-faction">
+      ${['none', 'friendly', 'neutral', 'hostile']
+        .map((f) => {
+          const cur = e.npc ? n.faction ?? 'neutral' : 'none';
+          return `<option value="${f}"${f === cur ? ' selected' : ''}>${f}</option>`;
+        })
+        .join('')}
+    </select>
+    <label>Behaviour</label>
+    <select id="n-behavior">
+      ${['idle', 'patrol', 'wander', 'guard', 'flee']
+        .map((b) => `<option${b === (n.behavior ?? 'idle') ? ' selected' : ''}>${b}</option>`)
+        .join('')}
+    </select>
+    <div class="row">
+      <div style="flex:1"><label>Health</label>
+        <input id="n-hp" type="number" min="1" value="${n.health ?? DEFAULTS.health}" /></div>
+      <div style="flex:1"><label>Damage</label>
+        <input id="n-dmg" type="number" min="0" value="${n.damage ?? DEFAULTS.damage}" /></div>
+    </div>
+    <div class="row">
+      <div style="flex:1"><label>Aggro</label>
+        <input id="n-aggro" type="number" min="0" step="0.5" value="${n.aggroRadius ?? DEFAULTS.aggroRadius}" /></div>
+      <div style="flex:1"><label>Reach</label>
+        <input id="n-reach" type="number" min="0.5" step="0.1" value="${n.attackRadius ?? DEFAULTS.attackRadius}" /></div>
+    </div>
+    <label>Loot on defeat</label>
+    <input id="n-loot" type="text" placeholder="/models/quaternius-pirate/Coins.glb"
+      value="${(n.loot ?? '').replace(/"/g, '&quot;')}" />
+    <hr style="border:none;border-top:2px solid var(--border-quiet);margin:10px 0" />
+    <label>Dialogue (one line per row)</label>
+    <textarea id="n-lines" rows="3" placeholder="Ahoy there!">${(n.lines ?? (e.dialog ? [e.dialog] : [])).join('\n')}</textarea>
+    <div class="row">
+      <label style="flex:1;margin:6px 0 0"><input id="n-follow" type="checkbox" ${n.canFollow ? 'checked' : ''} /> can follow</label>
+    </div>
+    <div class="row">
+      <button id="n-guide" class="${pickingGuide ? 'live' : ''}">${
+        pickingGuide ? 'Click a spot…' : n.guideTo ? `Guide → ${n.guideTo[0]}, ${n.guideTo[1]}` : 'Set guide target'
+      }</button>
+      <button id="n-guideclear">Clear</button>
+    </div>
+    <label>Arrival line</label>
+    <input id="n-arrive" type="text" placeholder="Here we are!" value="${(n.arriveLine ?? '').replace(/"/g, '&quot;')}" />
   `;
   npcEl.querySelector('#n-clip')!.addEventListener('change', (ev) => {
     setClip(item, (ev.target as HTMLSelectElement).value);
@@ -661,13 +708,73 @@ function updateNpcPanel() {
     persist();
     updateNpcPanel();
   });
-  const dialogInput = npcEl.querySelector('#n-dialog') as HTMLInputElement;
-  dialogInput.addEventListener('keydown', (ev) => ev.stopPropagation());
-  dialogInput.addEventListener('change', () => {
-    e.dialog = dialogInput.value.trim() || undefined;
+  const commit = (patch: Partial<NpcConfig>) => {
+    e.npc = { ...(e.npc ?? {}), ...patch };
+    resetNpc(item);
     reapply(state, item);
     persist();
+  };
+  const num = (id: string, key: keyof NpcConfig) => {
+    const el = npcEl.querySelector(id) as HTMLInputElement;
+    el.addEventListener('keydown', (ev) => ev.stopPropagation());
+    el.addEventListener('change', () => commit({ [key]: parseFloat(el.value) } as Partial<NpcConfig>));
+  };
+
+  const faction = npcEl.querySelector('#n-faction') as HTMLSelectElement;
+  faction.addEventListener('change', () => {
+    if (faction.value === 'none') {
+      delete e.npc;
+      resetNpc(item);
+      reapply(state, item);
+      persist();
+      updateNpcPanel();
+      return;
+    }
+    commit({ faction: faction.value as NpcConfig['faction'] });
+    updateNpcPanel();
   });
+  (npcEl.querySelector('#n-behavior') as HTMLSelectElement).addEventListener('change', (ev) =>
+    commit({ behavior: (ev.target as HTMLSelectElement).value as NpcConfig['behavior'] })
+  );
+  num('#n-hp', 'health');
+  num('#n-dmg', 'damage');
+  num('#n-aggro', 'aggroRadius');
+  num('#n-reach', 'attackRadius');
+
+  const lootEl = npcEl.querySelector('#n-loot') as HTMLInputElement;
+  lootEl.addEventListener('keydown', (ev) => ev.stopPropagation());
+  lootEl.addEventListener('change', () => commit({ loot: lootEl.value.trim() || undefined }));
+
+  const linesEl = npcEl.querySelector('#n-lines') as HTMLTextAreaElement;
+  linesEl.addEventListener('keydown', (ev) => ev.stopPropagation());
+  linesEl.addEventListener('change', () => {
+    const lines = linesEl.value.split('\n').map((l) => l.trim()).filter(Boolean);
+    delete e.dialog; // superseded by the multi-line script
+    commit({ lines: lines.length ? lines : undefined });
+    e.dialog = lines[0]; // keeps the "!" marker logic working
+    reapply(state, item);
+  });
+
+  (npcEl.querySelector('#n-follow') as HTMLInputElement).addEventListener('change', (ev) =>
+    commit({ canFollow: (ev.target as HTMLInputElement).checked })
+  );
+  npcEl.querySelector('#n-guide')!.addEventListener('click', () => {
+    pickingGuide = !pickingGuide;
+    updateNpcPanel();
+    setStatus(
+      pickingGuide
+        ? `<b class="piece">Guide target</b><i class="sep"></i>` + cap(['click'], 'pick the destination')
+        : describe(item)
+    );
+  });
+  npcEl.querySelector('#n-guideclear')!.addEventListener('click', () => {
+    commit({ guideTo: undefined });
+    updateNpcPanel();
+  });
+  const arriveEl = npcEl.querySelector('#n-arrive') as HTMLInputElement;
+  arriveEl.addEventListener('keydown', (ev) => ev.stopPropagation());
+  arriveEl.addEventListener('change', () => commit({ arriveLine: arriveEl.value.trim() || undefined }));
+
   layoutRightPanels();
 }
 
@@ -955,6 +1062,23 @@ function onPointerDown(ev: PointerEvent) {
   if (target.closest('#builder .bar, #builder .palette, #builder .npc, #builder .settings')) return;
   if (!updateNdc(ev)) return;
 
+  if (pickingGuide && selection.length === 1) {
+    const hit = groundHit();
+    if (hit) {
+      const it = selection[0];
+      it.entry.npc = {
+        ...(it.entry.npc ?? {}),
+        guideTo: [+hit.x.toFixed(2), +hit.z.toFixed(2)],
+      };
+      pickingGuide = false;
+      resetNpc(it);
+      persist();
+      updateNpcPanel();
+      setStatus(describe(it));
+    }
+    return;
+  }
+
   if (drawingPath && selection.length === 1) {
     const hit = groundHit();
     if (hit) {
@@ -1172,6 +1296,7 @@ function onKeyDown(ev: KeyboardEvent) {
   if (ev.code === 'Escape') {
     disarm();
     drawingPath = false;
+    pickingGuide = false;
     clearSelection();
     setStatus(IDLE_STATUS);
     return;

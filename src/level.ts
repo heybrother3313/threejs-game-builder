@@ -5,6 +5,7 @@ import type { State } from 'vibegame';
 import { Body, BodyType, Collider } from 'vibegame/physics';
 import { getScene } from 'vibegame/rendering';
 import { Transform } from 'vibegame/transforms';
+import type { NpcConfig } from './npc';
 import assetMeta from './levels/asset-meta.json';
 import defaultLevel from './levels/default-level.json';
 
@@ -56,6 +57,8 @@ export type LevelEntry = {
   speed?: number;
   /** Walking into this NPC shows this line (with a "!" marker overhead). */
   dialog?: string;
+  /** Behaviour, combat and conversation — see npc.ts. */
+  npc?: NpcConfig;
   /** A painted ground tile rather than a model. */
   paint?: string;
 };
@@ -658,27 +661,7 @@ export function setClip(item: PlacedItem, segment: string) {
   item.currentAction = next;
 }
 
-/** Speech bubble shown when the player reaches a talking NPC. */
-let bubble: HTMLDivElement | null = null;
-function showBubble(text: string | null) {
-  if (!bubble) {
-    bubble = document.createElement('div');
-    bubble.id = 'npc-bubble';
-    bubble.style.cssText =
-      'position:fixed;left:50%;bottom:84px;transform:translateX(-50%);' +
-      'background:var(--surface-face,#faf7f2);color:var(--text-primary,#111);' +
-      'border:2px solid #111;border-radius:12px;box-shadow:0 4px 0 #111;' +
-      'padding:10px 16px;font-family:Inter,system-ui,sans-serif;font-size:14px;' +
-      'max-width:60vw;z-index:15;display:none;';
-    document.body.appendChild(bubble);
-  }
-  if (text) {
-    bubble.textContent = text;
-    bubble.style.display = 'block';
-  } else {
-    bubble.style.display = 'none';
-  }
-}
+
 
 /**
  * Per-frame level upkeep: raft riders, NPC animation, and thrown items.
@@ -688,7 +671,7 @@ function showBubble(text: string | null) {
  * (then back again on landing) is far more machinery than a parabola needs.
  */
 export function updateLevel(state: State, dt: number, playerPos?: THREE.Vector3) {
-  let talking: string | null = null;
+  void playerPos;
   for (const item of placed) {
     if (animationsPlaying && item.mixer) item.mixer.update(dt);
 
@@ -722,12 +705,6 @@ export function updateLevel(state: State, dt: number, playerPos?: THREE.Vector3)
       }
     }
 
-    // Dialog: near a talking NPC, surface its line.
-    if (item.entry.dialog && playerPos && !talking) {
-      const dx = item.obj.position.x - playerPos.x;
-      const dz = item.obj.position.z - playerPos.z;
-      if (dx * dx + dz * dz < 4.5) talking = item.entry.dialog;
-    }
 
     if (item.flight) {
       const f = item.flight;
@@ -755,7 +732,6 @@ export function updateLevel(state: State, dt: number, playerPos?: THREE.Vector3)
       item.followBase.z + (Transform.posZ[e] - item.followOrigin.z)
     );
   }
-  showBubble(talking);
 }
 
 /** Nearest pickable item within reach of a point, facing considered. */

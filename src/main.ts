@@ -23,6 +23,7 @@ import {
 import { Transform, WorldTransform } from 'vibegame/transforms';
 import { buildMode, initBuilder, toggleBuildMode } from './builder';
 import { initCharacterVisual, updateCharacterVisual } from './character';
+import { configurePlayerHooks, isTalking, npcKey, updateNpcs } from './npc';
 import {
   analyzeAssets,
   beginCarry,
@@ -104,8 +105,14 @@ let heldItem: PlacedItem | null = null;
 let wantsGrab = false;
 let wantsThrow = false;
 
+/** Last drawn player position, for input handlers that run outside systems. */
+const lastPlayerPos = new THREE.Vector3();
+
 window.addEventListener('keydown', (e) => {
   if (e.repeat || buildMode) return;
+  // Conversation gets first refusal on keys: E talks to a nearby NPC rather
+  // than grabbing, and F answers "follow me" instead of throwing.
+  if (npcKey(e.code, lastPlayerPos)) return;
   if (e.code === 'KeyE') wantsGrab = true;
   else if (e.code === 'KeyF') wantsThrow = true;
 });
@@ -175,6 +182,12 @@ const SteerSystem: System = {
     const dt = state.time.fixedDeltaTime;
     for (const player of playerQuery(state.world)) {
       if (buildMode) {
+        InputState.moveX[player] = 0;
+        InputState.moveY[player] = 0;
+        steerInput = 0;
+        continue;
+      }
+      if (isTalking()) {
         InputState.moveX[player] = 0;
         InputState.moveY[player] = 0;
         steerInput = 0;
@@ -554,7 +567,10 @@ const VisualsSystem: System = {
             WorldTransform.posZ[p0]
           )
         : undefined;
-    updateLevel(state, Math.min(state.time.deltaTime, 0.05), playerPos);
+    const dt = Math.min(state.time.deltaTime, 0.05);
+    updateLevel(state, dt, playerPos);
+    if (playerPos) lastPlayerPos.copy(playerPos);
+    updateNpcs(state, dt, playerPos, !buildMode);
     const players = playerQuery(state.world);
     if (players.length > 0) updateCharacterVisual(state, players[0]);
 
@@ -604,6 +620,28 @@ withSystem(PlatformSlipSystem)
     if (players.length > 0) {
       await initCharacterVisual(state, players[0]);
     }
+
+    // NPCs shove and respawn the player through these; the character is a
+    // Rapier controller, so position writes are the channel that works.
+    configurePlayerHooks({
+      spawn: new THREE.Vector3(0, 1.2, 0),
+      push: (dx, dz) => {
+        for (const p of playerQuery(state.world)) {
+          Body.posX[p] += dx;
+          Body.posZ[p] += dz;
+        }
+      },
+      teleport: (x, y, z) => {
+        for (const p of playerQuery(state.world)) {
+          Body.posX[p] = x;
+          Body.posY[p] = y;
+          Body.posZ[p] = z;
+          Body.velX[p] = 0;
+          Body.velY[p] = 0;
+          Body.velZ[p] = 0;
+        }
+      },
+    });
 
     initBuilder(state, () => cameraQuery(state.world)[0]);
 
