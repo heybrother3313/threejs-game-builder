@@ -23,7 +23,15 @@ import {
 import { Transform, WorldTransform } from 'vibegame/transforms';
 import { buildMode, initBuilder, toggleBuildMode } from './builder';
 import { initCharacterVisual, updateCharacterVisual } from './character';
-import { configurePlayerHooks, isTalking, npcKey, updateNpcs } from './npc';
+import {
+  configurePlayerHooks,
+  damageNpc,
+  isTalking,
+  npcKey,
+  npcRuntime,
+  playerHealth,
+  updateNpcs,
+} from './npc';
 import {
   analyzeAssets,
   beginCarry,
@@ -670,6 +678,10 @@ withSystem(PlatformSlipSystem)
         instantiate: (entry: Parameters<typeof instantiate>[1]) => instantiate(state, entry),
         setClip,
         getCamera: () => threeCameras.get(cameraQuery(state.world)[0]),
+        // The app's own NPC functions — importing npc.ts from a console eval
+        // yields a SEPARATE module instance, so flags set there are invisible
+        // to the running game.
+        npc: { npcKey, npcRuntime, damageNpc, playerHealth },
       };
     }
   });
