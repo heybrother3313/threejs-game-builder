@@ -82,6 +82,8 @@ export type LevelEntry = {
   exitTo?: string;
   /** What the travel prompt says. Defaults to the destination's name. */
   exitLabel?: string;
+  /** A quest board: E reads every open fetch quest in the level off it. */
+  questBoard?: boolean;
 };
 
 export type PlacedItem = {

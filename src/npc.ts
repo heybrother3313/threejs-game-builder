@@ -712,6 +712,10 @@ export function updateNpcs(
     }
   }
 
+  // Boards are props, not NPCs — the loop below skips anything without an
+  // npc block, so their prompt has to be raised here.
+  if (nearbyBoard(playerPos)) prompt = `<b>E</b>&nbsp; read the quest board`;
+
   for (const item of placed) {
     const cfg = item.entry.npc;
     if (!cfg) continue;
@@ -893,6 +897,42 @@ export function updateNpcs(
 
 /* -------------------------------------------------------------- input --- */
 
+/**
+ * The quest board. It doesn't STORE quests — it reads them off the NPCs
+ * standing around it, so posting a job means giving someone a wantsItem and
+ * nothing else. A board that had its own list would drift from the world the
+ * moment anyone edited an NPC.
+ */
+function questBoardText(): string {
+  const open: string[] = [];
+  const done: string[] = [];
+  for (const item of placed) {
+    const n = item.entry.npc;
+    if (!n?.wantsItem) continue;
+    const line = `<b>${nameOf(item)}</b> wants a <b>${n.wantsItem}</b>` +
+      (n.reward ? ` — pays a ${n.reward}` : '');
+    (n.delivered ? done : open).push(line);
+  }
+  if (!open.length && !done.length) return 'The board is empty. Quiet season.';
+  const parts = [];
+  if (open.length) parts.push(`<b>WANTED</b><br>${open.join('<br>')}`);
+  if (done.length) parts.push(`<span style="opacity:.55">Settled: ${done.length}</span>`);
+  return parts.join('<br><br>');
+}
+
+/** The nearest quest board within reading distance, if any. */
+function nearbyBoard(playerPos: THREE.Vector3): PlacedItem | null {
+  let best: PlacedItem | null = null;
+  let bestD = 3.2;
+  for (const item of placed) {
+    if (!item.entry.questBoard) continue;
+    const d = Math.hypot(item.obj.position.x - playerPos.x, item.obj.position.z - playerPos.z);
+    if (Math.abs(item.obj.position.y - playerPos.y) > REACH_HEIGHT) continue;
+    if (d < bestD) { best = item; bestD = d; }
+  }
+  return best;
+}
+
 /** True when the key was consumed by conversation. */
 export function npcKey(code: string, playerPos: THREE.Vector3 | undefined): boolean {
   // Dead players only have one verb.
@@ -937,6 +977,19 @@ export function npcKey(code: string, playerPos: THREE.Vector3 | undefined): bool
   }
 
   if (code === 'KeyE') {
+    const board = nearbyBoard(playerPos);
+    if (board) {
+      ensureUi();
+      if (dialogEl) {
+        talking = { item: board, index: Number.MAX_SAFE_INTEGER };
+        dialogEl.innerHTML =
+          `<div class="who">Quest board</div>` +
+          `<div class="line">${questBoardText()}</div>` +
+          `<div class="opts"><span class="opt">[E] Done</span></div>`;
+        dialogEl.style.display = 'block';
+      }
+      return true;
+    }
     // Nearest talkable NPC wins over picking things up.
     let best: PlacedItem | null = null;
     let bestD = 3;

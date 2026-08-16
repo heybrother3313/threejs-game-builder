@@ -147,7 +147,7 @@ function pirateCove(): LevelEntry[] {
     { src: P('Dock'), x: 1.5, y: -3.4, z: -10, rotY: 10.9956, scale: 1.494, solid: true },
     // The ship is the way off the island — stand by it and press E.
     { src: P('Ship'), x: -7.5, y: -1.2, z: -12.5, rotY: 0.5, fitHeight: 9, solid: true,
-      exitTo: 'fishing-village', exitLabel: 'Sail to the fishing village' },
+      exitTo: 'town-island', exitLabel: 'Sail back to Ketch Harbour' },
     ...climb,
     // "Bones" guards the climb — the captain's job has a catch. (The pirate
     // kit's own Skeleton binds lying in a heap, axe on the ground; fitting it
@@ -223,6 +223,8 @@ function jungleOutpost(): LevelEntry[] {
     ...paintRect('road', -1, -8, 1, 6),
     // Gateposts pace the road; passing the second one means you left safety.
     { src: P('Post'), x: -1.4, y: 0, z: -7.5, rotY: 0, fitHeight: 2.4, solid: true },
+    { src: P('Small Ship'), x: 4, y: -0.6, z: -11, rotY: 3.1, fitMaxDim: 5, solid: true,
+      exitTo: 'town-island', exitLabel: 'Sail back to Ketch Harbour' },
     { src: P('Post'), x: 1.4, y: 0, z: -7.5, rotY: 0, fitHeight: 2.4, solid: true },
     { src: P('Post'), x: -1.4, y: 0, z: -1, rotY: 0.2, fitHeight: 2.2, solid: true },
     { src: P('Post'), x: 1.4, y: 0, z: -1, rotY: 6, fitHeight: 2.2, solid: true },
@@ -341,7 +343,7 @@ function fishingVillage(): LevelEntry[] {
     { src: P('House'), x: 0.5, y: 0, z: 2.6, rotY: 3.2, fitHeight: 3.6, solid: true },
     // The way back: island hopping is a loop, not a one-way trip.
     { src: P('Small Ship'), x: -9.5, y: -0.6, z: -11, rotY: 1.9, fitMaxDim: 5.5, solid: true,
-      exitTo: 'pirate-cove', exitLabel: 'Sail to the pirate cove' },
+      exitTo: 'town-island', exitLabel: 'Sail back to Ketch Harbour' },
     // The fish market along the road.
     ...stall(-2.2, -6.2, 'Fish Tuna'),
     ...stall(2.4, -6.3, 'Fish Mackerel'),
@@ -460,12 +462,138 @@ function monsterArena(): LevelEntry[] {
     ...paintBlob('rock', 0, 0, 10, rand),
     ...paintBlob('sand', 0, 0, 4, rand),
     ...ring, ...foes, ...centre, ...ammo,
+    { src: P('Red X'), x: 0, y: 0, z: 8, rotY: 0, fitMaxDim: 1.6, solid: false,
+      exitTo: 'town-island', exitLabel: 'Step out to Ketch Harbour' },
   ];
 }
 
 function blankSands(): LevelEntry[] {
   const rand = rng(7);
   return [spawnFlag(), ...paintBlob('sand', 0, 0, 12, rand)];
+}
+
+/**
+ * The hub. Everything else in the game is reachable or askable from here:
+ * a board that posts what the townsfolk want, the people who want it, a
+ * market, and berths for every island. Quests are not authored on the board —
+ * it reads them off the NPCs, so posting a job is just giving someone a
+ * wantsItem.
+ */
+function townIsland(): LevelEntry[] {
+  const rand = rng(4242);
+  // A town is a CLEARING. Scatter that wanders into the square puts a pine
+  // through the middle of the market, so the whole plaza and both roads are
+  // claimed before a single tree is placed.
+  const taken = [
+    ...spawnClear(),
+    ...Array.from({ length: 8 }, (_, i) => ({ x: 0, z: -9 + i * 1.8, r: 3.2 })), // north road
+    ...Array.from({ length: 7 }, (_, i) => ({ x: -8 + i * 2.7, z: -3, r: 2.8 })), // market row
+    { x: -7, z: -4, r: 4 }, { x: 7, z: -4, r: 4 }, { x: 0, z: -7, r: 4 },
+    { x: -9.5, z: 3, r: 3.5 }, { x: 9, z: 2.4, r: 3 }, { x: 6.5, z: 5, r: 3 },
+    { x: 0, z: -9.5, r: 4.5 },   // the quay
+    { x: 0, z: 2.6, r: 2.5 },    // the campfire
+  ];
+  const stall = (x: number, z: number, goods: string): LevelEntry[] => [
+    { src: P('Barrel'), x, y: 0, z, rotY: rand() * 6, fitHeight: 0.9, solid: true },
+    { src: P(goods), x, y: 0.9, z, rotY: rand() * 6, fitHeight: 0.4, pickable: true },
+  ];
+  return [
+    spawnFlag(0, 1),
+    ...paintRect('road', -1, -9, 1, 4),
+    ...paintRect('road', -8, -3, 8, -3),
+
+    // The board sits in the middle of the square, facing the spawn.
+    {
+      src: P('Post'), x: 0, y: 0, z: -1.5, rotY: 0, fitHeight: 2.4,
+      solid: true, questBoard: true,
+    },
+    { src: P('Paper'), x: 0.42, y: 1.5, z: -1.5, rotY: 0, fitHeight: 0.5, solid: false },
+
+    // Town buildings around the square.
+    { src: P('House'), x: -7, y: 0, z: -4, rotY: 0.25, fitHeight: 4.4, solid: true },
+    { src: P('House'), x: 7, y: 0, z: -4, rotY: -0.25, fitHeight: 4, solid: true },
+    { src: P('House-2kytqGs4rH'), x: 0, y: 0, z: -7.5, rotY: 3.14, fitHeight: 3.6, solid: true },
+    { src: P('Sawmill'), x: -9.5, y: 0, z: 3, rotY: 1.2, fitMaxDim: 4.5, solid: true },
+    { src: '/models/kenney-survival/Workbench.glb', x: 9, y: 0, z: 2.4, rotY: -1, fitMaxDim: 2, solid: true },
+    { src: '/models/kenney-survival/Campfire.glb', x: 0, y: 0, z: 2.6, rotY: 0, fitHeight: 0.6 },
+    { src: '/models/kenney-survival/Tent.glb', x: 6.5, y: 0, z: 5, rotY: 2.4, fitMaxDim: 3, solid: true },
+
+    // The market: three stalls along the road.
+    ...stall(-3.4, -3.2, 'Fish Tuna'),
+    ...stall(-1.2, -3.2, 'Bucket of Fish'),
+    ...stall(3.2, -3.2, 'Chicken Leg'),
+    { src: P('Bucket'), x: -2.3, y: 0, z: -2.4, rotY: 1, fitHeight: 0.5, pickable: true },
+    { src: P('Wood'), x: 4.4, y: 0, z: -2.6, rotY: 2, fitHeight: 0.5, pickable: true },
+    { src: P('Barrel'), x: 5.2, y: 0, z: -3.4, rotY: 0.4, fitHeight: 0.9, pickable: true },
+
+    // ---- the people, and what they want -------------------------------
+    {
+      src: P('Pirate Captain'), x: -2.2, y: 0, z: -0.8, rotY: 0.5, fitHeight: 1.7, clip: 'Idle',
+      npc: {
+        faction: 'friendly', behavior: 'idle',
+        lines: ['This is Ketch Harbour. Everything starts here.',
+          'Read the board — folk post what they need.',
+          'The ships at the quay will take you anywhere you like.'],
+        wantsItem: 'Chest Gold', reward: 'Gold Bag',
+        thanksLine: 'The chest! I knew you had it in you. Take this.',
+        canFollow: true,
+      },
+    },
+    {
+      src: W('Woman Casual'), x: 2.4, y: 0, z: -1, rotY: -0.6, fitHeight: 1.7, clip: 'Idle',
+      npc: {
+        faction: 'friendly', behavior: 'idle',
+        lines: ['The reef past the fishing village is thick with gems.',
+          'Bring me a blue one and the bakery is yours for a day.'],
+        wantsItem: 'Gem Blue', reward: 'Coins',
+        thanksLine: 'Blue as deep water. Here, coin for your trouble.',
+      },
+    },
+    {
+      src: MEN('Man'), x: -5.5, y: 0, z: -1.6, rotY: 1.2, fitHeight: 1.75, clip: 'Walk',
+      speed: 1.1, path: [[-5.5, -1.6], [-5.5, 3], [2, 3.4], [-2, 0]],
+      npc: {
+        faction: 'friendly', behavior: 'patrol', speed: 1.1,
+        lines: ['Night watch. Nothing gets past me. Mostly.'],
+        wantsItem: 'Skull', reward: 'Gem Green',
+        thanksLine: 'A skull for the shrine. Take this stone, it is luckier than me.',
+      },
+    },
+    {
+      src: P('Henry'), x: 3.2, y: 0, z: -3.9, rotY: 3.2, fitHeight: 1.65, clip: 'Idle',
+      npc: { faction: 'friendly', behavior: 'idle',
+        lines: ['Fresh catch! Salt pork! Rope, if you are the tying kind.',
+          'No credit. Not since the parrot incident.'] },
+    },
+    {
+      src: M('Mushnub'), x: 8, y: 0, z: 5.5, rotY: 1.4, fitHeight: 1.2, clip: 'Idle',
+      npc: { faction: 'neutral', behavior: 'wander', health: 20, speed: 1.1, loot: 'Gem Green' },
+    },
+    { src: P('Bird'), x: -1.4, y: 0, z: 4.2, rotY: 2, fitHeight: 0.35, clip: 'Idle', solid: false },
+
+    // ---- the quay: a berth for every island ---------------------------
+    { src: P('Dock'), x: 0, y: -3.4, z: -10, rotY: 10.9956, scale: 1.494, solid: true },
+    { src: P('Ship'), x: -7.5, y: -1.2, z: -12.5, rotY: 0.45, fitHeight: 9, solid: true,
+      exitTo: 'pirate-cove', exitLabel: 'Sail to the pirate cove' },
+    { src: P('Small Ship'), x: 6.5, y: -0.6, z: -11.5, rotY: -0.5, fitMaxDim: 5.5, solid: true,
+      exitTo: 'fishing-village', exitLabel: 'Sail to the fishing village' },
+    { src: P('Dock Broken'), x: 10, y: -3.4, z: -9, rotY: 10.9956, scale: 1.2, solid: true,
+      exitTo: 'jungle-outpost', exitLabel: 'Take the jungle boat' },
+    { src: P('Red X'), x: -10.5, y: 0, z: -7.5, rotY: 0.6, fitMaxDim: 1.6, solid: false,
+      exitTo: 'monster-arena', exitLabel: 'Step onto the marked stone' },
+
+    ...scatter(
+      [
+        { src: N('Tree'), height: [3.5, 5], solid: true },
+        { src: N('Pine'), height: [3, 4.5], solid: true },
+        { src: N('Bush with Flowers'), height: [0.5, 0.9] },
+        { src: N('Flower Group'), height: [0.3, 0.5] },
+        { src: N('Grass'), height: [0.3, 0.5] },
+        { src: N('Pebble Round'), height: [0.15, 0.3] },
+      ],
+      26, rand, taken
+    ),
+  ];
 }
 
 export type Starter = {
@@ -476,6 +604,12 @@ export type Starter = {
 };
 
 export const STARTERS: Starter[] = [
+  {
+    id: 'town-island',
+    name: 'Ketch Harbour (town)',
+    blurb: 'The hub: a quest board, folk who want things, and ships to everywhere.',
+    build: townIsland,
+  },
   {
     id: 'pirate-cove',
     name: 'Pirate cove',
