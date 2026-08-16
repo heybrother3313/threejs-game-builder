@@ -808,7 +808,7 @@ export function refreshBorder(item: PlacedItem) {
 export function reapply(state: State, item: PlacedItem) {
   applyEntryTransform(item);
   item.homePos = item.obj.position.clone();
-  item.pathDist = 0;
+  item.pathDist = undefined;
   buildSolid(state, item);
   refreshBorder(item);
   const scene = getScene(state);
@@ -932,7 +932,7 @@ export function setAnimationsPlaying(v: boolean) {
     for (const item of placed) {
       if (item.entry.path || item.mixer) {
         applyEntryTransform(item);
-        item.pathDist = 0;
+        item.pathDist = undefined;
         positionBang(item);
       }
     }
@@ -1063,7 +1063,14 @@ export function updateLevel(state: State, dt: number, playerPos?: THREE.Vector3)
         total += l;
       }
       if (total > 0.01) {
-        item.pathDist = ((item.pathDist ?? 0) + (item.entry.speed ?? 1.3) * dt) % total;
+        // Stagger starts: with everyone at pathDist 0 the whole reef swims in
+        // lockstep, like a marching band. Seed each walker's phase from its
+        // authored position — deterministic, so saves replay identically.
+        if (item.pathDist === undefined) {
+          const seed = Math.abs(Math.sin(item.entry.x * 12.9898 + item.entry.z * 78.233));
+          item.pathDist = (seed % 1) * total;
+        }
+        item.pathDist = (item.pathDist + (item.entry.speed ?? 1.3) * dt) % total;
         let d = item.pathDist;
         let seg = 0;
         while (d > lens[seg]) {
@@ -1316,7 +1323,10 @@ export function migrateSwimmers(entries: LevelEntry[]) {
     const swims =
       e.clip?.startsWith('Swimming') ||
       name === 'Shark' || name === 'Fish Mackerel' || name === 'Fish Tuna';
-    if (swims && e.y > -0.3) e.y = name === 'Shark' ? -0.75 : -0.55;
+    // Yesterday's migration parked them a smidge low; lift those too.
+    if (swims && Math.abs(e.y - -0.55) < 0.01) e.y = -0.45;
+    if (name === 'Shark' && Math.abs(e.y - -0.75) < 0.01) e.y = -0.65;
+    if (swims && e.y > -0.3) e.y = name === 'Shark' ? -0.65 : -0.45;
     if (name === 'Tentacle' && e.y > -0.3) e.y = -0.6;
   }
 }
