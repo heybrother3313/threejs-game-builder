@@ -22,6 +22,7 @@ import {
 } from 'vibegame/rendering';
 import { Transform, WorldTransform } from 'vibegame/transforms';
 import { buildMode, initBuilder, toggleBuildMode } from './builder';
+import { canRedo, canUndo, mark, redo, undo } from './history';
 import { initCharacterVisual, updateCharacterVisual } from './character';
 import {
   configurePlayerHooks,
@@ -682,6 +683,7 @@ withSystem(PlatformSlipSystem)
         // yields a SEPARATE module instance, so flags set there are invisible
         // to the running game.
         npc: { npcKey, npcRuntime, damageNpc, playerHealth },
+        history: { mark, undo, redo, canUndo, canRedo },
       };
     }
   });

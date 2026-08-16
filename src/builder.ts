@@ -27,6 +27,7 @@ import { cachedThumb, thumbFor } from './thumbs';
 import extraPalette from './levels/extra-palette.json';
 import { aiConfig, listModels, runAssistant, saveAiConfig } from './assistant';
 import { DEFAULTS, resetNpc, type NpcConfig } from './npc';
+import { canRedo, canUndo, initHistory, mark, redo, redoLabel, undo, undoLabel } from './history';
 
 /**
  * The map builder: Tony Hawk park-editor semantics, not a DCC.
@@ -204,6 +205,8 @@ let drawingPath = false;
 let buildAnims = false;
 /** While true, the next ground click sets the selected NPC's guide target. */
 let pickingGuide = false;
+/** One history entry per paint stroke, not per tile. */
+let paintedThisStroke = false;
 let orbiting = false;
 let painting = false;
 const orbitPrev = new THREE.Vector2();
@@ -228,11 +231,14 @@ export function initBuilder(gameState: State, cameraEntityFn: () => number | und
   state = gameState;
   getCameraEntity = cameraEntityFn;
   buildUi();
+  initHistory(gameState, refreshHistoryButtons);
+  refreshHistoryButtons();
   buildGizmo();
   window.addEventListener('keydown', onKeyDown);
   window.addEventListener('pointermove', onPointerMove);
   window.addEventListener('pointerdown', onPointerDown);
   window.addEventListener('pointerup', () => {
+    paintedThisStroke = false;
     if (pendingCollapse && !dragging) {
       select(pendingCollapse, false);
       setStatus(describe(pendingCollapse));
@@ -382,6 +388,8 @@ function buildUi() {
     <div class="bar plinth">
       <span class="eyebrow">Build mode</span>
       <button id="b-save" class="accent">Save level.json</button>
+      <button id="b-undo" title="Undo (⌘Z)">↶</button>
+      <button id="b-redo" title="Redo (⇧⌘Z)">↷</button>
       <button id="b-load">Load…</button>
       <button id="b-borders">Borders (B)</button>
       <button id="b-reset">Reset</button>
@@ -432,6 +440,8 @@ function buildUi() {
       );
     }
   });
+  ui.querySelector('#b-undo')!.addEventListener('click', () => void doUndo());
+  ui.querySelector('#b-redo')!.addEventListener('click', () => void doRedo());
   ui.querySelector('#b-borders')!.addEventListener('click', toggleBorders);
   const animBtn = ui.querySelector('#b-anim') as HTMLButtonElement;
   animBtn.addEventListener('click', () => {
@@ -484,6 +494,7 @@ function wireAiPanel() {
     const req = promptEl.value.trim();
     if (!req) return;
     outEl.textContent = 'Thinking… (local model, may take a moment)';
+    mark('AI edit');
     try {
       const result = await runAssistant(state, aiConfig(), req);
       outEl.textContent = result.ok
@@ -493,6 +504,39 @@ function wireAiPanel() {
       outEl.textContent = `Failed: ${(err as Error).message}`;
     }
   });
+}
+
+function refreshHistoryButtons() {
+  const u = ui?.querySelector('#b-undo') as HTMLButtonElement | null;
+  const r = ui?.querySelector('#b-redo') as HTMLButtonElement | null;
+  if (u) {
+    u.disabled = !canUndo();
+    u.style.opacity = canUndo() ? '1' : '0.4';
+    u.title = canUndo() ? `Undo ${undoLabel()} (⌘Z)` : 'Nothing to undo';
+  }
+  if (r) {
+    r.disabled = !canRedo();
+    r.style.opacity = canRedo() ? '1' : '0.4';
+    r.title = canRedo() ? `Redo ${redoLabel()} (⇧⌘Z)` : 'Nothing to redo';
+  }
+}
+
+async function doUndo() {
+  clearSelection();
+  const label = await undo();
+  setStatus(
+    label
+      ? `<b class="piece">Undid ${label}</b><i class="sep"></i>` + cap(['⇧⌘Z'], 'redo')
+      : IDLE_STATUS
+  );
+}
+
+async function doRedo() {
+  clearSelection();
+  const label = await redo();
+  setStatus(
+    label ? `<b class="piece">Redid ${label}</b>` : IDLE_STATUS
+  );
 }
 
 function setStatus(html: string) {
@@ -683,6 +727,7 @@ function updateNpcPanel() {
     <input id="n-arrive" type="text" placeholder="Here we are!" value="${(n.arriveLine ?? '').replace(/"/g, '&quot;')}" />
   `;
   npcEl.querySelector('#n-clip')!.addEventListener('change', (ev) => {
+    mark('animation');
     setClip(item, (ev.target as HTMLSelectElement).value);
     persist();
   });
@@ -702,6 +747,7 @@ function updateNpcPanel() {
     );
   });
   npcEl.querySelector('#n-clearpath')!.addEventListener('click', () => {
+    mark('clear path');
     delete e.path;
     drawingPath = false;
     reapply(state, item);
@@ -709,6 +755,7 @@ function updateNpcPanel() {
     updateNpcPanel();
   });
   const commit = (patch: Partial<NpcConfig>) => {
+    mark('npc');
     e.npc = { ...(e.npc ?? {}), ...patch };
     resetNpc(item);
     reapply(state, item);
@@ -981,6 +1028,11 @@ function pickPlaced(): PlacedItem | null {
 
 function paintAt(p: THREE.Vector3) {
   if (!paintColour) return;
+  // One history entry per stroke, not per tile.
+  if (!paintedThisStroke) {
+    mark('paint');
+    paintedThisStroke = true;
+  }
   // Snap to the tile grid, and replace rather than stack.
   const x = Math.round(p.x / PAINT_TILE) * PAINT_TILE;
   const z = Math.round(p.z / PAINT_TILE) * PAINT_TILE;
@@ -1038,8 +1090,10 @@ function onPointerMove(ev: PointerEvent) {
   // A click is not a drag until the pointer has clearly moved. Without this,
   // selecting an item snapped it to wherever the cursor happened to be.
   if (dragArmed && !dragging) {
-    if (Math.hypot(ev.clientX - downPx.x, ev.clientY - downPx.y) > 5) dragging = true;
-    else return;
+    if (Math.hypot(ev.clientX - downPx.x, ev.clientY - downPx.y) > 5) {
+      dragging = true;
+      mark(dragOffsets.length > 1 ? `move ${dragOffsets.length} pieces` : 'move');
+    } else return;
   }
 
   if (dragging && dragOffsets.length && hit) {
@@ -1065,6 +1119,7 @@ function onPointerDown(ev: PointerEvent) {
   if (pickingGuide && selection.length === 1) {
     const hit = groundHit();
     if (hit) {
+      mark('guide target');
       const it = selection[0];
       it.entry.npc = {
         ...(it.entry.npc ?? {}),
@@ -1082,6 +1137,7 @@ function onPointerDown(ev: PointerEvent) {
   if (drawingPath && selection.length === 1) {
     const hit = groundHit();
     if (hit) {
+      mark('waypoint');
       const e = selection[0].entry;
       e.path = e.path ?? [];
       e.path.push([+hit.x.toFixed(2), +hit.z.toFixed(2)]);
@@ -1093,6 +1149,7 @@ function onPointerDown(ev: PointerEvent) {
   }
 
   if (hitGizmo()) {
+    mark('height');
     gizmoDrag = { pointerY: ev.clientY, startYs: selection.map((s) => s.entry.y) };
     return;
   }
@@ -1119,6 +1176,7 @@ function onPointerDown(ev: PointerEvent) {
       solid: true,
       ...(armed.clip ? { clip: armed.clip } : {}),
     };
+    mark('place');
     void instantiate(state, entry).then((item) => {
       if (item) {
         persist();
@@ -1280,6 +1338,7 @@ const IDLE_STATUS =
   cap(['click'], 'place · select') +
   cap(['shift'], 'multi-select') +
   cap(['⌘C', '⌘V'], 'copy · paste') +
+  cap(['⌘Z'], 'undo') +
   cap(['drag'], 'orbit') +
   `<i class="sep"></i>` +
   cap(['B'], 'borders') +
@@ -1311,6 +1370,11 @@ function onKeyDown(ev: KeyboardEvent) {
   if (ev.code === 'KeyS' && !ev.metaKey) return saveFile();
 
   const cmd = ev.metaKey || ev.ctrlKey;
+  if (cmd && ev.code === 'KeyZ') {
+    ev.preventDefault();
+    void (ev.shiftKey ? doRedo() : doUndo());
+    return;
+  }
   if (cmd && ev.code === 'KeyC' && selection.length) {
     clipboard = selection.map((s) => ({ ...s.entry }));
     for (const e of clipboard) delete e.follow; // the raft stays unique
@@ -1377,6 +1441,7 @@ function onKeyDown(ev: KeyboardEvent) {
 
 /** Paste offsets a little more each time, so repeated pastes fan out. */
 async function pasteClipboard() {
+  mark(`paste ${clipboard.length}`);
   pasteBump += 0.8;
   const copies = clipboard.map((e) => ({ ...e, x: +(e.x + pasteBump).toFixed(2), z: +(e.z + pasteBump).toFixed(2) }));
   const made = (await Promise.all(copies.map((c) => instantiate(state, c)))).filter(
