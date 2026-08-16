@@ -127,6 +127,8 @@ let pushPlayer: ((dx: number, dz: number) => void) | null = null;
 let teleportPlayer: ((x: number, y: number, z: number) => void) | null = null;
 /** Plays the player's death/respawn animation; set by main.ts. */
 let playerDeathHook: ((dying: boolean) => void) | null = null;
+/** Plays the player's flinch; set by main.ts. */
+let playerHitHook: (() => void) | null = null;
 /** True once you've been beaten; stays true until you choose to restart. */
 let playerDead = false;
 /** Death animation plays for this long before the restart prompt appears. */
@@ -137,11 +139,13 @@ export function configurePlayerHooks(opts: {
   push?: (dx: number, dz: number) => void;
   teleport?: (x: number, y: number, z: number) => void;
   death?: (dying: boolean) => void;
+  hit?: () => void;
 }) {
   if (opts.spawn) spawn = opts.spawn.clone();
   if (opts.push) pushPlayer = opts.push;
   if (opts.teleport) teleportPlayer = opts.teleport;
   if (opts.death) playerDeathHook = opts.death;
+  if (opts.hit) playerHitHook = opts.hit;
 }
 
 /** True while the player is dead — main.ts freezes input and the brain idles. */
@@ -462,6 +466,7 @@ export function damageNpc(state: State, item: PlacedItem, amount: number, fromX:
   item.obj.position.z += (dz / d) * 0.35;
   r.state = 'hit';
   r.t = 0;
+  r.cooldown = Math.max(r.cooldown, 0.5); // a stagger costs them their next swing
   play(item, 'hit', true);
   // Being hit makes anyone hostile.
   if (item.entry.npc && item.entry.npc.faction !== 'hostile') {
@@ -473,6 +478,7 @@ function hurtPlayer(amount: number, fromX: number, fromZ: number, px: number, pz
   if (playerHurtT > 0) return;
   playerHp = Math.max(0, playerHp - amount);
   playerHurtT = 0.6;
+  if (playerHp > 0) playerHitHook?.();
   renderHud();
   const dx = px - fromX;
   const dz = pz - fromZ;

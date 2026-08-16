@@ -26,6 +26,7 @@ import { setPlayerPosProvider } from './assistant';
 import { canRedo, canUndo, mark, redo, undo } from './history';
 import {
   initCharacterVisual,
+  playerHitReact,
   playerSwing,
   setPlayerDead,
   updateCharacterVisual,
@@ -657,6 +658,7 @@ withSystem(PlatformSlipSystem)
         }
       },
       death: (dying) => setPlayerDead(dying),
+      hit: () => playerHitReact(),
       teleport: (x, y, z) => {
         for (const p of playerQuery(state.world)) {
           Body.posX[p] = x;

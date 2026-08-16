@@ -132,12 +132,18 @@ export async function initCharacterVisual(state: State, playerEntity: number) {
     Jump_Land: ['Jump_Land', 'Female_Jump', 'Male_Jump', 'Land'],
     Death: ['Death', 'Female_Death', 'Male_Death'],
     Punch: ['Punch', 'Punch_Left', 'Female_Punch', 'Male_Punch', 'Attack', 'Sword_Slash'],
+    HitReact: ['HitReact', 'HitRecieve', 'Hit', 'Duck'],
   };
-  for (const seg of ['Idle', 'Walk', 'Run', 'Jump', 'Jump_Idle', 'Jump_Land', 'Death', 'Punch']) {
+  for (const seg of [
+    'Idle', 'Walk', 'Run', 'Jump', 'Jump_Idle', 'Jump_Land', 'Death', 'Punch', 'HitReact',
+  ]) {
     const clip = CANDIDATES[seg].map((c) => findClip(gltf.animations, c)).find(Boolean) ?? null;
     if (clip) {
       const a = mixer.clipAction(clip);
-      if (seg === 'Jump' || seg === 'Jump_Land' || seg === 'Death' || seg === 'Punch') {
+      if (
+        seg === 'Jump' || seg === 'Jump_Land' || seg === 'Death' ||
+        seg === 'Punch' || seg === 'HitReact'
+      ) {
         a.setLoop(THREE.LoopOnce, 1);
         a.clampWhenFinished = true;
       }
@@ -220,6 +226,17 @@ export function playerSwing(): number {
   swingT = a.getClip().duration;
   currentState = -1; // force a re-read of the movement state when the swing ends
   return swingT;
+}
+
+/** Flinch when struck. Shares the swing timer: both briefly own the rig. */
+export function playerHitReact() {
+  const a = actions['HitReact'];
+  if (!a || dead) return;
+  a.reset().fadeIn(0.05).play();
+  current?.fadeOut(0.05);
+  current = a;
+  swingT = Math.min(a.getClip().duration, 0.45);
+  currentState = -1;
 }
 
 /** Play (or clear) the death animation; the rig ignores movement while dead. */

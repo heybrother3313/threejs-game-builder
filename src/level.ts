@@ -406,6 +406,23 @@ function slabBoxes(obj: THREE.Object3D, maxBoxes = 4): { c: THREE.Vector3; s: TH
   }));
 }
 
+/** Packs whose models are characters: posed limbs, not solid props. */
+const CHARACTER_DIRS = [
+  'animated-animal-pack',
+  'animated-enemies',
+  'animated-fish-bundle',
+  'animated-men-pack',
+  'animated-women-pack',
+  'ultimate-modular-men-pack',
+  'ultimate-modular-women-pack',
+  'ultimate-monsters',
+];
+/** Widest a character's collider gets, in metres — roughly a torso. */
+const CHARACTER_GIRTH = 0.7;
+function isCharacterLike(src: string) {
+  return CHARACTER_DIRS.some((d) => src.includes(d));
+}
+
 /** Oriented collider boxes for a placed item, in world space. */
 export function colliderBoxes(item: PlacedItem) {
   const { obj, entry } = item;
@@ -415,6 +432,21 @@ export function colliderBoxes(item: PlacedItem) {
 
   const ceiling = solidCeiling(item);
   let boxes = slabBoxes(obj).filter((b) => b.c.y - b.s.y / 2 < ceiling - 0.02);
+
+  // Characters are posed with arms out and tails trailing, so a measured box
+  // is far wider than the body you'd actually bump into. Squeeze the footprint
+  // toward the model's centre line — the torso is what should block you.
+  if (isCharacterLike(item.entry.src)) {
+    const wb = new THREE.Box3().setFromObject(obj);
+    const cx = (wb.min.x + wb.max.x) / 2;
+    const cz = (wb.min.z + wb.max.z) / 2;
+    for (const b of boxes) {
+      b.s.x = Math.min(b.s.x, CHARACTER_GIRTH);
+      b.s.z = Math.min(b.s.z, CHARACTER_GIRTH);
+      b.c.x = cx;
+      b.c.z = cz;
+    }
+  }
   if (boxes.length === 0) {
     const local = coreBounds(obj);
     boxes = [{ c: local.getCenter(new THREE.Vector3()), s: local.getSize(new THREE.Vector3()) }];
@@ -733,6 +765,22 @@ export function removeItem(state: State, item: PlacedItem) {
   scene?.remove(item.obj);
   scene?.remove(item.border);
   for (const w of item.partBorders) scene?.remove(w);
+  // Everything the item spawned into the scene is its responsibility to take
+  // with it — the patrol line especially, which otherwise hangs in build mode
+  // pointing at a creature that no longer exists.
+  if (item.pathLine) {
+    scene?.remove(item.pathLine);
+    item.pathLine.geometry.dispose();
+    item.pathLine = undefined;
+  }
+  if (item.marker) {
+    scene?.remove(item.marker);
+    item.marker = undefined;
+  }
+  if (item.bang) {
+    scene?.remove(item.bang);
+    item.bang = undefined;
+  }
   const i = placed.indexOf(item);
   if (i >= 0) placed.splice(i, 1);
 }
