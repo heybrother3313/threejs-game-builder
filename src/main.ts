@@ -66,6 +66,8 @@ import {
   updateLevel,
   type PlacedItem,
   spawnPoint,
+  groundHeightAt,
+  reseatOnGround,
 } from './level';
 
 /**
@@ -825,6 +827,7 @@ withSystem(PlatformSlipSystem)
         toggleBuildMode,
         analyzeAssets,
         placed,
+        ground: { groundHeightAt, reseatOnGround: () => reseatOnGround(state) },
         instantiate: (entry: Parameters<typeof instantiate>[1]) => instantiate(state, entry),
         setClip,
         getCamera: () => threeCameras.get(cameraQuery(state.world)[0]),

@@ -17,6 +17,7 @@ import {
   reapply,
   refreshBorder,
   removeItem,
+  reseatOnGround,
   serialize,
   setAnimationsPlaying,
   setClip,
@@ -1510,11 +1511,18 @@ function onPointerDown(ev: PointerEvent) {
       rotY: 0,
       fitHeight: 1.5,
       solid: defaultSolidFor(armed.src),
+      // Ground pieces are floors, not props: sampled collision + a squash
+      // that keeps their slopes inside the engine's step height.
+      ...(isGroundPiece(armed.src)
+        ? { groundMesh: true, solid: true, flatten: 0.3, fitMaxDim: 26, fitHeight: undefined, y: -0.4 }
+        : {}),
       ...(armed.clip ? { clip: armed.clip } : {}),
     };
     mark('place');
     void instantiate(state, entry).then((item) => {
       if (item) {
+        // New terrain changes the floor under everything already placed.
+        if (item.entry.groundMesh) reseatOnGround(state);
         persist();
         select(item, false);
         setStatus(describe(item));
@@ -1615,6 +1623,11 @@ function onWheel(ev: WheelEvent) {
 }
 
 /* ----------------------------------------------------------- selection --- */
+
+/** Pieces meant to be walked ON rather than around. */
+function isGroundPiece(src: string) {
+  return /Ground Rolling|Woods Ground/.test(src);
+}
 
 /** Loot worth dropping — picked from a list so no one has to type a path. */
 const LOOT_CHOICES: { label: string; src: string }[] = [

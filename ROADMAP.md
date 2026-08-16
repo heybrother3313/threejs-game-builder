@@ -19,9 +19,12 @@ What we're building toward, roughly ordered. Items graduate off the top.
 - [ ] Meshy licence check — commercial-safe export needs a paid tier.
 - [ ] **More ground pieces** in varied biomes (sand, grass, rock).
 - [ ] Blend the ground piece into the island skirt/shoreline so the seam is hidden.
-- [ ] Lift placed objects onto the ground surface automatically (sample
-      groundMesh height at x/z instead of assuming y=0).
-- [ ] NPC path-walkers should follow ground height too.
+- [x] Objects, path-walkers and chasing NPCs follow the ground surface.
+      `entry.y` now means height ABOVE THE GROUND, so saves survive the
+      terrain changing under them. Terrain hides painted tiles (flat quads
+      hovering over relief look worse than no paint).
+- [ ] Starters should ship with terrain instead of a flat slab.
+- [ ] Blend the terrain edge into the shoreline skirt — the seam still shows.
 - [ ] Terraced paint tiles were tried and rejected — square hills, wrong shape
       for this world. Don't revisit.
 - [ ] Textured/varied ground so paint isn't flat color (per-tile tone jitter,
@@ -78,7 +81,6 @@ What we're building toward, roughly ordered. Items graduate off the top.
 - [ ] Let the assistant see asset *appearance* (thumbnails), not just names.
 
 ## Known texture/polish debt
-- [ ] NPC paths don't follow raised ground (walkers keep authored height).
 - [ ] Per-model character girth for collision (one constant today).
 - [ ] Sound.
 

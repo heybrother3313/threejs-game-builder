@@ -642,6 +642,32 @@ export function orientedBox(item: PlacedItem) {
 }
 
 /** Apply the entry's transform to an already-loaded object. */
+/**
+ * Ground-follow: how high the walkable surface is at (x, z).
+ *
+ * Rolling terrain is a trap without this — the ground moves and everything
+ * authored at y=0 stays put, so props sink to their windows and NPCs walk
+ * through hillsides. Every placement adds this offset, which means an entry's
+ * y stays a height ABOVE THE GROUND rather than an absolute altitude, and
+ * saved levels survive the ground changing underneath them.
+ */
+const groundRay = new THREE.Raycaster();
+const GROUND_PROBE = new THREE.Vector3(0, -1, 0);
+
+export function groundHeightAt(x: number, z: number): number {
+  let best = 0;
+  for (const item of placed) {
+    if (!item.entry.groundMesh) continue;
+    groundRay.set(new THREE.Vector3(x, 60, z), GROUND_PROBE);
+    const hit = groundRay.intersectObject(item.obj, true)[0];
+    if (hit) best = Math.max(best, hit.point.y);
+  }
+  return best;
+}
+
+/** True while a ground mesh is being laid, so it doesn't sample itself. */
+let placingGround = false;
+
 function applyEntryTransform(item: PlacedItem) {
   const { entry, obj } = item;
   obj.rotation.set(0, entry.rotY, 0);
@@ -651,7 +677,9 @@ function applyEntryTransform(item: PlacedItem) {
   obj.updateMatrixWorld(true);
   const box = new THREE.Box3().setFromObject(obj);
   const size = box.getSize(new THREE.Vector3());
-  const baseY = entry.alignTop ? entry.y - size.y : entry.y;
+  const lift =
+    entry.groundMesh || placingGround || entry.follow ? 0 : groundHeightAt(entry.x, entry.z);
+  const baseY = (entry.alignTop ? entry.y - size.y : entry.y) + lift;
   obj.position.set(
     entry.x - (box.min.x + box.max.x) / 2,
     baseY - box.min.y,
@@ -723,6 +751,8 @@ function instantiatePaint(state: State, entry: LevelEntry): PlacedItem | null {
 
   const border = makeBorder(scene);
   const item: PlacedItem = { entry, obj: group, solidEs: [], border, partBorders: [] };
+  // A tile laid onto existing terrain stays hidden for the same reason.
+  if (placed.some((i) => i.entry.groundMesh)) group.visible = false;
   placed.push(item);
   refreshBorder(item);
   return item;
@@ -875,6 +905,36 @@ export function refreshBorder(item: PlacedItem) {
  *  Also the single home of marker/path/bang upkeep — markers used to be
  *  positioned only by builder edits, so carrying an item left its coral ring
  *  behind at the old spot. */
+/**
+ * Re-seat every piece on the current terrain. Called when a ground mesh
+ * arrives or moves — placement order shouldn't decide whether your village
+ * sits on the hill or inside it.
+ */
+export function reseatOnGround(state: State) {
+  // Terrain replaces paint. Painted tiles are flat quads; over rolling ground
+  // they hover in a patchwork of pale squares at different heights, which
+  // looks far worse than no paint at all.
+  const hasTerrain = placed.some((i) => i.entry.groundMesh);
+  for (const item of placed) {
+    if (item.entry.paint) {
+      item.obj.visible = !hasTerrain;
+      continue;
+    }
+    if (item.entry.groundMesh || item.entry.follow) continue;
+    applyEntryTransform(item);
+    item.homePos = item.obj.position.clone();
+    buildSolid(state, item);
+    refreshBorder(item);
+    const scene = getScene(state);
+    if (scene) {
+      applyMarker(item, scene);
+      applyExitRing(item, scene);
+      syncPathLine(item, scene);
+      syncBang(item, scene);
+    }
+  }
+}
+
 export function reapply(state: State, item: PlacedItem) {
   applyEntryTransform(item);
   item.homePos = item.obj.position.clone();
@@ -1160,6 +1220,12 @@ export function updateLevel(state: State, dt: number, playerPos?: THREE.Vector3)
         const pz = pts[seg][1] + (pts[seg + 1][1] - pts[seg][1]) * t;
         item.obj.position.x = item.homePos.x + (px - item.entry.x);
         item.obj.position.z = item.homePos.z + (pz - item.entry.z);
+        // Walk the terrain, not the altitude you were authored at. Swimmers
+        // keep their own depth — the sea floor is not their ground.
+        if (!item.entry.clip?.startsWith('Swimming')) {
+          item.obj.position.y =
+            item.entry.y + groundHeightAt(item.obj.position.x, item.obj.position.z);
+        }
         item.obj.rotation.y = Math.atan2(pts[seg + 1][0] - pts[seg][0], pts[seg + 1][1] - pts[seg][1]);
         positionBang(item);
       }
@@ -1411,6 +1477,7 @@ export function migrateSwimmers(entries: LevelEntry[]) {
 
 export async function loadLevel(state: State) {
   let entries: LevelEntry[] = SEED;
+  void placingGround;
   const saved = localStorage.getItem(STORAGE_KEY);
   if (saved) {
     try {
@@ -1421,5 +1488,9 @@ export async function loadLevel(state: State) {
     }
   }
   migrateSwimmers(entries);
-  await Promise.all(entries.map((e) => instantiate(state, { ...e })));
+  // Terrain first: everything else samples its surface at placement time.
+  const terrain = entries.filter((e) => e.groundMesh);
+  const rest = entries.filter((e) => !e.groundMesh);
+  for (const e of terrain) await instantiate(state, { ...e });
+  await Promise.all(rest.map((e) => instantiate(state, { ...e })));
 }

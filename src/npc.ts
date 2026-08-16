@@ -1,7 +1,10 @@
 import * as THREE from 'three';
 import type { State } from 'vibegame';
 import { grantLoot, setLootTrayVisible, spendLoot } from './loot';
-import { findClip, instantiate, loadModel, persist, placed, syncMarker, type PlacedItem } from './level';
+import {
+  findClip, groundHeightAt, instantiate, loadModel, persist, placed, syncMarker,
+  type PlacedItem,
+} from './level';
 
 /**
  * NPC behaviour, combat, and conversation.
@@ -445,6 +448,8 @@ function faceAndStep(item: PlacedItem, tx: number, tz: number, speed: number, dt
   }
   p.x = nx;
   p.z = nz;
+  // Chasing across a hill should climb it, not tunnel through it.
+  if (!isSwimmer(item)) p.y = (item.entry.y ?? 0) + groundHeightAt(nx, nz);
   item.obj.rotation.y = Math.atan2(dx, dz);
   return dist;
 }
