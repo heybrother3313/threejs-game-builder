@@ -355,10 +355,10 @@ export function damageNpc(state: State, item: PlacedItem, amount: number, fromX:
     r.t = 0;
     play(item, 'death', true);
     // Defeated NPCs stop blocking and drop their loot.
-    if (item.solidE !== null && state.exists(item.solidE)) {
-      state.destroyEntity(item.solidE);
-      item.solidE = null;
+    for (const e of item.solidEs) {
+      if (state.exists(e)) state.destroyEntity(e);
     }
+    item.solidEs = [];
     const loot = item.entry.npc?.loot;
     if (loot) {
       void instantiate(state, {

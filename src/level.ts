@@ -66,9 +66,12 @@ export type LevelEntry = {
 export type PlacedItem = {
   entry: LevelEntry;
   obj: THREE.Group;
-  solidE: number | null;
-  /** Oriented wireframe box — matches the collider, rotation included. */
+  /** One entity per collider box (a dock is posts + deck, not one slab). */
+  solidEs: number[];
+  /** Oriented wireframe of the whole piece — selection highlight, gizmo anchor. */
   border: THREE.LineSegments;
+  /** One wireframe per collider box, shown by the Borders toggle. */
+  partBorders: THREE.LineSegments[];
   followBase?: THREE.Vector3;
   followOrigin?: THREE.Vector3;
   /** Animation rig for NPC assets (characters ship 14+ clips). */
@@ -201,34 +204,35 @@ function makeShadows(obj: THREE.Object3D) {
 }
 
 function destroySolid(state: State, item: PlacedItem) {
-  if (item.solidE !== null && state.exists(item.solidE)) {
-    state.destroyEntity(item.solidE);
+  for (const e of item.solidEs) {
+    if (state.exists(e)) state.destroyEntity(e);
   }
-  item.solidE = null;
+  item.solidEs = [];
 }
 
 function buildSolid(state: State, item: PlacedItem) {
   destroySolid(state, item);
   if (!item.entry.solid) return;
-  const { size, center, yaw } = orientedBox(item);
-  const qy = Math.sin(yaw / 2);
-  const qw = Math.cos(yaw / 2);
-  const e = state.createEntity();
-  state.addComponent(e, Transform, {
-    posX: center.x, posY: center.y, posZ: center.z,
-    rotY: qy, rotW: qw, eulerY: (yaw * 180) / Math.PI,
-    scaleX: 1, scaleY: 1, scaleZ: 1,
-  });
-  state.addComponent(e, Body, {
-    type: BodyType.Fixed,
-    posX: center.x, posY: center.y, posZ: center.z,
-    rotY: qy, rotW: qw, eulerY: (yaw * 180) / Math.PI,
-    mass: 0, gravityScale: 0,
-  });
-  state.addComponent(e, Collider, {
-    shape: 0, sizeX: size.x, sizeY: size.y, sizeZ: size.z,
-  });
-  item.solidE = e;
+  for (const { size, center, yaw } of colliderBoxes(item)) {
+    const qy = Math.sin(yaw / 2);
+    const qw = Math.cos(yaw / 2);
+    const e = state.createEntity();
+    state.addComponent(e, Transform, {
+      posX: center.x, posY: center.y, posZ: center.z,
+      rotY: qy, rotW: qw, eulerY: (yaw * 180) / Math.PI,
+      scaleX: 1, scaleY: 1, scaleZ: 1,
+    });
+    state.addComponent(e, Body, {
+      type: BodyType.Fixed,
+      posX: center.x, posY: center.y, posZ: center.z,
+      rotY: qy, rotW: qw, eulerY: (yaw * 180) / Math.PI,
+      mass: 0, gravityScale: 0,
+    });
+    state.addComponent(e, Collider, {
+      shape: 0, sizeX: size.x, sizeY: size.y, sizeZ: size.z,
+    });
+    item.solidEs.push(e);
+  }
 }
 
 /**
@@ -271,6 +275,160 @@ export function coreBounds(obj: THREE.Object3D, q = 0.04): THREE.Box3 {
     new THREE.Vector3(pick(xs, q), minY, pick(zs, q)),
     new THREE.Vector3(pick(xs, 1 - q), pick(ys, 1 - q), pick(zs, 1 - q))
   );
+}
+
+/**
+ * Split a model into a few stacked boxes that follow its silhouette.
+ *
+ * One box per asset is always wrong somewhere: a dock is thin posts under a
+ * wide deck, a palm is a slim trunk under a broad crown, a house is a body
+ * under a roof. Fitting a single box to any of them means colliding with air.
+ *
+ * So slice the model into horizontal slabs, measure each slab's own footprint
+ * (quantiles again, so a stray frond doesn't inflate it), and merge adjacent
+ * slabs whose footprints agree. What comes out is a short stack of boxes that
+ * traces the shape — cheap to compute, cheap for Rapier, and far tighter than
+ * a bounding box.
+ */
+function slabBoxes(obj: THREE.Object3D, maxBoxes = 4): { c: THREE.Vector3; s: THREE.Vector3 }[] {
+  const verts: THREE.Vector3[] = [];
+  const v = new THREE.Vector3();
+  obj.updateMatrixWorld(true);
+  obj.traverse((o) => {
+    const mesh = o as THREE.Mesh;
+    if (!mesh.isMesh || !mesh.geometry) return;
+    const pos = mesh.geometry.getAttribute('position') as THREE.BufferAttribute | undefined;
+    if (!pos) return;
+    const stride = Math.max(1, Math.floor(pos.count / 1500));
+    for (let i = 0; i < pos.count; i += stride) {
+      verts.push(v.fromBufferAttribute(pos, i).applyMatrix4(mesh.matrixWorld).clone());
+    }
+  });
+  if (verts.length < 8) return [];
+
+  const ys = verts.map((p) => p.y);
+  const minY = Math.min(...ys);
+  const maxY = Math.max(...ys);
+  const height = maxY - minY;
+  if (height < 1e-3) return [];
+
+  const SLABS = 10;
+  const q = 0.06;
+  type Slab = { y0: number; y1: number; x0: number; x1: number; z0: number; z1: number; n: number };
+  const slabs: Slab[] = [];
+  for (let i = 0; i < SLABS; i++) {
+    const y0 = minY + (height * i) / SLABS;
+    const y1 = minY + (height * (i + 1)) / SLABS;
+    const inSlab = verts.filter((p) => p.y >= y0 - 1e-6 && p.y <= y1 + 1e-6);
+    if (inSlab.length < 4) continue;
+    const xs = inSlab.map((p) => p.x).sort((a, b) => a - b);
+    const zs = inSlab.map((p) => p.z).sort((a, b) => a - b);
+    const pick = (arr: number[], t: number) => arr[Math.min(arr.length - 1, Math.round(t * (arr.length - 1)))];
+    slabs.push({
+      y0, y1,
+      x0: pick(xs, q), x1: pick(xs, 1 - q),
+      z0: pick(zs, q), z1: pick(zs, 1 - q),
+      n: inSlab.length,
+    });
+  }
+  if (slabs.length === 0) return [];
+
+  // Merge neighbours with similar footprints; the tolerance decides how much
+  // detail survives.
+  const merged: Slab[] = [];
+  for (const sl of slabs) {
+    const last = merged[merged.length - 1];
+    if (last) {
+      const wA = Math.max(last.x1 - last.x0, 1e-3);
+      const dA = Math.max(last.z1 - last.z0, 1e-3);
+      const wB = Math.max(sl.x1 - sl.x0, 1e-3);
+      const dB = Math.max(sl.z1 - sl.z0, 1e-3);
+      const similar =
+        Math.abs(wA - wB) / Math.max(wA, wB) < 0.3 && Math.abs(dA - dB) / Math.max(dA, dB) < 0.3;
+      if (similar) {
+        last.y1 = sl.y1;
+        last.x0 = Math.min(last.x0, sl.x0);
+        last.x1 = Math.max(last.x1, sl.x1);
+        last.z0 = Math.min(last.z0, sl.z0);
+        last.z1 = Math.max(last.z1, sl.z1);
+        last.n += sl.n;
+        continue;
+      }
+    }
+    merged.push({ ...sl });
+  }
+
+  // Keep the meatiest boxes; too many is worse than slightly loose.
+  const kept = merged
+    .sort((a, b) => b.n * (b.y1 - b.y0) - a.n * (a.y1 - a.y0))
+    .slice(0, maxBoxes)
+    .sort((a, b) => a.y0 - b.y0);
+
+  return kept.map((sl) => ({
+    c: new THREE.Vector3((sl.x0 + sl.x1) / 2, (sl.y0 + sl.y1) / 2, (sl.z0 + sl.z1) / 2),
+    s: new THREE.Vector3(
+      Math.max(sl.x1 - sl.x0, 0.05),
+      Math.max(sl.y1 - sl.y0, 0.05),
+      Math.max(sl.z1 - sl.z0, 0.05)
+    ),
+  }));
+}
+
+/** Oriented collider boxes for a placed item, in world space. */
+export function colliderBoxes(item: PlacedItem) {
+  const { obj, entry } = item;
+  const yaw = obj.rotation.y;
+  obj.rotation.y = 0;
+  obj.updateMatrixWorld(true);
+
+  const ceiling = solidCeiling(item);
+  let boxes = slabBoxes(obj).filter((b) => b.c.y - b.s.y / 2 < ceiling - 0.02);
+  if (boxes.length === 0) {
+    const local = coreBounds(obj);
+    boxes = [{ c: local.getCenter(new THREE.Vector3()), s: local.getSize(new THREE.Vector3()) }];
+  }
+  // Clip anything poking above the standable surface (masts, roof ridges).
+  for (const b of boxes) {
+    const top = b.c.y + b.s.y / 2;
+    if (top > ceiling) {
+      const bottom = b.c.y - b.s.y / 2;
+      const h = Math.max(0.05, ceiling - bottom);
+      b.c.y = bottom + h / 2;
+      b.s.y = h;
+    }
+    if (entry.colliderXZ) {
+      b.s.x = entry.colliderXZ;
+      b.s.z = entry.colliderXZ;
+    }
+  }
+
+  obj.rotation.y = yaw;
+  obj.updateMatrixWorld(true);
+
+  const pivot = obj.position;
+  const cos = Math.cos(yaw);
+  const sin = Math.sin(yaw);
+  return boxes.map((b) => {
+    const dx = b.c.x - pivot.x;
+    const dz = b.c.z - pivot.z;
+    return {
+      size: b.s,
+      center: new THREE.Vector3(pivot.x + dx * cos + dz * sin, b.c.y, pivot.z - dx * sin + dz * cos),
+      yaw,
+    };
+  });
+}
+
+/** Where the collider stack stops: explicit trim, else the analysed surface. */
+function solidCeiling(item: PlacedItem): number {
+  const { obj, entry } = item;
+  const box = coreBounds(obj);
+  if (entry.trimTop !== undefined) return box.max.y - entry.trimTop;
+  const meta = metaFor(entry.src);
+  if (meta && meta.standYFrac < 0.999) {
+    return Math.min(box.max.y, box.min.y + meta.height * (entry.scale ?? 1) * meta.standYFrac);
+  }
+  return box.max.y;
 }
 
 /**
@@ -372,7 +530,7 @@ function instantiatePaint(state: State, entry: LevelEntry): PlacedItem | null {
   scene.add(group);
 
   const border = makeBorder(scene);
-  const item: PlacedItem = { entry, obj: group, solidE: null, border };
+  const item: PlacedItem = { entry, obj: group, solidEs: [], border, partBorders: [] };
   placed.push(item);
   refreshBorder(item);
   return item;
@@ -450,7 +608,7 @@ export async function instantiate(state: State, entry: LevelEntry): Promise<Plac
 
   // Unit cube wireframe, scaled/rotated to the collider each refresh.
   const border = makeBorder(scene);
-  const item: PlacedItem = { entry, obj, solidE: null, border, clips };
+  const item: PlacedItem = { entry, obj, solidEs: [], border, partBorders: [], clips };
   applyEntryTransform(item);
   item.homePos = obj.position.clone();
   scene.add(obj);
@@ -492,6 +650,31 @@ export function refreshBorder(item: PlacedItem) {
   item.border.position.copy(center);
   item.border.rotation.set(0, yaw, 0);
   item.border.scale.set(size.x, size.y, size.z);
+
+  // One wireframe per collider box, so "show borders" shows what you'll
+  // actually bump into rather than a single approximation of it.
+  const boxes = item.entry.solid ? colliderBoxes(item) : [];
+  const scene = item.border.parent;
+  while (item.partBorders.length > boxes.length) {
+    const extra = item.partBorders.pop()!;
+    extra.parent?.remove(extra);
+  }
+  while (item.partBorders.length < boxes.length && scene) {
+    const w = new THREE.LineSegments(
+      new THREE.EdgesGeometry(new THREE.BoxGeometry(1, 1, 1)),
+      new THREE.LineBasicMaterial({ color: 0x33ff88, depthTest: false, transparent: true, opacity: 0.9 })
+    );
+    w.renderOrder = 998;
+    w.visible = item.border.visible;
+    scene.add(w);
+    item.partBorders.push(w);
+  }
+  boxes.forEach((b, i) => {
+    const w = item.partBorders[i];
+    w.position.copy(b.center);
+    w.rotation.set(0, b.yaw, 0);
+    w.scale.set(b.size.x, b.size.y, b.size.z);
+  });
 }
 
 /** Re-apply a mutated entry: move/rotate/scale/flip, then rebuild physics.
@@ -517,6 +700,7 @@ export function removeItem(state: State, item: PlacedItem) {
   destroySolid(state, item);
   scene?.remove(item.obj);
   scene?.remove(item.border);
+  for (const w of item.partBorders) scene?.remove(w);
   const i = placed.indexOf(item);
   if (i >= 0) placed.splice(i, 1);
 }
@@ -754,11 +938,9 @@ export function findPickable(px: number, pz: number, fx: number, fz: number, rea
 /** Carry: strip physics, park the visual in the player's hands. */
 export function beginCarry(state: State, item: PlacedItem) {
   item.carried = true;
-  if (item.solidE !== null && state.exists(item.solidE)) {
-    state.destroyEntity(item.solidE);
-    item.solidE = null;
-  }
+  destroySolid(state, item);
   item.border.visible = false;
+  for (const w of item.partBorders) w.visible = false;
 }
 
 export function carryTo(item: PlacedItem, x: number, y: number, z: number, yaw: number) {
