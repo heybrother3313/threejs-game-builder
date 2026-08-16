@@ -491,6 +491,36 @@ function hurtPlayer(amount: number, fromX: number, fromZ: number, px: number, pz
 
 /* ------------------------------------------------------------- update --- */
 
+/**
+ * Melee: hit every living NPC inside a short cone in front of the player.
+ * Returns how many connected, so callers can tell a real hit from a whiff.
+ */
+export function playerMelee(
+  state: State,
+  px: number,
+  pz: number,
+  fx: number,
+  fz: number,
+  damage = 14,
+  reach = 2.3
+) {
+  let hits = 0;
+  for (const item of placed) {
+    if (!item.entry.npc) continue;
+    const r = npcRuntime(item);
+    if (r.state === 'dead') continue;
+    const dx = item.obj.position.x - px;
+    const dz = item.obj.position.z - pz;
+    const dist = Math.hypot(dx, dz);
+    if (dist > reach || dist < 1e-3) continue;
+    // In front of you, not behind — roughly a 60-degree half-angle.
+    if ((dx / dist) * fx + (dz / dist) * fz < 0.5) continue;
+    damageNpc(state, item, damage, px, pz);
+    hits++;
+  }
+  return hits;
+}
+
 export function isNpc(item: PlacedItem) {
   return !!item.entry.npc || (item.clips?.length ?? 0) > 0;
 }

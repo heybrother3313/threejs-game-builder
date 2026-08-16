@@ -75,6 +75,8 @@ let current: THREE.AnimationAction | null = null;
 let currentState = -1;
 /** While true the death clip owns the rig and the state machine is ignored. */
 let dead = false;
+/** Seconds left in a melee swing; the state machine is ignored while it runs. */
+let swingT = 0;
 
 let player: THREE.Group | null = null;
 let baseOffsetY = 0;
@@ -129,12 +131,13 @@ export async function initCharacterVisual(state: State, playerEntity: number) {
     Jump_Idle: ['Jump_Idle', 'Female_Jump', 'Male_Jump', 'Fall'],
     Jump_Land: ['Jump_Land', 'Female_Jump', 'Male_Jump', 'Land'],
     Death: ['Death', 'Female_Death', 'Male_Death'],
+    Punch: ['Punch', 'Punch_Left', 'Female_Punch', 'Male_Punch', 'Attack', 'Sword_Slash'],
   };
-  for (const seg of ['Idle', 'Walk', 'Run', 'Jump', 'Jump_Idle', 'Jump_Land', 'Death']) {
+  for (const seg of ['Idle', 'Walk', 'Run', 'Jump', 'Jump_Idle', 'Jump_Land', 'Death', 'Punch']) {
     const clip = CANDIDATES[seg].map((c) => findClip(gltf.animations, c)).find(Boolean) ?? null;
     if (clip) {
       const a = mixer.clipAction(clip);
-      if (seg === 'Jump' || seg === 'Jump_Land' || seg === 'Death') {
+      if (seg === 'Jump' || seg === 'Jump_Land' || seg === 'Death' || seg === 'Punch') {
         a.setLoop(THREE.LoopOnce, 1);
         a.clampWhenFinished = true;
       }
@@ -207,6 +210,18 @@ function play(seg: string) {
   current = next;
 }
 
+/** Throw a punch. Returns the clip length so combat can time its hit window. */
+export function playerSwing(): number {
+  const a = actions['Punch'];
+  if (!a || dead) return 0;
+  a.reset().fadeIn(0.06).play();
+  current?.fadeOut(0.06);
+  current = a;
+  swingT = a.getClip().duration;
+  currentState = -1; // force a re-read of the movement state when the swing ends
+  return swingT;
+}
+
 /** Play (or clear) the death animation; the rig ignores movement while dead. */
 export function setPlayerDead(v: boolean) {
   dead = v;
@@ -240,10 +255,13 @@ export function updateCharacterVisual(state: State, playerEntity: number) {
   // Follow the engine's state machine (unless death has taken the rig).
   const ac = findAnimChar(state);
   const st = ac !== null ? AnimatedCharacter.animationState[ac] : 0;
-  if (!dead && ac !== null && st !== currentState) {
+  // One delta per frame: it drives both the swing timer and the mixer.
+  const dt = clock.getDelta();
+  swingT = Math.max(0, swingT - dt);
+  if (!dead && swingT <= 0 && ac !== null && st !== currentState) {
     currentState = st;
     play(STATE_CLIP[st] ?? 'Idle');
   }
 
-  mixer.update(clock.getDelta());
+  mixer.update(dt);
 }

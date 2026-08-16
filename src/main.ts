@@ -24,12 +24,18 @@ import { Transform, WorldTransform } from 'vibegame/transforms';
 import { buildMode, initBuilder, toggleBuildMode } from './builder';
 import { setPlayerPosProvider } from './assistant';
 import { canRedo, canUndo, mark, redo, undo } from './history';
-import { initCharacterVisual, setPlayerDead, updateCharacterVisual } from './character';
+import {
+  initCharacterVisual,
+  playerSwing,
+  setPlayerDead,
+  updateCharacterVisual,
+} from './character';
 import {
   configurePlayerHooks,
   damageNpc,
   isTalking,
   playerIsDead,
+  playerMelee,
   npcKey,
   npcRuntime,
   playerHealth,
@@ -409,6 +415,14 @@ const CarrySystem: System = {
 
     if (wantsThrow && heldItem) {
       releaseItem(CARRY.throwSpeed, CARRY.throwLift);
+      wantsGrab = wantsThrow = false;
+      return;
+    }
+    // Empty-handed F is a punch. Same button, context decides — you either
+    // throw what you're carrying or swing at what's in front of you.
+    if (wantsThrow && heldItem === null && heldEntity === null) {
+      playerSwing();
+      playerMelee(state, Transform.posX[player], Transform.posZ[player], fx, fz);
       wantsGrab = wantsThrow = false;
       return;
     }
