@@ -81,8 +81,9 @@ export type PlacedItem = {
   marker?: THREE.Mesh;
   /** Set while the player is carrying this item. */
   carried?: boolean;
-  /** In-flight throw: velocity plus the height it should land at. */
-  flight?: { vx: number; vy: number; vz: number; restY: number };
+  /** In-flight throw: velocity plus the height it should land at.
+   *  `harmless` marks loot pops, which shouldn't damage bystanders. */
+  flight?: { vx: number; vy: number; vz: number; restY: number; harmless?: boolean };
   /** Patrol state: distance travelled along the path loop. */
   pathDist?: number;
   /** The visual's authored base position, so path motion is a pure offset. */
@@ -1014,7 +1015,14 @@ export function updateLevel(state: State, dt: number, playerPos?: THREE.Vector3)
 }
 
 /** Nearest pickable item within reach of a point, facing considered. */
-export function findPickable(px: number, pz: number, fx: number, fz: number, reach: number) {
+export function findPickable(
+  px: number,
+  pz: number,
+  fx: number,
+  fz: number,
+  reach: number,
+  py?: number
+) {
   let best: PlacedItem | null = null;
   let bestDist = reach;
   for (const item of placed) {
@@ -1023,6 +1031,8 @@ export function findPickable(px: number, pz: number, fx: number, fz: number, rea
     const dz = item.entry.z - pz;
     const dist = Math.hypot(dx, dz);
     if (dist > bestDist || dist < 1e-3) continue;
+    // No reaching up to a ledge or down through the floor.
+    if (py !== undefined && Math.abs(item.obj.position.y - py) > 1.5) continue;
     if ((dx / dist) * fx + (dz / dist) * fz < 0.2) continue;
     best = item;
     bestDist = dist;

@@ -450,7 +450,8 @@ const CarrySystem: System = {
         Transform.posZ[player],
         fx,
         fz,
-        CARRY.reach
+        CARRY.reach,
+        Transform.posY[player]
       );
       if (prop) {
         beginCarry(state, prop);
@@ -614,6 +615,7 @@ const VisualsSystem: System = {
         playerMelee(
           state,
           Transform.posX[p0],
+          Transform.posY[p0],
           Transform.posZ[p0],
           pendingPunch.fx,
           pendingPunch.fz
@@ -734,7 +736,7 @@ withSystem(PlatformSlipSystem)
         // The app's own NPC functions — importing npc.ts from a console eval
         // yields a SEPARATE module instance, so flags set there are invisible
         // to the running game.
-        npc: { npcKey, npcRuntime, damageNpc, playerHealth },
+        npc: { npcKey, npcRuntime, damageNpc, playerHealth, playerMelee, updateNpcs },
         history: { mark, undo, redo, canUndo, canRedo },
         selectionInfo,
         selectItems,

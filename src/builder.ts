@@ -27,7 +27,7 @@ import { cachedThumb, thumbFor } from './thumbs';
 import extraPalette from './levels/extra-palette.json';
 import { QUICK_PROMPTS, aiConfig, listModels, runAssistant, saveAiConfig } from './assistant';
 import { PLAYER_CHOICES, playerModel, setPlayerModel } from './character';
-import { DEFAULTS, resetNpc, type NpcConfig } from './npc';
+import { DEFAULTS, resetNpc, resolveLoot, type NpcConfig } from './npc';
 import { canRedo, canUndo, initHistory, mark, redo, redoLabel, undo, undoLabel } from './history';
 
 /**
@@ -867,8 +867,13 @@ function updateNpcPanel() {
         <input id="n-reach" type="number" min="0.5" step="0.1" value="${n.attackRadius ?? DEFAULTS.attackRadius}" /></div>
     </div>
     <label>Loot on defeat</label>
-    <input id="n-loot" type="text" placeholder="/models/quaternius-pirate/Coins.glb"
-      value="${(n.loot ?? '').replace(/"/g, '&quot;')}" />
+    <select id="n-loot">
+      ${LOOT_CHOICES.map((l) => {
+        // Show what will actually drop, including the hostile default.
+        const effective = resolveLoot(n.loot, n.faction) ?? 'none';
+        return `<option value="${l.src}"${effective === l.src ? ' selected' : ''}>${l.label}</option>`;
+      }).join('')}
+    </select>
     <hr style="border:none;border-top:2px solid var(--border-quiet);margin:10px 0" />
     <label>Dialogue (one line per row)</label>
     <textarea id="n-lines" rows="3" placeholder="Ahoy there!">${(n.lines ?? (e.dialog ? [e.dialog] : [])).join('\n')}</textarea>
@@ -947,9 +952,8 @@ function updateNpcPanel() {
   num('#n-aggro', 'aggroRadius');
   num('#n-reach', 'attackRadius');
 
-  const lootEl = npcEl.querySelector('#n-loot') as HTMLInputElement;
-  lootEl.addEventListener('keydown', (ev) => ev.stopPropagation());
-  lootEl.addEventListener('change', () => commit({ loot: lootEl.value.trim() || undefined }));
+  const lootEl = npcEl.querySelector('#n-loot') as HTMLSelectElement;
+  lootEl.addEventListener('change', () => commit({ loot: lootEl.value || undefined }));
 
   const linesEl = npcEl.querySelector('#n-lines') as HTMLTextAreaElement;
   linesEl.addEventListener('keydown', (ev) => ev.stopPropagation());
@@ -1470,6 +1474,21 @@ function onWheel(ev: WheelEvent) {
 }
 
 /* ----------------------------------------------------------- selection --- */
+
+/** Loot worth dropping — picked from a list so no one has to type a path. */
+const LOOT_CHOICES: { label: string; src: string }[] = [
+  { label: 'nothing', src: 'none' },
+  { label: 'Coins', src: '/models/quaternius-pirate/Coins.glb' },
+  { label: 'Gold bag', src: '/models/quaternius-pirate/Gold Bag.glb' },
+  { label: 'Gold ore', src: '/models/quaternius-pirate/Gold ore.glb' },
+  { label: 'Gem (blue)', src: '/models/quaternius-pirate/Gem Blue.glb' },
+  { label: 'Gem (green)', src: '/models/quaternius-pirate/Gem Green.glb' },
+  { label: 'Gem (pink)', src: '/models/quaternius-pirate/Gem Pink.glb' },
+  { label: 'Chest (gold)', src: '/models/quaternius-pirate/Chest Gold.glb' },
+  { label: 'Skull', src: '/models/quaternius-pirate/Skull.glb' },
+  { label: 'Bottle', src: '/models/quaternius-pirate/Prop Bottle.glb' },
+  { label: 'Barrel', src: '/models/quaternius-pirate/Barrel.glb' },
+];
 
 /**
  * Whether a freshly placed piece should collide.

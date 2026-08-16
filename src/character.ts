@@ -273,7 +273,13 @@ export function updateCharacterVisual(state: State, playerEntity: number) {
   const ac = findAnimChar(state);
   const st = ac !== null ? AnimatedCharacter.animationState[ac] : 0;
   // One delta per frame: it drives both the swing timer and the mixer.
-  const dt = clock.getDelta();
+  //
+  // Clamped, because a long frame otherwise eats the animation. Killing an NPC
+  // spawns its loot, and loading that model can stall a frame for a few
+  // hundred milliseconds; an unclamped delta then advances the mixer past most
+  // of the punch and zeroes the swing timer in one step, so the swing appears
+  // to abort — which is exactly why the *final* punch was the one that broke.
+  const dt = Math.min(clock.getDelta(), 0.05);
   swingT = Math.max(0, swingT - dt);
   if (!dead && swingT <= 0 && ac !== null && st !== currentState) {
     currentState = st;

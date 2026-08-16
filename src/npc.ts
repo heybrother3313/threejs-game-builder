@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import type { State } from 'vibegame';
-import { findClip, instantiate, placed, type PlacedItem } from './level';
+import { findClip, instantiate, loadModel, placed, type PlacedItem } from './level';
 
 /**
  * NPC behaviour, combat, and conversation.
@@ -100,6 +100,16 @@ const CLIPS: Record<string, string[]> = {
 
 /** How far into a swing the blow actually connects, seconds. */
 export const SWING_CONTACT = 0.32;
+
+/**
+ * Vertical limits. Every range check used to be flat distance in x/z, so an
+ * NPC could punch someone standing on a rock above its head — the maths simply
+ * didn't know about height. Reach covers slopes and a step or two; notice is
+ * looser, since seeing someone up a ledge is fine, it's hitting them that
+ * isn't.
+ */
+const REACH_HEIGHT = 1.5;
+const NOTICE_HEIGHT = 4;
 
 export const DEFAULTS: Required<Pick<NpcConfig, 'health' | 'damage' | 'speed' | 'aggroRadius' | 'attackRadius'>> = {
   health: 30,
@@ -332,6 +342,10 @@ export function npcRuntime(item: PlacedItem): Runtime {
   let r = rt.get(item);
   if (!r) {
     const cfg = item.entry.npc ?? {};
+    // Warm the loot model now, not on the frame this NPC dies — parsing a GLB
+    // mid-combat costs a visible hitch right at the killing blow.
+    const effectiveLoot = resolveLoot(cfg.loot, cfg.faction);
+  if (effectiveLoot) void loadModel(effectiveLoot).catch(() => undefined);
     r = {
       hp: cfg.health ?? DEFAULTS.health,
       maxHp: cfg.health ?? DEFAULTS.health,
@@ -452,17 +466,30 @@ export function damageNpc(state: State, item: PlacedItem, amount: number, fromX:
       if (state.exists(e)) state.destroyEntity(e);
     }
     item.solidEs = [];
-    const loot = item.entry.npc?.loot;
+    const loot = resolveLoot(item.entry.npc?.loot, item.entry.npc?.faction);
     if (loot) {
+      // Pop it out of the body rather than dropping it underneath. A flat item
+      // spawned at the corpse's feet is invisible — hidden by the very model
+      // that dropped it — so give it a short arc and land it clear of the body.
+      const dir = Math.random() * Math.PI * 2;
       void instantiate(state, {
         src: loot,
         x: item.obj.position.x,
-        y: 0,
+        y: 0.9,
         z: item.obj.position.z,
         rotY: Math.random() * Math.PI * 2,
-        fitHeight: 0.5,
+        fitHeight: 0.65,
         solid: false,
         pickable: true,
+      }).then((drop) => {
+        if (!drop) return;
+        drop.flight = {
+          vx: Math.sin(dir) * 1.8,
+          vy: 3.2,
+          vz: Math.cos(dir) * 1.8,
+          restY: 0,
+          harmless: true,
+        };
       });
     }
     return;
@@ -507,6 +534,26 @@ function hurtPlayer(amount: number, fromX: number, fromZ: number, px: number, pz
 /* ------------------------------------------------------------- update --- */
 
 /**
+ * Accept a bare loot name as well as a full path.
+ *
+ * The field used to demand "/models/quaternius-pirate/Coins.glb"; typing
+ * "Coins" produced a silent no-drop, which is indistinguishable from loot
+ * being broken. Anything without a slash is looked up in the treasure kit.
+ */
+export function resolveLoot(loot?: string, faction?: string): string | undefined {
+  const trimmed = loot?.trim();
+  // Never configured + hostile: drop coins. Beating something and getting
+  // nothing reads as broken, and "you must first fill in a model path" is a
+  // bad answer. 'none' is the explicit opt-out.
+  if (trimmed === undefined || trimmed === '') {
+    return faction === 'hostile' ? '/models/quaternius-pirate/Coins.glb' : undefined;
+  }
+  if (trimmed === 'none') return undefined;
+  if (trimmed.includes('/')) return trimmed;
+  return `/models/quaternius-pirate/${trimmed.replace(/\.glb$/i, '')}.glb`;
+}
+
+/**
  * Melee: hit every living NPC inside a short cone in front of the player.
  * Returns how many connected, so callers can tell a real hit from a whiff.
  */
@@ -529,6 +576,7 @@ function ensureAlive(item: PlacedItem): boolean {
 export function playerMelee(
   state: State,
   px: number,
+  py: number,
   pz: number,
   fx: number,
   fz: number,
@@ -544,6 +592,7 @@ export function playerMelee(
     const dz = item.obj.position.z - pz;
     const dist = Math.hypot(dx, dz);
     if (dist > reach || dist < 1e-3) continue;
+    if (Math.abs(item.obj.position.y - py) > REACH_HEIGHT) continue; // out of reach above/below
     // In front of you, not behind — roughly a 60-degree half-angle.
     if ((dx / dist) * fx + (dz / dist) * fz < 0.5) continue;
     damageNpc(state, item, damage, px, pz);
@@ -592,7 +641,7 @@ export function updateNpcs(
   // Thrown props hurt anything alive, configured or not — checked before the
   // brain loop so a character with no Role can still be knocked about.
   for (const proj of placed) {
-    if (!proj.flight) continue;
+    if (!proj.flight || proj.flight.harmless) continue;
     for (const target of placed) {
       if (target === proj || !ensureAlive(target)) continue;
       if (npcRuntime(target).state === 'dead') continue;
@@ -617,13 +666,16 @@ export function updateNpcs(
     const reach = cfg.attackRadius ?? DEFAULTS.attackRadius;
     const p = item.obj.position;
     const toPlayer = Math.hypot(playerPos.x - p.x, playerPos.z - p.z);
+    const heightGap = Math.abs(playerPos.y - p.y);
+    const canReach = heightGap < REACH_HEIGHT;
+    const canNotice = heightGap < NOTICE_HEIGHT;
     // Assume path-walking owns the transform unless a state below takes over.
     item.npcDriving = false;
     r.t += dt;
     r.cooldown = Math.max(0, r.cooldown - dt);
     if (r.swing > 0) {
       r.swing = Math.max(0, r.swing - dt);
-      if (r.swing === 0 && r.state !== 'dead' && toPlayer <= reach + 0.4) {
+      if (r.swing === 0 && r.state !== 'dead' && toPlayer <= reach + 0.4 && canReach) {
         hurtPlayer(cfg.damage ?? DEFAULTS.damage, p.x, p.z, playerPos.x, playerPos.z);
       }
     }
@@ -651,15 +703,16 @@ export function updateNpcs(
     }
 
     // Offer a chat when close enough.
-    if (linesOf(item).length && toPlayer < 3 && cfg.faction !== 'hostile') {
+    if (linesOf(item).length && toPlayer < 3 && canReach && cfg.faction !== 'hostile') {
       prompt = `<b>E</b>&nbsp; talk to ${nameOf(item)}`;
     }
 
     if (r.following) r.state = 'follow';
     else if (r.guiding) r.state = 'guide';
-    else if (cfg.faction === 'hostile' && toPlayer < aggro) r.state = toPlayer <= reach ? 'attack' : 'chase';
+    else if (cfg.faction === 'hostile' && toPlayer < aggro && canNotice)
+      r.state = toPlayer <= reach && canReach ? 'attack' : 'chase';
     else if (r.parked) r.state = 'idle';
-    else if (cfg.behavior === 'flee' && toPlayer < aggro) r.state = 'flee';
+    else if (cfg.behavior === 'flee' && toPlayer < aggro && canNotice) r.state = 'flee';
     else if (r.state === 'chase' || r.state === 'attack' || r.state === 'flee') r.state = 'idle';
     else if (cfg.behavior === 'wander') r.state = 'wander';
     else if (item.entry.path?.length) r.state = 'patrol';
@@ -823,6 +876,7 @@ export function npcKey(code: string, playerPos: THREE.Vector3 | undefined): bool
       if (!linesOf(item).length) continue;
       if (item.entry.npc?.faction === 'hostile') continue;
       if (npcRuntime(item).state === 'dead') continue;
+      if (Math.abs(item.obj.position.y - playerPos.y) > REACH_HEIGHT) continue;
       const d = Math.hypot(item.obj.position.x - playerPos.x, item.obj.position.z - playerPos.z);
       if (d < bestD) {
         best = item;
