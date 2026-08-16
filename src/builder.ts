@@ -31,6 +31,7 @@ import { DEFAULTS, resetNpc, resolveLoot, type NpcConfig } from './npc';
 import { canRedo, canUndo, initHistory, mark, redo, redoLabel, replaceAll, undo, undoLabel } from './history';
 import { STARTERS } from './starters';
 import { currentWorldId, destinations, setCurrentWorldId, worldName } from './worlds';
+import { setAtmosphereFog } from './atmosphere';
 
 /**
  * The map builder: Tony Hawk park-editor semantics, not a DCC.
@@ -1119,6 +1120,7 @@ export function toggleBuildMode() {
   buildMode = !buildMode;
   ui.classList.toggle('on', buildMode);
   setPathsVisible(buildMode);
+  setAtmosphereFog(!buildMode);
   // Older saves predate spawn flags; conjure one so it's there to drag.
   if (buildMode && !placed.some((i) => i.entry.src === 'spawn')) {
     void instantiate(state, { src: 'spawn', x: 0, y: 0, z: 0, rotY: 0 }).then(() => {

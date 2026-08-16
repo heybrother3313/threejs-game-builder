@@ -51,6 +51,7 @@ import {
 } from './npc';
 import { travelTo, worldName } from './worlds';
 import { grantLoot, lootCounts, updateLootPickup } from './loot';
+import { initAtmosphere } from './atmosphere';
 import {
   analyzeAssets,
   beginCarry,
@@ -738,6 +739,7 @@ withSystem(PlatformSlipSystem)
     }
 
     brightenScene(state);
+    initAtmosphere(state);
 
     await loadLevel(state);
 
