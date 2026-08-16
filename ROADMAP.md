@@ -32,8 +32,13 @@ What we're building toward, roughly ordered. Items graduate off the top.
 - [ ] Irregular island coastline (jittered skirt outline instead of rectangles).
 
 ## World structure
-- [ ] **Main town island** — the hub. NPCs give out quests posted on boards
-      (quest board = interactable that lists fetch quests from town NPCs).
+- [x] **Main town island** — Ketch Harbour, with a quest board that reads open
+      fetch quests off the townsfolk, and berths to all four islands.
+      Travel is hub-and-spoke.
+- [ ] **Starter updates don't reach saved worlds.** A world you've visited is
+      banked in `sandbox-worlds-v1` and shadows the starter forever — editing a
+      starter has no effect on anyone who has been there. Needs a "reset this
+      island" action, or version-stamping starters.
 - [ ] **Cut scenes between islands** — play authored AI videos (boat pulling
       away, spaceship to the Mars level, etc.) during travel instead of the
       instant swap. Travel already goes through one code path (`worlds.travelTo`),
@@ -41,9 +46,10 @@ What we're building toward, roughly ordered. Items graduate off the top.
 - [ ] More destination islands; portals already support any world id.
 
 ## Gameplay systems
-- [ ] **Weapons** — handheld melee (sword/axe pickups that change punch damage
-      and animation) and bombs that actually explode (area damage + knockback;
-      bombs exist as throwables today but only bonk).
+- [x] **Weapons** — blades change damage/reach when carried (F swings instead
+      of throwing); bombs explode where they land with falloff damage, prop
+      knockback and self-damage.
+- [ ] Swing animation for blades (currently reuses the punch clip).
 - [ ] **Fishing** — the survival kit ships a Fishing Stand and Fish props;
       fish stocks live in the lagoon already. Cast → wait → catch → inventory.
 - [ ] **Gardening** — plant seeds, wait (real time or steps), harvest into

@@ -735,7 +735,8 @@ export function updateNpcs(
 
   // Boards are props, not NPCs — the loop below skips anything without an
   // npc block, so their prompt has to be raised here.
-  if (nearbyBoard(playerPos)) prompt = `<b>E</b>&nbsp; read the quest board`;
+  const boardNear = nearbyBoard(playerPos);
+  if (boardNear) prompt = `<b>E</b>&nbsp; read the quest board`;
 
   for (const item of placed) {
     const cfg = item.entry.npc;
@@ -796,7 +797,10 @@ export function updateNpcs(
     }
 
     // Offer a chat when close enough.
-    if (linesOf(item).length && toPlayer < 3 && canReach && cfg.faction !== 'hostile') {
+    if (
+      linesOf(item).length && toPlayer < 3 && canReach && cfg.faction !== 'hostile' &&
+      (!boardNear || toPlayer <= boardNear.d)
+    ) {
       prompt = `<b>E</b>&nbsp; talk to ${nameOf(item)}`;
     }
 
@@ -941,15 +945,14 @@ function questBoardText(): string {
   return parts.join('<br><br>');
 }
 
-/** The nearest quest board within reading distance, if any. */
-function nearbyBoard(playerPos: THREE.Vector3): PlacedItem | null {
-  let best: PlacedItem | null = null;
-  let bestD = 3.2;
+/** The nearest quest board within reading distance, with its distance. */
+function nearbyBoard(playerPos: THREE.Vector3): { item: PlacedItem; d: number } | null {
+  let best: { item: PlacedItem; d: number } | null = null;
   for (const item of placed) {
     if (!item.entry.questBoard) continue;
     const d = Math.hypot(item.obj.position.x - playerPos.x, item.obj.position.z - playerPos.z);
-    if (Math.abs(item.obj.position.y - playerPos.y) > REACH_HEIGHT) continue;
-    if (d < bestD) { best = item; bestD = d; }
+    if (d > 3.2 || Math.abs(item.obj.position.y - playerPos.y) > REACH_HEIGHT) continue;
+    if (!best || d < best.d) best = { item, d };
   }
   return best;
 }
@@ -999,18 +1002,6 @@ export function npcKey(code: string, playerPos: THREE.Vector3 | undefined): bool
 
   if (code === 'KeyE') {
     const board = nearbyBoard(playerPos);
-    if (board) {
-      ensureUi();
-      if (dialogEl) {
-        talking = { item: board, index: Number.MAX_SAFE_INTEGER };
-        dialogEl.innerHTML =
-          `<div class="who">Quest board</div>` +
-          `<div class="line">${questBoardText()}</div>` +
-          `<div class="opts"><span class="opt">[E] Done</span></div>`;
-        dialogEl.style.display = 'block';
-      }
-      return true;
-    }
     // Nearest talkable NPC wins over picking things up.
     let best: PlacedItem | null = null;
     let bestD = 3;
@@ -1024,6 +1015,20 @@ export function npcKey(code: string, playerPos: THREE.Vector3 | undefined): bool
         best = item;
         bestD = d;
       }
+    }
+    // A board in a town square sits within arm's reach of everyone; if it
+    // always won, none of them could be spoken to. Nearest thing wins.
+    if (board && (!best || board.d <= bestD)) {
+      ensureUi();
+      if (dialogEl) {
+        talking = { item: board.item, index: Number.MAX_SAFE_INTEGER };
+        dialogEl.innerHTML =
+          `<div class="who">Quest board</div>` +
+          `<div class="line">${questBoardText()}</div>` +
+          `<div class="opts"><span class="opt">[E] Done</span></div>`;
+        dialogEl.style.display = 'block';
+      }
+      return true;
     }
     if (best) {
       const r = npcRuntime(best);
