@@ -63,19 +63,21 @@ export function initAtmosphere(state: State) {
   scene.add(ocean);
 
   // The island skirt. The playfield is a rectangular slab, and a slab over
-  // water is a floating table from any downward camera angle. Two low-poly
-  // rings turn it into a landmass: a sandy shelf hugging the slab just above
-  // the waterline, and a wider shallows ring just under it. Corner of the
-  // 26x18 slab is 15.8 out, so the shelf's top radius must clear that.
+  // water is a floating table from any downward camera angle. The skirt must
+  // be RECTANGULAR like the slab: a circle wide enough to cover the corners
+  // (15.8 out) bulges seven units past the flat edges — sand that looks
+  // walkable with nothing under it, and fish swimming over beach. A snug
+  // rectangular shelf keeps the visual coastline within a step of the real
+  // floor, so what looks like land IS land.
   const shelf = new THREE.Mesh(
-    new THREE.CylinderGeometry(16.8, 14.5, 0.9, 12),
+    new THREE.BoxGeometry(27.5, 1.0, 19.5),
     new THREE.MeshLambertMaterial({ color: 0xe8d6a0 })
   );
-  shelf.position.y = -0.5; // top at -0.05, a hair under the sand top
+  shelf.position.y = -0.55; // top at -0.05, a hair under the sand top
   shelf.receiveShadow = true;
   scene.add(shelf);
   const shallows = new THREE.Mesh(
-    new THREE.CylinderGeometry(20.5, 18, 0.5, 12),
+    new THREE.BoxGeometry(31.5, 0.5, 23.5),
     new THREE.MeshLambertMaterial({ color: 0x5fa3cd })
   );
   shallows.position.y = -0.55; // top at -0.3: above the sea, below the shelf
