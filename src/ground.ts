@@ -25,16 +25,26 @@ import { Transform } from 'vibegame/transforms';
 /** The playfield, matching the island slab in index.html. */
 export const ISLAND = { x: 13, z: 9 };
 /**
- * Peak relief in metres. Measured, not guessed: at 0.85 three collision cells
- * stepped 0.328m and would have been invisible walls against the engine's
- * 0.3m autostep. 0.74 puts the worst step at 0.29.
+ * Peak relief in metres. Height is measured UP FROM ZERO, never below it —
+ * the base slab's top sits at y=0, so a hollow that dipped under it would
+ * put the walkable floor above the visible ground, and the rim of the
+ * collision grid would become a drop you fall off. Sitting the whole range
+ * on top of the slab means the grid and the slab agree everywhere.
  */
-const AMPLITUDE = 0.74;
+const AMPLITUDE = 1.15;
 /** Visual resolution. */
 const SEG_X = 104;
 const SEG_Z = 72;
-/** Collision resolution — coarser than the visual, still under the step. */
-const CELL = 1.0;
+/**
+ * Collision resolution. Each cell is a FLAT-topped box, so the walkable
+ * surface is a staircase however smooth the visual is — and at 1.0m the
+ * risers were big enough to launch the character controller off the ground
+ * between cells. The state machine saw that as a jump and flickered
+ * Jump_Idle/Jump_Land while merely walking, which is the "skipping". Halving
+ * the cell quarters the riser; the box count is still trivial for Rapier
+ * static cuboids.
+ */
+const CELL = 0.5;
 
 /**
  * Smooth pseudo-random relief: a few sine octaves. Deterministic, cheap, and
@@ -64,7 +74,10 @@ function coastFade(x: number, z: number): number {
 /** Ground height at a world position. O(1) — call it per frame, per entity. */
 export function islandHeight(x: number, z: number): number {
   if (Math.abs(x) > ISLAND.x || Math.abs(z) > ISLAND.z) return 0;
-  return relief(x, z) * AMPLITUDE * coastFade(x, z);
+  // relief() spans about ±1.27; fold it into 0..1 so the ground only ever
+  // rises from the slab, and halve the slope while we're at it.
+  const t = Math.max(0, Math.min(1, relief(x, z) * 0.4 + 0.5));
+  return t * AMPLITUDE * coastFade(x, z);
 }
 
 const SAND = new THREE.Color('#e8d6a0');

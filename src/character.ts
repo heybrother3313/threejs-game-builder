@@ -3,6 +3,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import type { State } from 'vibegame';
 import { AnimatedCharacter } from 'vibegame/animation';
 import { Renderer, getScene } from 'vibegame/rendering';
+import { Body, CharacterController } from 'vibegame/physics';
 import { Transform, WorldTransform } from 'vibegame/transforms';
 
 /**
@@ -89,6 +90,12 @@ let swingT = 0;
 let swinging = false;
 
 let player: THREE.Group | null = null;
+/** Eased draw height; see updateCharacterVisual. */
+let smoothY: number | null = null;
+/** How long the engine has reported the player airborne, and the last
+ *  grounded state to hold onto while that's still in doubt. */
+let airborneT = 0;
+let groundedState = 0;
 let baseOffsetY = 0;
 const clock = new THREE.Clock();
 
@@ -171,6 +178,18 @@ export async function initCharacterVisual(state: State, playerEntity: number) {
 
 /** Cached so the per-frame renderer sweep isn't an entity scan. */
 let animChar: number | null = null;
+/** The entity carrying the character controller, cached the same way. */
+let ccEntity: number | null = null;
+function playerCC(state: State): number | null {
+  if (ccEntity !== null && state.exists(ccEntity)) return ccEntity;
+  for (let e = 1; e < 4096; e++) {
+    if (state.exists(e) && state.hasComponent(e, CharacterController)) {
+      ccEntity = e;
+      return e;
+    }
+  }
+  return null;
+}
 
 function findAnimChar(state: State): number | null {
   if (animChar !== null && state.exists(animChar)) return animChar;
@@ -282,9 +301,16 @@ export function updateCharacterVisual(state: State, playerEntity: number) {
   if (!player || !mixer) return;
   hideBlockyCharacter(state);
 
+  // Ease the drawn height. The collision grid is a staircase, so walking a
+  // slope arrives as a series of small vertical pops; easing them out reads as
+  // walking uphill. Only small deltas are smoothed — a real jump or fall must
+  // stay instant, or the character lags behind its own physics.
+  const targetY = WorldTransform.posY[playerEntity] + baseOffsetY;
+  if (smoothY === null || Math.abs(targetY - smoothY) > 0.4) smoothY = targetY;
+  else smoothY += (targetY - smoothY) * 0.35;
   player.position.set(
     WorldTransform.posX[playerEntity],
-    WorldTransform.posY[playerEntity] + baseOffsetY,
+    smoothY,
     WorldTransform.posZ[playerEntity]
   );
   const y = Transform.rotY[playerEntity];
@@ -293,7 +319,7 @@ export function updateCharacterVisual(state: State, playerEntity: number) {
 
   // Follow the engine's state machine (unless death has taken the rig).
   const ac = findAnimChar(state);
-  const st = ac !== null ? AnimatedCharacter.animationState[ac] : 0;
+  const raw = ac !== null ? AnimatedCharacter.animationState[ac] : 0;
   // One delta per frame: it drives both the swing timer and the mixer.
   //
   // Clamped, because a long frame otherwise eats the animation. Killing an NPC
@@ -304,6 +330,42 @@ export function updateCharacterVisual(state: State, playerEntity: number) {
   const dt = Math.min(clock.getDelta(), 0.05);
   swingT = Math.max(0, swingT - dt);
   if (swingT === 0) swinging = false;
+
+  /*
+   * Debounce going airborne.
+   *
+   * The ground's colliders are a grid of flat-topped boxes, so walking DOWN a
+   * slope means a series of tiny free-falls off each plateau — physically
+   * correct, and invisible, except that the engine reports every one as
+   * airborne. The rig then flickered Jump_Idle/Jump_Land several times a
+   * second while merely walking, which is the "skipping", and it made a punch
+   * look like it had failed. A real jump stays airborne far longer than this
+   * window, so it still animates; a one-frame stumble no longer does.
+   */
+  /*
+   * GROUNDED IS AUTHORITATIVE.
+   *
+   * The engine derives its animation state partly from vertical velocity, and
+   * walking down this terrain always has some: the ground's colliders are a
+   * grid of flat-topped boxes, so a descent is a run of small drops off each
+   * plateau. The controller stays grounded through all of it (snapDist holds
+   * it down) but the state machine kept calling it a fall, flickering
+   * Jump_Idle/Jump_Land several times a second — the "skipping", and what made
+   * a punch look like it had died halfway.
+   *
+   * So: if the controller says grounded, the character is walking or standing,
+   * whatever the state machine thinks. The debounce below still covers the
+   * genuine one-frame ungroundings on the way down.
+   */
+  const cc = playerCC(state);
+  const grounded = cc !== null && CharacterController.grounded[cc] === 1;
+  const speed = Math.hypot(Body.velX[playerEntity], Body.velZ[playerEntity]);
+  let raw2 = raw;
+  if (grounded && (raw === 2 || raw === 3 || raw === 4)) raw2 = speed > 0.6 ? 1 : 0;
+  const airborne = raw2 === 2 || raw2 === 3 || raw2 === 4;
+  airborneT = airborne ? airborneT + dt : 0;
+  const st = airborne && airborneT < 0.14 ? groundedState : raw2;
+  if (!airborne) groundedState = raw2;
   if (!dead && swingT <= 0 && ac !== null && st !== currentState) {
     currentState = st;
     play(STATE_CLIP[st] ?? 'Idle');
