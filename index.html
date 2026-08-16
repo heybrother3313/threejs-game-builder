@@ -78,9 +78,8 @@
       <player pos="0 1 0" character-controller="offset: 0.02"></player>
       <!-- Sand base -->
       <static-part pos="0 -0.5 0" shape="box" size="26 1 18" color="#e8d6a0"></static-part>
-      <!-- Shallow water aprons past the sand edge -->
-      <static-part pos="0 -0.75 14" shape="box" size="26 0.5 10" color="#3f7fb2"></static-part>
-      <static-part pos="0 -0.75 -14" shape="box" size="26 0.5 10" color="#3f7fb2"></static-part>
+      <!-- No water aprons: the sea is real now (atmosphere.ts) — rectangular
+           water slabs read as a table edge from any downward camera angle. -->
 
       <!-- Rocks, climb, and summit are Quaternius models loaded from main.ts;
            their colliders are auto-generated from each model's bounds. -->

@@ -52,8 +52,8 @@ export function initAtmosphere(state: State) {
   dome.renderOrder = -1;
   scene.add(dome);
 
-  // Endless ocean: sits below the levels' own water aprons, so painted water
-  // reads as shallows and everything past the island is open sea.
+  // Endless ocean, with everything below it hidden — the skirt and any
+  // underwater geometry end at this plane instead of hanging in a void.
   const ocean = new THREE.Mesh(
     new THREE.PlaneGeometry(1600, 1600),
     new THREE.MeshLambertMaterial({ color: OCEAN })
@@ -61,6 +61,25 @@ export function initAtmosphere(state: State) {
   ocean.rotation.x = -Math.PI / 2;
   ocean.position.y = -0.62;
   scene.add(ocean);
+
+  // The island skirt. The playfield is a rectangular slab, and a slab over
+  // water is a floating table from any downward camera angle. Two low-poly
+  // rings turn it into a landmass: a sandy shelf hugging the slab just above
+  // the waterline, and a wider shallows ring just under it. Corner of the
+  // 26x18 slab is 15.8 out, so the shelf's top radius must clear that.
+  const shelf = new THREE.Mesh(
+    new THREE.CylinderGeometry(16.8, 14.5, 0.9, 12),
+    new THREE.MeshLambertMaterial({ color: 0xe8d6a0 })
+  );
+  shelf.position.y = -0.5; // top at -0.05, a hair under the sand top
+  shelf.receiveShadow = true;
+  scene.add(shelf);
+  const shallows = new THREE.Mesh(
+    new THREE.CylinderGeometry(20.5, 18, 0.5, 12),
+    new THREE.MeshLambertMaterial({ color: 0x5fa3cd })
+  );
+  shallows.position.y = -0.55; // top at -0.3: above the sea, below the shelf
+  scene.add(shallows);
 
   // Far islands: dark low lumps half-swallowed by the fog. Cones are enough —
   // at that distance silhouette is all that survives.

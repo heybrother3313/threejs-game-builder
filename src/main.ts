@@ -479,6 +479,16 @@ const CarrySystem: System = {
       wantsGrab = wantsThrow = false;
       return;
     }
+    // The sea has no floor now (the aprons were secretly one). Walking off
+    // the island drops you in; the tide puts you back on the spawn flag.
+    if (Body.posY[player] < -6) {
+      const v = spawnPoint();
+      Body.posX[player] = v.x;
+      Body.posY[player] = v.y;
+      Body.posZ[player] = v.z;
+      Body.velX[player] = Body.velY[player] = Body.velZ[player] = 0;
+    }
+
     // Treasure scoops itself — no button, just walk over it.
     updateLootPickup(
       state, Transform.posX[player], Transform.posY[player], Transform.posZ[player]);
