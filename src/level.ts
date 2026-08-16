@@ -120,6 +120,29 @@ const loader = new GLTFLoader();
 /** Animation clips per source file, captured alongside the cached scene. */
 const modelClips = new Map<string, THREE.AnimationClip[]>();
 
+/**
+ * Kit assets model thin features — fish tails and fins, ship sails, leaves —
+ * as single-sided planes. Three.js culls back faces by default, so those parts
+ * vanish the moment a fish turns away or you walk around a ship. Render them
+ * from both sides; shadowSide keeps the shadow pass from acne-ing on the now
+ * two-sided geometry. Done once on the cached source so every clone inherits.
+ */
+function makeDoubleSided(root: THREE.Object3D) {
+  const seen = new Set<THREE.Material>();
+  root.traverse((o) => {
+    const mesh = o as THREE.Mesh;
+    if (!mesh.isMesh && !(mesh as unknown as THREE.SkinnedMesh).isSkinnedMesh) return;
+    const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+    for (const m of mats) {
+      if (!m || seen.has(m)) continue;
+      seen.add(m);
+      m.side = THREE.DoubleSide;
+      m.shadowSide = THREE.FrontSide;
+      m.needsUpdate = true;
+    }
+  });
+}
+
 export function loadModel(src: string): Promise<THREE.Group> {
   let p = modelCache.get(src);
   if (!p) {
@@ -128,6 +151,7 @@ export function loadModel(src: string): Promise<THREE.Group> {
         src,
         (g) => {
           modelClips.set(src, g.animations ?? []);
+          makeDoubleSided(g.scene);
           resolve(g.scene);
         },
         undefined,

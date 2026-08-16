@@ -252,6 +252,7 @@ export function initBuilder(gameState: State, cameraEntityFn: () => number | und
     gizmoDrag = null;
   });
   window.addEventListener('wheel', onWheel, { passive: false });
+  window.addEventListener('resize', layoutRightPanels);
 }
 
 /* ------------------------------------------------------------------ UI --- */
@@ -350,9 +351,12 @@ function buildUi() {
       #builder .sep { width: var(--border-w-hair); height:14px; background: var(--border-quiet); }
 
       /* AI settings + assistant panel (gear in the top bar). */
-      #builder .settings { position:absolute; right:16px; top:74px; width:260px;
-        padding: var(--space-sm); pointer-events:auto; display:none; }
-      #builder .settings.on { display:block; }
+      #builder .settings { position:absolute; right:16px; top:74px; width:264px;
+        padding: var(--space-sm); pointer-events:auto; display:none;
+        max-height: calc(100vh - 108px); overflow:hidden; flex-direction:column; }
+      #builder .settings.on { display:flex; }
+      #builder .settings .scroll { overflow-y:auto; overscroll-behavior:contain;
+        flex:1; min-height:0; padding-right:4px; }
       #builder .settings h3 { font-family: var(--font-display);
         font-size: var(--text-body-sm); margin: 0 0 var(--space-xs); }
       #builder .settings label { display:block; font-size: var(--text-label-sm);
@@ -369,9 +373,16 @@ function buildUi() {
         max-height:140px; overflow-y:auto; white-space:pre-wrap; }
 
       /* NPC behavior panel: appears when one animated piece is selected. */
-      #builder .npc { position:absolute; right:16px; top:74px; width:220px;
-        padding: var(--space-sm); pointer-events:auto; display:none; }
-      #builder .npc.on { display:block; }
+      /* Both right-hand panels cap their height and scroll internally —
+         the model lists and NPC controls are taller than the viewport, and a
+         panel whose Save/Clear buttons sit below the fold is unusable. */
+      #builder .npc { position:absolute; right:16px; top:74px; width:224px;
+        padding: var(--space-sm); pointer-events:auto; display:none;
+        max-height: calc(100vh - 108px); overflow:hidden;
+        flex-direction:column; }
+      #builder .npc.on { display:flex; }
+      #builder .npc .scroll { overflow-y:auto; overscroll-behavior:contain;
+        flex:1; min-height:0; padding-right:4px; }
       #builder .npc h3 { font-family: var(--font-display); font-size: var(--text-body-sm);
         margin: 0 0 var(--space-xs); }
       #builder .npc label { display:block; font-size: var(--text-label-sm);
@@ -403,6 +414,7 @@ function buildUi() {
     <div class="npc plinth" id="b-npc"></div>
     <div class="settings plinth" id="b-ai">
       <h3>AI Assistant</h3>
+      <div class="scroll">
       <label>Ollama URL (proxied)</label>
       <input id="ai-url" type="text" />
       <label>Model</label>
@@ -418,6 +430,7 @@ function buildUi() {
         <button id="ai-run" class="accent">Run</button>
       </div>
       <div id="ai-out"></div>
+      </div>
     </div>
     <div class="status plinth" id="b-status"></div>
   `;
@@ -650,8 +663,21 @@ function clipSegments(item: PlacedItem): string[] {
 function layoutRightPanels() {
   const settings = ui.querySelector('#b-ai') as HTMLDivElement | null;
   if (!settings) return;
-  const npcOn = npcEl?.classList.contains('on');
-  settings.style.top = npcOn ? `${74 + npcEl.offsetHeight + 12}px` : '74px';
+  const npcOn = !!npcEl?.classList.contains('on');
+  const settingsOn = settings.classList.contains('on');
+  const avail = window.innerHeight - 108;
+
+  if (npcOn && settingsOn) {
+    // Share the column: neither panel may push the other off the bottom.
+    const half = Math.floor((avail - 12) / 2);
+    npcEl.style.maxHeight = `${half}px`;
+    settings.style.maxHeight = `${half}px`;
+    settings.style.top = `${74 + half + 12}px`;
+  } else {
+    if (npcEl) npcEl.style.maxHeight = `${avail}px`;
+    settings.style.maxHeight = `${avail}px`;
+    settings.style.top = '74px';
+  }
 }
 
 function updateNpcPanel() {
@@ -668,6 +694,7 @@ function updateNpcPanel() {
   const n: NpcConfig = e.npc ?? {};
   npcEl.innerHTML = `
     <h3>${nameOf(e.src)}</h3>
+    <div class="scroll">
     <label>Animation</label>
     <select id="n-clip">${clipSegments(item)
       .map((c) => `<option${c === e.clip ? ' selected' : ''}>${c}</option>`)
@@ -725,6 +752,7 @@ function updateNpcPanel() {
     </div>
     <label>Arrival line</label>
     <input id="n-arrive" type="text" placeholder="Here we are!" value="${(n.arriveLine ?? '').replace(/"/g, '&quot;')}" />
+    </div>
   `;
   npcEl.querySelector('#n-clip')!.addEventListener('change', (ev) => {
     mark('animation');

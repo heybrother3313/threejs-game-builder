@@ -55,6 +55,14 @@ export async function initCharacterVisual(state: State, playerEntity: number) {
     if (m.isMesh) {
       m.castShadow = true;
       m.frustumCulled = false; // skinned bounds are bind-pose; don't let it cull mid-jump
+      // Hair and cloth are single-sided planes; without this they disappear
+      // whenever she turns away from the camera.
+      for (const mat of Array.isArray(m.material) ? m.material : [m.material]) {
+        if (mat) {
+          mat.side = THREE.DoubleSide;
+          mat.shadowSide = THREE.FrontSide;
+        }
+      }
     }
   });
 
