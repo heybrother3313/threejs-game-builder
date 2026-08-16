@@ -52,6 +52,7 @@ import {
 import { travelTo, worldName } from './worlds';
 import { grantLoot, lootCounts, updateLootPickup } from './loot';
 import { initAtmosphere } from './atmosphere';
+import { aiConfig, runAssistant } from './assistant';
 import {
   analyzeAssets,
   beginCarry,
@@ -829,6 +830,7 @@ withSystem(PlatformSlipSystem)
         // to the running game.
         npc: { npcKey, npcRuntime, damageNpc, playerHealth, playerMelee, updateNpcs },
         worlds: { travelTo: (id: string) => travelTo(state, id) },
+        ai: { run: (req: string) => runAssistant(state, aiConfig(), req) },
         loot: { grantLoot, lootCounts, updateLootPickup: (x: number, y: number, z: number) => updateLootPickup(state, x, y, z) },
         history: { mark, undo, redo, canUndo, canRedo },
         selectionInfo,
