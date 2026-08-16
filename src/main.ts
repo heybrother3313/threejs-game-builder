@@ -50,7 +50,11 @@ import {
   updateNpcs,
 } from './npc';
 import { travelTo, worldName } from './worlds';
-import { grantLoot, lootCounts, updateLootPickup } from './loot';
+import { grantLoot, lootCounts, showHeld, updateLootPickup } from './loot';
+import { FISTS, bladeFor, type Blade } from './weapons';
+
+/** Bare model name, for the hand label. */
+const nameOfSrc = (src: string) => src.split('/').pop()!.replace('.glb', '');
 import { initAtmosphere, updateWater } from './atmosphere';
 import { initIslandGround } from './ground';
 import { aiConfig, runAssistant } from './assistant';
@@ -139,7 +143,7 @@ let wantsGrab = false;
 let wantsThrow = false;
 
 /** A thrown punch waiting to connect. */
-let pendingPunch: { t: number; fx: number; fz: number } | null = null;
+let pendingPunch: { t: number; fx: number; fz: number; blade: Blade } | null = null;
 
 /** Last drawn player position, for input handlers that run outside systems. */
 const lastPlayerPos = new THREE.Vector3();
@@ -459,6 +463,7 @@ const CarrySystem: System = {
     // primitive crates: they're what the level author marked as interactive.
     const releaseItem = (speed: number, lift: number) => {
       if (!heldItem) return;
+      showHeld(null);
       endCarry(
         state,
         heldItem,
@@ -470,6 +475,14 @@ const CarrySystem: System = {
       heldItem = null;
     };
 
+    // Holding a blade, F is a SWING, not a throw — you don't lob your sword
+    // at people. Everything else (barrels, bombs) still gets thrown.
+    if (wantsThrow && heldItem && bladeFor(heldItem) !== FISTS) {
+      playerSwing();
+      pendingPunch = { t: SWING_CONTACT, fx, fz, blade: bladeFor(heldItem) };
+      wantsGrab = wantsThrow = false;
+      return;
+    }
     if (wantsThrow && heldItem) {
       releaseItem(CARRY.throwSpeed, CARRY.throwLift);
       wantsGrab = wantsThrow = false;
@@ -481,7 +494,7 @@ const CarrySystem: System = {
       // Swing now, connect partway through — matching how NPC blows land, and
       // how it reads on screen.
       playerSwing();
-      pendingPunch = { t: SWING_CONTACT, fx, fz };
+      pendingPunch = { t: SWING_CONTACT, fx, fz, blade: FISTS };
       wantsGrab = wantsThrow = false;
       return;
     }
@@ -545,6 +558,8 @@ const CarrySystem: System = {
       if (prop) {
         beginCarry(state, prop);
         heldItem = prop;
+        const b = bladeFor(prop);
+        showHeld(b === FISTS ? nameOfSrc(prop.entry.src) : `${b.name} — ${b.damage} dmg`);
         wantsGrab = wantsThrow = false;
         return;
       }
@@ -708,7 +723,8 @@ const VisualsSystem: System = {
           Transform.posY[p0],
           Transform.posZ[p0],
           pendingPunch.fx,
-          pendingPunch.fz
+          pendingPunch.fz,
+          pendingPunch.blade
         );
         pendingPunch = null;
       }

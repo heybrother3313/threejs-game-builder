@@ -129,10 +129,28 @@ function renderTray(popped?: string) {
   }
 }
 
+/** What's in your hand, shown under the loot tray. */
+let handEl: HTMLDivElement | null = null;
+export function showHeld(label: string | null) {
+  if (!handEl) {
+    handEl = document.createElement('div');
+    handEl.style.cssText =
+      'position:fixed;left:16px;top:150px;z-index:13;pointer-events:none;' +
+      'font-family:var(--font-body,Inter,sans-serif);font-weight:700;font-size:13px;' +
+      'color:var(--text-primary,#111);background:var(--surface-face,#faf6ef);' +
+      'border:2px solid var(--border-strong,#111);border-radius:10px;' +
+      'box-shadow:0 3px 0 var(--border-strong,#111);padding:3px 10px;display:none;';
+    document.body.appendChild(handEl);
+  }
+  handEl.style.display = label ? '' : 'none';
+  if (label) handEl.textContent = label;
+}
+
 /** Hide alongside the rest of the play HUD in build mode. */
 export function setLootTrayVisible(v: boolean) {
   ensureTray();
   if (tray) tray.style.display = v ? '' : 'none';
+  if (!v) showHeld(null);
 }
 
 /** Take n of a kind out of the inventory (fetch quests). False if short. */

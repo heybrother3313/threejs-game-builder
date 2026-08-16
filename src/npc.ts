@@ -1,10 +1,12 @@
 import * as THREE from 'three';
 import type { State } from 'vibegame';
 import { grantLoot, setLootTrayVisible, spendLoot } from './loot';
+import { FISTS, blastFlash, explode, isBomb } from './weapons';
 import {
-  findClip, groundHeightAt, instantiate, loadModel, persist, placed, syncMarker,
-  type PlacedItem,
+  findClip, groundHeightAt, instantiate, loadModel, persist, placed, removeItem,
+  syncMarker, type PlacedItem,
 } from './level';
+import { getScene } from 'vibegame/rendering';
 
 /**
  * NPC behaviour, combat, and conversation.
@@ -634,9 +636,9 @@ export function playerMelee(
   pz: number,
   fx: number,
   fz: number,
-  damage = 14,
-  reach = 2.3
+  blade: { damage: number; reach: number } = FISTS
 ) {
+  const { damage, reach } = blade;
   let hits = 0;
   for (const item of placed) {
     if (!ensureAlive(item)) continue;
@@ -695,8 +697,10 @@ export function updateNpcs(
 
   // Thrown props hurt anything alive, configured or not — checked before the
   // brain loop so a character with no Role can still be knocked about.
-  for (const proj of placed) {
+  for (const proj of [...placed]) {
     if (!proj.flight || proj.flight.harmless) continue;
+    const bomb = isBomb(proj);
+    let struck = false;
     for (const target of placed) {
       if (target === proj || !ensureAlive(target)) continue;
       if (npcRuntime(target).state === 'dead') continue;
@@ -705,10 +709,27 @@ export function updateNpcs(
         proj.obj.position.z - target.obj.position.z
       );
       if (d < 1.1 && Math.abs(proj.obj.position.y - target.obj.position.y) < 2) {
-        proj.flight = undefined;
-        damageNpc(state, target, 12, proj.obj.position.x, proj.obj.position.z);
+        struck = true;
+        if (!bomb) {
+          proj.flight = undefined;
+          damageNpc(state, target, 12, proj.obj.position.x, proj.obj.position.z);
+        }
         break;
       }
+    }
+    // A bomb is not a rock: it goes off where it stops, whether that is a
+    // body or the ground, and it takes the neighbourhood with it.
+    if (bomb && (struck || !proj.flight)) {
+      const { x, y, z } = proj.obj.position;
+      const scene = getScene(state);
+      if (scene) blastFlash(scene, x, y, z);
+      explode(
+        state, x, y, z,
+        (target, amount, fx, fz) => damageNpc(state, target, amount, fx, fz),
+        (amount, fx, fz) => hurtPlayer(amount, fx, fz, playerPos.x, playerPos.z),
+        playerPos
+      );
+      removeItem(state, proj);
     }
   }
 
