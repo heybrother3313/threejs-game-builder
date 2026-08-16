@@ -213,7 +213,7 @@ let pickingGuide = false;
 /** One history entry per paint stroke, not per tile. */
 let paintedThisStroke = false;
 let orbiting = false;
-/** Alt-drag on empty space slides the view instead of orbiting it. */
+/** Command-drag on empty space slides the view instead of orbiting it. */
 let panning = false;
 /** Shift-drag on empty space rubber-bands a selection. */
 let marquee: { x0: number; y0: number; x1: number; y1: number } | null = null;
@@ -1392,13 +1392,12 @@ function onPointerDown(ev: PointerEvent) {
     }
     if (selection[0]) setStatus(describe(selection[0]));
   } else {
-    // Empty space. Shift rubber-bands a selection, Option/Alt slides the view,
-    // a plain drag orbits. Marquee wins the shift chord because selecting many
-    // things is the more common need; panning moves to Alt.
+    // Empty space. Shift rubber-bands a selection, Command slides the view, a
+    // plain drag orbits.
     if (ev.shiftKey) {
       marquee = { x0: ev.clientX, y0: ev.clientY, x1: ev.clientX, y1: ev.clientY };
       drawMarquee();
-    } else if (ev.altKey) {
+    } else if (ev.metaKey || ev.ctrlKey) {
       panning = true;
     } else {
       clearSelection();
@@ -1545,7 +1544,7 @@ const IDLE_STATUS =
   cap(['⌘Z'], 'undo') +
   cap(['drag'], 'orbit') +
   cap(['⇧drag'], 'box-select') +
-  cap(['⌥drag'], 'pan') +
+  cap(['⌘drag'], 'pan') +
   `<i class="sep"></i>` +
   cap(['B'], 'borders') +
   cap(['Tab'], 'play');
