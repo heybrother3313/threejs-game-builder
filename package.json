@@ -1,5 +1,5 @@
 {
-  "name": "vibegame-sandbox",
+  "name": "threejs-game-generator",
   "version": "1.0.0",
   "type": "module",
   "scripts": {
@@ -7,7 +7,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "check": "tsc --noEmit",
-    "update": "cp node_modules/vibegame/llms.txt ./llms.txt && echo '✓ Updated llms.txt from vibegame'",
+    "update": "cp node_modules/vibegame/llms.txt ./llms.txt && echo '\u2713 Updated llms.txt from vibegame'",
     "postinstall": "test -f node_modules/vibegame/llms.txt && cp node_modules/vibegame/llms.txt ./llms.txt || true",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
@@ -30,5 +30,6 @@
   "dependencies": {
     "bitecs": "^0.3.40",
     "vibegame": "latest"
-  }
+  },
+  "description": "A 3D game + level builder: three.js rendering, Rapier physics, XML scenes, an in-browser park-editor-style builder, NPCs, island hopping, and a local-AI level assistant."
 }
