@@ -697,8 +697,17 @@ export function updateNpcs(
 
   // Thrown props hurt anything alive, configured or not — checked before the
   // brain loop so a character with no Role can still be knocked about.
+  // Bombs that have been thrown, so a landing can be told from a bomb that
+  // has simply been sitting on the ground since the level loaded.
   for (const proj of [...placed]) {
+    if (armedBombs.has(proj) && !proj.flight) {
+      // It came to rest without hitting anything. Still a bomb.
+      armedBombs.delete(proj);
+      detonate(state, proj, playerPos);
+      continue;
+    }
     if (!proj.flight || proj.flight.harmless) continue;
+    if (isBomb(proj)) armedBombs.add(proj);
     const bomb = isBomb(proj);
     let struck = false;
     for (const target of placed) {
@@ -719,17 +728,9 @@ export function updateNpcs(
     }
     // A bomb is not a rock: it goes off where it stops, whether that is a
     // body or the ground, and it takes the neighbourhood with it.
-    if (bomb && (struck || !proj.flight)) {
-      const { x, y, z } = proj.obj.position;
-      const scene = getScene(state);
-      if (scene) blastFlash(scene, x, y, z);
-      explode(
-        state, x, y, z,
-        (target, amount, fx, fz) => damageNpc(state, target, amount, fx, fz),
-        (amount, fx, fz) => hurtPlayer(amount, fx, fz, playerPos.x, playerPos.z),
-        playerPos
-      );
-      removeItem(state, proj);
+    if (bomb && struck) {
+      armedBombs.delete(proj);
+      detonate(state, proj, playerPos);
     }
   }
 
@@ -770,6 +771,11 @@ export function updateNpcs(
     }
 
     if (r.state === 'dead') {
+      // Hold the transform. npcDriving was cleared above, and without taking
+      // it back level.ts resumes walking the patrol route — so the corpse
+      // slides along its old beat, which is what "dead things sliding around"
+      // was.
+      item.npcDriving = true;
       // The sea buries its own: after the death clip has played out, a dead
       // swimmer settles slowly below the surface and out of sight.
       if (isSwimmer(item) && r.t > 1.2 && item.obj.position.y > -1.6) {
@@ -955,6 +961,22 @@ function nearbyBoard(playerPos: THREE.Vector3): { item: PlacedItem; d: number } 
     if (!best || d < best.d) best = { item, d };
   }
   return best;
+}
+
+/** Thrown bombs still in the air; a landing is a detonation. */
+const armedBombs = new Set<PlacedItem>();
+
+function detonate(state: State, proj: PlacedItem, playerPos: THREE.Vector3) {
+  const { x, y, z } = proj.obj.position;
+  const scene = getScene(state);
+  if (scene) blastFlash(scene, x, y, z);
+  explode(
+    state, x, y, z,
+    (target, amount, fx, fz) => damageNpc(state, target, amount, fx, fz),
+    (amount, fx, fz) => hurtPlayer(amount, fx, fz, playerPos.x, playerPos.z),
+    playerPos
+  );
+  removeItem(state, proj);
 }
 
 /** True when the key was consumed by conversation. */

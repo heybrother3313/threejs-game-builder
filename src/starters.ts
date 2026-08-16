@@ -215,7 +215,13 @@ function jungleOutpost(): LevelEntry[] {
   const taken = [...spawnClear(), { x: -7, z: -5, r: 3.5 }, { x: 7.5, z: -5.5, r: 3 },
     // Keep the road itself clear of trees.
     ...Array.from({ length: 8 }, (_, i) => ({ x: 0, z: -8 + i * 2, r: 1.8 })),
-    { x: 9.5, z: 6.5, r: 3 }];
+    { x: 9.5, z: 6.5, r: 3 },
+    // Reserve the loose props. Undergrowth is placed last and will happily
+    // grow a fern straight over a bomb, which is how the bomb "disappeared".
+    { x: -5, z: -1.5, r: 1.6 }, { x: -4.4, z: -2.2, r: 1.6 },
+    { x: -5.9, z: -0.8, r: 1.6 }, { x: -5.2, z: -3, r: 1.6 },
+    { x: 4.5, z: 1.2, r: 2 },
+    { x: 9.5, z: 6.5, r: 2 }, { x: 10.3, z: 5.8, r: 2 }, { x: 8.8, z: 7.2, r: 2 }];
   return [
     spawnFlag(0, -7),
     ...paintBlob('jungle', 0, -1, 12, rand),
