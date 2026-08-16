@@ -19,7 +19,39 @@ import { Transform, WorldTransform } from 'vibegame/transforms';
  * stay in sync with the physics without re-deriving any of it.
  */
 
-const PLAYER_MODEL = '/models/ultimate-modular-women-pack/Punk.glb';
+/**
+ * Candidate player models — packs whose clip sets cover what the engine's
+ * animation states ask for. The Monsters bundle is the best match: its clips
+ * are literally named Idle / Walk / Run / Jump / Jump_Idle / Jump_Land, the
+ * same states the engine drives, so nothing has to be approximated.
+ */
+export const PLAYER_CHOICES: { label: string; src: string }[] = [
+  { label: 'Frog (monster)', src: '/models/ultimate-monsters/Frog.glb' },
+  { label: 'Cactoro (monster)', src: '/models/ultimate-monsters/Cactoro.glb' },
+  { label: 'Dino (monster)', src: '/models/ultimate-monsters/Dino.glb' },
+  { label: 'Alien (monster)', src: '/models/ultimate-monsters/Alien.glb' },
+  { label: 'Bunny (monster)', src: '/models/ultimate-monsters/Bunny.glb' },
+  { label: 'Ghost (monster)', src: '/models/ultimate-monsters/Ghost.glb' },
+  { label: 'Woman Casual', src: '/models/animated-women-pack/Woman Casual.glb' },
+  { label: 'Man', src: '/models/animated-men-pack/Man.glb' },
+];
+
+const PLAYER_KEY = 'sandbox-player-model';
+export function playerModel() {
+  return localStorage.getItem(PLAYER_KEY) ?? PLAYER_CHOICES[0].src;
+}
+export function setPlayerModel(src: string) {
+  localStorage.setItem(PLAYER_KEY, src);
+}
+/**
+ * Use a pack that animates jumps natively rather than retargeting one in.
+ *
+ * Borrowing a jump from a donor rig technically works — the skeletons share
+ * bone names — but even rotation-only retargeting looks wrong, because the
+ * two rigs differ in rest pose and limb proportion. The Animated packs ship
+ * Idle/Walk/Run/Jump/RunningJump/Death on one rig, so the player uses those
+ * and every pose is authored for the body wearing it.
+ */
 const CHARACTER_HEIGHT = 1.55;
 
 /** clip name segments look like "CharacterArmature|...|Walk|..." — match the
@@ -41,6 +73,9 @@ let mixer: THREE.AnimationMixer | null = null;
 let actions: Record<string, THREE.AnimationAction> = {};
 let current: THREE.AnimationAction | null = null;
 let currentState = -1;
+/** While true the death clip owns the rig and the state machine is ignored. */
+let dead = false;
+
 let player: THREE.Group | null = null;
 let baseOffsetY = 0;
 const clock = new THREE.Clock();
@@ -51,7 +86,7 @@ export async function initCharacterVisual(state: State, playerEntity: number) {
 
   const gltf = await new Promise<{ scene: THREE.Group; animations: THREE.AnimationClip[] }>(
     (resolve, reject) =>
-      new GLTFLoader().load(PLAYER_MODEL, resolve, undefined, reject)
+      new GLTFLoader().load(playerModel(), resolve, undefined, reject)
   );
 
   player = gltf.scene;
@@ -84,19 +119,22 @@ export async function initCharacterVisual(state: State, playerEntity: number) {
   mixer = new THREE.AnimationMixer(player);
   actions = {};
   // People-pack clip names differ a little from the pirate kit's.
+  // The Animated packs prefix everything (Female_Idle, Male_Jump…), so try the
+  // prefixed name first and fall back to the bare one for other packs.
   const CANDIDATES: Record<string, string[]> = {
-    Idle: ['Idle', 'Idle_Neutral'],
-    Walk: ['Walk'],
-    Run: ['Run'],
-    Jump: ['Jump', 'Jump_Start'],
-    Jump_Idle: ['Jump_Idle', 'Jump_Air', 'Fall'],
-    Jump_Land: ['Jump_Land', 'Land'],
+    Idle: ['Idle', 'Female_Idle', 'Male_Idle', 'Idle_Neutral'],
+    Walk: ['Walk', 'Female_Walk', 'Male_Walk'],
+    Run: ['Run', 'Female_Run', 'Male_Run'],
+    Jump: ['Jump', 'Female_RunningJump', 'Male_RunningJump', 'Female_Jump', 'Male_Jump'],
+    Jump_Idle: ['Jump_Idle', 'Female_Jump', 'Male_Jump', 'Fall'],
+    Jump_Land: ['Jump_Land', 'Female_Jump', 'Male_Jump', 'Land'],
+    Death: ['Death', 'Female_Death', 'Male_Death'],
   };
-  for (const seg of ['Idle', 'Walk', 'Run', 'Jump', 'Jump_Idle', 'Jump_Land']) {
+  for (const seg of ['Idle', 'Walk', 'Run', 'Jump', 'Jump_Idle', 'Jump_Land', 'Death']) {
     const clip = CANDIDATES[seg].map((c) => findClip(gltf.animations, c)).find(Boolean) ?? null;
     if (clip) {
       const a = mixer.clipAction(clip);
-      if (seg === 'Jump' || seg === 'Jump_Land') {
+      if (seg === 'Jump' || seg === 'Jump_Land' || seg === 'Death') {
         a.setLoop(THREE.LoopOnce, 1);
         a.clampWhenFinished = true;
       }
@@ -104,7 +142,7 @@ export async function initCharacterVisual(state: State, playerEntity: number) {
     }
   }
   console.info(
-    `[character] ${PLAYER_MODEL.split('/').pop()} clips:`,
+    `[character] ${playerModel().split('/').pop()} clips:`,
     Object.keys(actions).join(', ')
   );
   play('Idle');
@@ -169,7 +207,23 @@ function play(seg: string) {
   current = next;
 }
 
-/** Call from a draw-group system: glue Anne to the player and advance clips. */
+/** Play (or clear) the death animation; the rig ignores movement while dead. */
+export function setPlayerDead(v: boolean) {
+  dead = v;
+  if (v) {
+    const d = actions['Death'];
+    if (d) {
+      d.reset().fadeIn(0.12).play();
+      current?.fadeOut(0.12);
+      current = d;
+    }
+  } else {
+    currentState = -1; // force a re-evaluation back into Idle/Walk
+    play('Idle');
+  }
+}
+
+/** Call from a draw-group system: glue the player model on and advance clips. */
 export function updateCharacterVisual(state: State, playerEntity: number) {
   if (!player || !mixer) return;
   hideBlockyCharacter(state);
@@ -183,14 +237,12 @@ export function updateCharacterVisual(state: State, playerEntity: number) {
   const w = Transform.rotW[playerEntity];
   player.rotation.y = Math.atan2(2 * w * y, 1 - 2 * y * y);
 
-  // Follow the engine's state machine.
+  // Follow the engine's state machine (unless death has taken the rig).
   const ac = findAnimChar(state);
-  if (ac !== null) {
-    const st = AnimatedCharacter.animationState[ac];
-    if (st !== currentState) {
-      currentState = st;
-      play(STATE_CLIP[st] ?? 'Idle');
-    }
+  const st = ac !== null ? AnimatedCharacter.animationState[ac] : 0;
+  if (!dead && ac !== null && st !== currentState) {
+    currentState = st;
+    play(STATE_CLIP[st] ?? 'Idle');
   }
 
   mixer.update(clock.getDelta());

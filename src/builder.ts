@@ -26,6 +26,7 @@ import {
 import { cachedThumb, thumbFor } from './thumbs';
 import extraPalette from './levels/extra-palette.json';
 import { QUICK_PROMPTS, aiConfig, listModels, runAssistant, saveAiConfig } from './assistant';
+import { PLAYER_CHOICES, playerModel, setPlayerModel } from './character';
 import { DEFAULTS, resetNpc, type NpcConfig } from './npc';
 import { canRedo, canUndo, initHistory, mark, redo, redoLabel, undo, undoLabel } from './history';
 
@@ -208,6 +209,8 @@ let pickingGuide = false;
 /** One history entry per paint stroke, not per tile. */
 let paintedThisStroke = false;
 let orbiting = false;
+/** Shift-drag on empty space slides the view instead of orbiting it. */
+let panning = false;
 let painting = false;
 const orbitPrev = new THREE.Vector2();
 let savedDistance = 0;
@@ -248,6 +251,7 @@ export function initBuilder(gameState: State, cameraEntityFn: () => number | und
     dragArmed = false;
     dragOffsets = [];
     orbiting = false;
+    panning = false;
     painting = false;
     gizmoDrag = null;
   });
@@ -415,8 +419,13 @@ function buildUi() {
     </div>
     <div class="npc plinth" id="b-npc"></div>
     <div class="settings plinth" id="b-ai">
-      <h3>AI Assistant</h3>
+      <h3>Settings</h3>
       <div class="scroll">
+      <label>Player character</label>
+      <select id="player-model">
+        ${PLAYER_CHOICES.map((c) => `<option value="${c.src}">${c.label}</option>`).join('')}
+      </select>
+      <hr style="border:none;border-top:2px solid var(--border-quiet);margin:10px 0" />
       <label>Ollama URL (proxied)</label>
       <input id="ai-url" type="text" />
       <label>Model</label>
@@ -494,6 +503,15 @@ function wireAiPanel() {
   ui.querySelector('#b-settings')!.addEventListener('click', () => {
     panel.classList.toggle('on');
     layoutRightPanels();
+  });
+
+  const modelSel = panel.querySelector('#player-model') as HTMLSelectElement;
+  modelSel.value = playerModel();
+  // A reload is the honest way to swap: the rig, its clips and the animation
+  // state are all bound at startup.
+  modelSel.addEventListener('change', () => {
+    setPlayerModel(modelSel.value);
+    location.reload();
   });
 
   const quick = panel.querySelector('#ai-quick') as HTMLDivElement;
@@ -1111,6 +1129,28 @@ function onPointerMove(ev: PointerEvent) {
     return;
   }
 
+  // Shift-drag slides the board under you: move the orbit pivot across the
+  // ground instead of swinging the camera around it. Screen right/up become
+  // world directions from the camera's yaw, and the step scales with zoom so a
+  // drag covers the same screen distance whether you're close in or far out.
+  if (panning) {
+    const cam = getCameraEntity();
+    if (cam !== undefined) {
+      const dx = ev.clientX - orbitPrev.x;
+      const dy = ev.clientY - orbitPrev.y;
+      const yaw = OrbitCamera.currentYaw[cam];
+      const scale = OrbitCamera.currentDistance[cam] * 0.0016;
+      const rightX = Math.cos(yaw);
+      const rightZ = -Math.sin(yaw);
+      const fwdX = -Math.sin(yaw);
+      const fwdZ = -Math.cos(yaw);
+      OrbitCamera.offsetX[cam] -= (rightX * dx - fwdX * dy) * scale;
+      OrbitCamera.offsetZ[cam] -= (rightZ * dx - fwdZ * dy) * scale;
+    }
+    orbitPrev.set(ev.clientX, ev.clientY);
+    return;
+  }
+
   if (orbiting) {
     const cam = getCameraEntity();
     if (cam !== undefined) {
@@ -1259,11 +1299,16 @@ function onPointerDown(ev: PointerEvent) {
       }
     }
     if (selection[0]) setStatus(describe(selection[0]));
-  } else if (!ev.shiftKey) {
-    clearSelection();
-    orbiting = true;
+  } else {
+    // Empty space: shift-drag slides the board, plain drag orbits it.
+    if (ev.shiftKey) {
+      panning = true;
+    } else {
+      clearSelection();
+      orbiting = true;
+      setStatus(IDLE_STATUS);
+    }
     orbitPrev.set(ev.clientX, ev.clientY);
-    setStatus(IDLE_STATUS);
   }
 }
 
@@ -1385,6 +1430,7 @@ const IDLE_STATUS =
   cap(['⌘C', '⌘V'], 'copy · paste') +
   cap(['⌘Z'], 'undo') +
   cap(['drag'], 'orbit') +
+  cap(['⇧drag'], 'pan') +
   `<i class="sep"></i>` +
   cap(['B'], 'borders') +
   cap(['Tab'], 'play');

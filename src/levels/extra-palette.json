@@ -366,5 +366,229 @@
 "/models/ultimate-modular-men-pack/Worker.glb"
 ]
 ]
+},
+{
+"name": "Animated People",
+"clip": "Idle",
+"items": [
+[
+"Man",
+"/models/animated-men-pack/Man.glb"
+],
+[
+"Man in Long Sleeves",
+"/models/animated-men-pack/Man in Long Sleeves.glb"
+],
+[
+"Man in Suit",
+"/models/animated-men-pack/Man in Suit.glb"
+],
+[
+"Man-fjHyMd5Wxw",
+"/models/animated-men-pack/Man-fjHyMd5Wxw.glb"
+],
+[
+"Woman",
+"/models/animated-women-pack/Woman.glb"
+],
+[
+"Woman Casual",
+"/models/animated-women-pack/Woman Casual.glb"
+],
+[
+"Woman in Dress",
+"/models/animated-women-pack/Woman in Dress.glb"
+],
+[
+"Woman in Tank Top",
+"/models/animated-women-pack/Woman in Tank Top.glb"
+]
+]
+},
+{
+"name": "Monsters",
+"clip": "Idle",
+"items": [
+[
+"Alien",
+"/models/ultimate-monsters/Alien.glb"
+],
+[
+"Alien (2)",
+"/models/ultimate-monsters/Alien-RRliSQBP7r.glb"
+],
+[
+"Alpaking",
+"/models/ultimate-monsters/Alpaking.glb"
+],
+[
+"Alpaking Evolved",
+"/models/ultimate-monsters/Alpaking Evolved.glb"
+],
+[
+"Armabee",
+"/models/ultimate-monsters/Armabee.glb"
+],
+[
+"Armabee Evolved",
+"/models/ultimate-monsters/Armabee Evolved.glb"
+],
+[
+"Birb",
+"/models/ultimate-monsters/Birb.glb"
+],
+[
+"Blue Demon",
+"/models/ultimate-monsters/Blue Demon.glb"
+],
+[
+"Bunny",
+"/models/ultimate-monsters/Bunny.glb"
+],
+[
+"Cactoro",
+"/models/ultimate-monsters/Cactoro.glb"
+],
+[
+"Cactoro (2)",
+"/models/ultimate-monsters/Cactoro-IGn9lhdama.glb"
+],
+[
+"Cat",
+"/models/ultimate-monsters/Cat.glb"
+],
+[
+"Chicken",
+"/models/ultimate-monsters/Chicken.glb"
+],
+[
+"Demon",
+"/models/ultimate-monsters/Demon.glb"
+],
+[
+"Demon (2)",
+"/models/ultimate-monsters/Demon-LnfIziKv4o.glb"
+],
+[
+"Dino",
+"/models/ultimate-monsters/Dino.glb"
+],
+[
+"Dragon",
+"/models/ultimate-monsters/Dragon.glb"
+],
+[
+"Dragon Evolved",
+"/models/ultimate-monsters/Dragon Evolved.glb"
+],
+[
+"Fish",
+"/models/ultimate-monsters/Fish.glb"
+],
+[
+"Fish (2)",
+"/models/ultimate-monsters/Fish-ypEYhCImAB.glb"
+],
+[
+"Frog",
+"/models/ultimate-monsters/Frog.glb"
+],
+[
+"Ghost",
+"/models/ultimate-monsters/Ghost.glb"
+],
+[
+"Ghost Skull",
+"/models/ultimate-monsters/Ghost Skull.glb"
+],
+[
+"Glub",
+"/models/ultimate-monsters/Glub.glb"
+],
+[
+"Glub Evolved",
+"/models/ultimate-monsters/Glub Evolved.glb"
+],
+[
+"Goleling",
+"/models/ultimate-monsters/Goleling.glb"
+],
+[
+"Goleling Evolved",
+"/models/ultimate-monsters/Goleling Evolved.glb"
+],
+[
+"Green Blob",
+"/models/ultimate-monsters/Green Blob.glb"
+],
+[
+"Green Spiky Blob",
+"/models/ultimate-monsters/Green Spiky Blob.glb"
+],
+[
+"Hywirl",
+"/models/ultimate-monsters/Hywirl.glb"
+],
+[
+"Monkroose",
+"/models/ultimate-monsters/Monkroose.glb"
+],
+[
+"Mushnub",
+"/models/ultimate-monsters/Mushnub.glb"
+],
+[
+"Mushnub Evolved",
+"/models/ultimate-monsters/Mushnub Evolved.glb"
+],
+[
+"Mushroom King",
+"/models/ultimate-monsters/Mushroom King.glb"
+],
+[
+"Ninja",
+"/models/ultimate-monsters/Ninja.glb"
+],
+[
+"Ninja (2)",
+"/models/ultimate-monsters/Ninja-xGYmeDpfTu.glb"
+],
+[
+"Orc",
+"/models/ultimate-monsters/Orc.glb"
+],
+[
+"Orc Enemy",
+"/models/ultimate-monsters/Orc Enemy.glb"
+],
+[
+"Pigeon",
+"/models/ultimate-monsters/Pigeon.glb"
+],
+[
+"Pink Blob",
+"/models/ultimate-monsters/Pink Blob.glb"
+],
+[
+"Squidle",
+"/models/ultimate-monsters/Squidle.glb"
+],
+[
+"Tribal",
+"/models/ultimate-monsters/Tribal.glb"
+],
+[
+"Wizard",
+"/models/ultimate-monsters/Wizard.glb"
+],
+[
+"Yeti",
+"/models/ultimate-monsters/Yeti.glb"
+],
+[
+"Yeti (2)",
+"/models/ultimate-monsters/Yeti-ceRHrn8HHE.glb"
+]
+]
 }
 ]

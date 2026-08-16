@@ -125,15 +125,48 @@ let spawn = new THREE.Vector3(0, 1.2, 0);
 /** Set by main.ts so NPCs can shove the player around on hit. */
 let pushPlayer: ((dx: number, dz: number) => void) | null = null;
 let teleportPlayer: ((x: number, y: number, z: number) => void) | null = null;
+/** Plays the player's death/respawn animation; set by main.ts. */
+let playerDeathHook: ((dying: boolean) => void) | null = null;
+/** True once you've been beaten; stays true until you choose to restart. */
+let playerDead = false;
+/** Death animation plays for this long before the restart prompt appears. */
+let deathAnimT = 0;
 
 export function configurePlayerHooks(opts: {
   spawn?: THREE.Vector3;
   push?: (dx: number, dz: number) => void;
   teleport?: (x: number, y: number, z: number) => void;
+  death?: (dying: boolean) => void;
 }) {
   if (opts.spawn) spawn = opts.spawn.clone();
   if (opts.push) pushPlayer = opts.push;
   if (opts.teleport) teleportPlayer = opts.teleport;
+  if (opts.death) playerDeathHook = opts.death;
+}
+
+/** True while the player is dead — main.ts freezes input and the brain idles. */
+export function playerIsDead() {
+  return playerDead;
+}
+
+/** Put the player back on their feet. Called by the restart prompt. */
+export function respawnPlayer() {
+  if (!playerDead) return;
+  playerDead = false;
+  deathAnimT = 0;
+  playerHp = PLAYER_MAX_HP;
+  renderHud();
+  teleportPlayer?.(spawn.x, spawn.y, spawn.z);
+  playerDeathHook?.(false);
+  showBanner(null);
+  for (const item of placed) {
+    const r = rt.get(item);
+    if (r && r.state !== 'dead') {
+      r.state = 'idle';
+      r.following = false;
+      r.guiding = false;
+    }
+  }
 }
 
 export function playerHealth() {
@@ -202,12 +235,40 @@ function ensureUi() {
   document.body.appendChild(promptEl);
 }
 
+let bannerEl: HTMLDivElement | null = null;
+function showBanner(text: string | null, sub?: string) {
+  if (!bannerEl) {
+    bannerEl = document.createElement('div');
+    bannerEl.id = 'npc-banner';
+    bannerEl.style.cssText =
+      'position:fixed;left:50%;top:38%;transform:translate(-50%,-50%);z-index:18;' +
+      'display:none;background:var(--color-coral,#fd9b9b);color:var(--text-primary,#111);' +
+      'border:3px solid var(--border-strong,#111);border-radius:16px;' +
+      'box-shadow:0 6px 0 var(--border-strong,#111);padding:14px 28px;' +
+      'font-family:var(--font-display,sans-serif);font-weight:700;font-size:26px;' +
+      'letter-spacing:.04em;text-transform:uppercase;';
+    document.body.appendChild(bannerEl);
+  }
+  if (text) {
+    bannerEl.innerHTML =
+      `<div>${text}</div>` +
+      (sub
+        ? `<div style="margin-top:8px;font-size:13px;font-weight:600;letter-spacing:.02em;` +
+          `text-transform:none;font-family:var(--font-body,sans-serif)">${sub}</div>`
+        : '');
+    bannerEl.style.display = 'block';
+  } else {
+    bannerEl.style.display = 'none';
+  }
+}
+
 function setHudVisible(v: boolean) {
   ensureUi();
   if (hud) hud.style.display = v ? 'block' : 'none';
   if (!v) {
     if (dialogEl) dialogEl.style.display = 'none';
     if (promptEl) promptEl.style.display = 'none';
+    if (bannerEl) bannerEl.style.display = 'none';
   }
 }
 
@@ -417,16 +478,14 @@ function hurtPlayer(amount: number, fromX: number, fromZ: number, px: number, pz
   const dz = pz - fromZ;
   const d = Math.hypot(dx, dz) || 1;
   knock = { x: (dx / d) * KNOCK_SPEED, z: (dz / d) * KNOCK_SPEED, t: KNOCK_TIME };
-  if (playerHp <= 0) {
+  if (playerHp <= 0 && !playerDead) {
+    // Stay down. Respawning on a timer takes the decision away from the
+    // player; the run ends when they say it ends.
     knock.t = 0;
-    playerHp = PLAYER_MAX_HP;
-    renderHud();
-    teleportPlayer?.(spawn.x, spawn.y, spawn.z);
-    // Everyone calms down after a knockout.
-    for (const item of placed) {
-      const r = rt.get(item);
-      if (r && r.state !== 'dead') r.state = 'idle';
-    }
+    playerDead = true;
+    deathAnimT = 0;
+    playerDeathHook?.(true);
+    endTalk();
   }
 }
 
@@ -451,6 +510,14 @@ export function updateNpcs(
   if (!active || !playerPos) return;
 
   playerHurtT = Math.max(0, playerHurtT - dt);
+
+  if (playerDead) {
+    // Let the death animation play out before offering the way back.
+    deathAnimT += dt;
+    if (deathAnimT > 1.1) showBanner('You died', 'Press R to restart');
+    renderHud();
+    return; // nothing attacks a corpse
+  }
 
   // Bleed out any knockback from a recent hit.
   if (knock.t > 0) {
@@ -629,6 +696,11 @@ export function updateNpcs(
 
 /** True when the key was consumed by conversation. */
 export function npcKey(code: string, playerPos: THREE.Vector3 | undefined): boolean {
+  // Dead players only have one verb.
+  if (playerDead) {
+    if (code === 'KeyR') respawnPlayer();
+    return true;
+  }
   if (!playerPos) return false;
 
   if (talking) {

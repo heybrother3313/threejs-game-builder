@@ -110,6 +110,11 @@ const MODEL_DIRS = [
   'animated-enemies',
   'animated-fish-bundle',
   'stylized-nature-megakit',
+  'ultimate-modular-men-pack',
+  'ultimate-modular-women-pack',
+  'animated-men-pack',
+  'animated-women-pack',
+  'ultimate-monsters',
 ];
 
 function systemPrompt(assetNames: Record<string, string[]>): string {

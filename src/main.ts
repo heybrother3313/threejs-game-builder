@@ -24,11 +24,12 @@ import { Transform, WorldTransform } from 'vibegame/transforms';
 import { buildMode, initBuilder, toggleBuildMode } from './builder';
 import { setPlayerPosProvider } from './assistant';
 import { canRedo, canUndo, mark, redo, undo } from './history';
-import { initCharacterVisual, updateCharacterVisual } from './character';
+import { initCharacterVisual, setPlayerDead, updateCharacterVisual } from './character';
 import {
   configurePlayerHooks,
   damageNpc,
   isTalking,
+  playerIsDead,
   npcKey,
   npcRuntime,
   playerHealth,
@@ -197,7 +198,7 @@ const SteerSystem: System = {
         steerInput = 0;
         continue;
       }
-      if (isTalking()) {
+      if (isTalking() || playerIsDead()) {
         InputState.moveX[player] = 0;
         InputState.moveY[player] = 0;
         steerInput = 0;
@@ -225,7 +226,7 @@ const SteerAnimationGuard: System = {
   update: (state: State) => {
     for (const player of playerQuery(state.world)) {
       InputState.moveX[player] = 0;
-      if (buildMode) {
+      if (buildMode || playerIsDead()) {
         InputState.moveY[player] = 0;
         InputState.jump[player] = 0;
       }
@@ -641,6 +642,7 @@ withSystem(PlatformSlipSystem)
           Body.posZ[p] += dz;
         }
       },
+      death: (dying) => setPlayerDead(dying),
       teleport: (x, y, z) => {
         for (const p of playerQuery(state.world)) {
           Body.posX[p] = x;
