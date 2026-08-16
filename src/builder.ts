@@ -25,7 +25,7 @@ import {
   syncMarker,
 } from './level';
 import { cachedThumb, thumbFor } from './thumbs';
-import extraPalette from './levels/extra-palette.json';
+import paletteTree from './levels/palette-tree.json';
 import { QUICK_PROMPTS, aiConfig, listModels, runAssistant, saveAiConfig } from './assistant';
 import { PLAYER_CHOICES, playerModel, setPlayerModel } from './character';
 import { DEFAULTS, resetNpc, resolveLoot, type NpcConfig } from './npc';
@@ -45,144 +45,25 @@ import { setAtmosphereFog } from './atmosphere';
  * Load brings one back.
  */
 
-const KIT = '/models/quaternius-pirate';
-const ANIMALS = '/models/animated-animal-pack';
-const ENEMIES = '/models/animated-enemies';
-const FISH = '/models/animated-fish-bundle';
-const srcOf = (dir: string, name: string) => `${dir}/${name}.glb`;
 
 type PaletteItem = { label: string; src: string; clip?: string };
-type Category = { name: string; items: PaletteItem[] };
 
-const kit = (label: string, name: string): PaletteItem => ({ label, src: srcOf(KIT, name) });
-/** Animated packs idle by default so a dropped creature breathes. */
-const npc = (dir: string, name: string, clip = 'Idle'): PaletteItem => ({
-  label: name,
-  src: srcOf(dir, name),
-  clip,
-});
-/** Fish "idle" by swimming. */
-const fish = (name: string): PaletteItem => npc(FISH, name, 'Swimming_Normal');
 
-const CATEGORIES: Category[] = [
-  {
-    name: 'Terrain',
-    items: [
-      kit('Rock (small)', 'Rock'), kit('Rock (tall)', 'Rock-4vHWF8XUBn'),
-      kit('Rock (spire)', 'Rock-6cytS1cPiL'), kit('Rock (round)', 'Rock-BvlfuHFAuI'),
-      kit('Rock (flat)', 'Rock-KvXSMwoftt'), kit('Rock (chunk)', 'Rock-cg6yBEddtZ'),
-      kit('Rocks (cluster)', 'Rocks'), kit('Rocks (wide)', 'Rocks-38eDa0gjwZ'),
-      kit('Rocks (stack)', 'Rocks-IFU6cm2Xow'), kit('Rocks (pile)', 'Rocks-e1rgb5i2kF'),
-      kit('Rocks (ridge)', 'Rocks-fy3szRMvuE'),
-    ],
-  },
-  {
-    name: 'Structures',
-    items: [
-      kit('Dock', 'Dock'), kit('Dock (broken)', 'Dock Broken'),
-      { label: 'Dock (long)', src: srcOf(FISH, 'Dock Long') },
-      { label: 'Dock (wide)', src: srcOf(FISH, 'Dock Wide') },
-      { label: 'Dock (stairs)', src: srcOf(FISH, 'Dock Stairs') },
-      kit('House', 'House'), kit('House (small)', 'House-2kytqGs4rH'),
-      kit('House (big)', 'House-g7eSJLFi4V'), kit('Sawmill', 'Sawmill'),
-      kit('Post', 'Post'), kit('Wood planks', 'Wood'),
-    ],
-  },
-  {
-    name: 'Ships',
-    items: [
-      kit('Ship (large)', 'Ship'), kit('Ship (small)', 'Small Ship'),
-      { label: 'Boat', src: srcOf(FISH, 'Boat') }, kit('Anchor', 'Anchor'),
-    ],
-  },
-  {
-    name: 'Nature',
-    items: [
-      kit('Palm Tree', 'Palm Tree'), kit('Palm Tree (bend)', 'Palm Tree-A6cKJYFsIb'),
-      kit('Palm Tree (tall)', 'Palm Tree-P0tgwyXBgr'), kit('Tentacle', 'Tentacle'),
-    ],
-  },
-  {
-    name: 'Animals',
-    items: [
-      npc(ANIMALS, 'Alpaca'), npc(ANIMALS, 'Bull'), npc(ANIMALS, 'Cow'),
-      npc(ANIMALS, 'Deer'), npc(ANIMALS, 'Donkey'), npc(ANIMALS, 'Fox'),
-      npc(ANIMALS, 'Horse'), npc(ANIMALS, 'Husky'), npc(ANIMALS, 'Shiba Inu'),
-      npc(ANIMALS, 'Stag'), npc(ANIMALS, 'White Horse'), npc(ANIMALS, 'Wolf'),
-    ],
-  },
-  {
-    name: 'Enemies',
-    items: [
-      npc(ENEMIES, 'Frog'), npc(ENEMIES, 'Rat'), npc(ENEMIES, 'Snake'),
-      npc(ENEMIES, 'Spider'), npc(ENEMIES, 'Wasp'),
-    ],
-  },
-  {
-    name: 'Fish',
-    items: [
-      fish('Anglerfish'), fish('Armored Catfish'), fish('Betta'), fish('Black Lion Fish'),
-      fish('Blobfish'), fish('Blue Goldfish'), fish('Blue Tang'), fish('Butterfly Fish'),
-      fish('Cardinal Fish'), fish('Clownfish'), fish('Coral Grouper'), fish('Cowfish'),
-      fish('Flatfish'), fish('Flower Horn'), fish('Goblin Shark'), fish('Goldfish'),
-      fish('Humphead'), fish('Koi'), fish('Lionfish'), fish('Mandarin Fish'),
-      fish('Moorish Idol'), fish('Parrot Fish'), fish('Piranha'), fish('Puffer'),
-      fish('Red Snapper'), fish('Royal Gramma'), fish('Shark'), fish('Sunfish'),
-      fish('Swordfish'), fish('Tang'), fish('Tetra'), fish('Tuna'), fish('Turbot'),
-      fish('Worm'), fish('Yellow Tang'), fish('Zebra Clown Fish'),
-    ],
-  },
-  {
-    name: 'Characters',
-    items: [
-      npc(KIT, 'Pirate Captain'), npc(KIT, 'Anne'), npc(KIT, 'Henry'),
-      npc(KIT, 'Sharky'), npc(KIT, 'Mako'), npc(KIT, 'Skeleton'),
-      npc(KIT, 'Skeleton-yq5ATpujSt'),
-    ],
-  },
-  {
-    name: 'Treasure',
-    items: [
-      kit('Chest (gold)', 'Chest Gold'), kit('Chest (closed)', 'Chest Closed'),
-      kit('Coins', 'Coins'), kit('Gold bag', 'Gold Bag'), kit('Gold ore', 'Gold ore'),
-      kit('Gem (blue)', 'Gem Blue'), kit('Gem (green)', 'Gem Green'),
-      kit('Gem (pink)', 'Gem Pink'), kit('Skull', 'Skull'),
-      kit('Skull (helmet)', 'Skull-VGtSTNRf2O'), kit('Large bone', 'Large Bone'),
-      kit('Red X', 'Red X'),
-    ],
-  },
-  {
-    name: 'Props',
-    items: [
-      kit('Barrel', 'Barrel'), kit('Bucket', 'Bucket'), kit('Bucket of fish', 'Bucket of Fish'),
-      kit('Bottle', 'Prop Bottle'), kit('Bomb', 'Bomb'), kit('Cannon', 'Cannon'),
-      kit('Lute', 'Lute'), kit('Paper', 'Paper'), kit('Chicken leg', 'Chicken Leg'),
-      { label: 'Fishing rod', src: srcOf(FISH, 'Fishing Rod') },
-      { label: 'Lure', src: srcOf(FISH, 'Lure') },
-    ],
-  },
-  {
-    name: 'Weapons',
-    items: [
-      kit('Cutlass', 'Cutlass'), kit('Sword', 'Sword'), kit('Swords', 'Swords'),
-      kit('Dagger', 'Dagger'), kit('Axe', 'Axe'), kit('Axe rifle', 'Axe Rifle'),
-      kit('Pistol', 'Pistol'), kit('Rifle', 'Rifle'), kit('Shotgun', 'Shotgun'),
-    ],
-  },
-];
-
-// Generated packs (Nature Kit, People) come from a manifest so new zips can
-// be added without hand-curating labels.
-for (const cat of extraPalette as { name: string; clip: string | null; items: [string, string][] }[]) {
-  CATEGORIES.push({
-    name: cat.name,
-    items: cat.items.map(([label, src]) => ({
-      label,
-      src,
-      ...(cat.clip ? { clip: cat.clip } : {}),
-    })),
-  });
-}
+/**
+ * The palette taxonomy: group -> subgroup -> pieces, generated from the pack
+ * manifests so a new zip lands in the right drawer without hand-curating.
+ */
+type SubGroup = { name: string; clip: string | null; items: PaletteItem[] };
+const PALETTE_TREE: { name: string; groups: SubGroup[] }[] = (
+  paletteTree as { name: string; groups: { name: string; clip: string | null; items: [string, string][] }[] }[]
+).map((g) => ({
+  name: g.name,
+  groups: g.groups.map((sg) => ({
+    name: sg.name,
+    clip: sg.clip,
+    items: sg.items.map(([label, src]) => ({ label, src, ...(sg.clip ? { clip: sg.clip } : {}) })),
+  })),
+}));
 
 export let buildMode = false;
 /** Read-only view of the current selection, for tests and diagnostics. */
@@ -367,6 +248,9 @@ function buildUi() {
         letter-spacing: var(--tracking-eyebrow); text-transform: uppercase;
         color: var(--text-secondary); }
       #builder .cat > summary::-webkit-details-marker { display:none; }
+      /* Subgroups sit inside their group, quieter and indented. */
+      #builder .cat.sub { margin-left: 8px; border-left: var(--border-w-hair) solid var(--border-quiet); padding-left: 6px; }
+      #builder .cat.sub > summary { font-size: 11px; opacity: .85; padding: 4px 2px; }
       #builder .cat > summary:hover { color: var(--text-primary); }
       #builder .cat .caret { transition: transform var(--dur-base) var(--ease-press);
         display:inline-block; }
@@ -790,46 +674,65 @@ function renderPalette(filter: string) {
   }
   paletteEl.appendChild(paints);
 
-  for (const cat of CATEGORIES) {
-    const hits = cat.items.filter(
-      (it) =>
-        !term || it.label.toLowerCase().includes(term) || it.src.toLowerCase().includes(term)
-    );
-    if (hits.length === 0) continue;
+  // Two levels: a group (Nature) holding subgroups (Trees, Bushes…). Three
+  // hundred pieces in one flat list was a scroll, not a search.
+  const matches = (it: PaletteItem) =>
+    !term || it.label.toLowerCase().includes(term) || it.src.toLowerCase().includes(term);
 
-    const details = document.createElement('details');
-    details.className = 'cat';
-    // A search opens its matches; otherwise sections stay as the user left them.
-    details.open = term ? true : openSections.has(cat.name);
-    details.addEventListener('toggle', () => {
-      if (details.open) {
-        openSections.add(cat.name);
-        void fillThumbs(details);
-      } else {
-        openSections.delete(cat.name);
-      }
+  const makeRow = (it: PaletteItem) => {
+    const row = document.createElement('div');
+    row.className = 'item';
+    const img = document.createElement('img');
+    img.dataset.src = it.src;
+    const cached = cachedThumb(it.src);
+    if (cached) img.src = cached;
+    row.appendChild(img);
+    const label = document.createElement('span');
+    label.textContent = it.label;
+    row.appendChild(label);
+    row.addEventListener('click', () => armPalette(it, row));
+    return row;
+  };
+
+  for (const group of PALETTE_TREE) {
+    const subs = group.groups
+      .map((sg) => ({ sg, hits: sg.items.filter(matches) }))
+      .filter((x) => x.hits.length > 0);
+    if (!subs.length) continue;
+    const total = subs.reduce((a, x) => a + x.hits.length, 0);
+
+    const outer = document.createElement('details');
+    outer.className = 'cat';
+    outer.open = term ? true : openSections.has(group.name);
+    outer.addEventListener('toggle', () => {
+      if (outer.open) openSections.add(group.name);
+      else openSections.delete(group.name);
     });
     const summary = document.createElement('summary');
     summary.innerHTML =
-      `<span class="caret">▸</span>${cat.name}<span class="count">${hits.length}</span>`;
-    details.appendChild(summary);
+      `<span class="caret">▸</span>${group.name}<span class="count">${total}</span>`;
+    outer.appendChild(summary);
 
-    for (const it of hits) {
-      const row = document.createElement('div');
-      row.className = 'item';
-      const img = document.createElement('img');
-      img.dataset.src = it.src;
-      const cached = cachedThumb(it.src);
-      if (cached) img.src = cached;
-      row.appendChild(img);
-      const label = document.createElement('span');
-      label.textContent = it.label;
-      row.appendChild(label);
-      row.addEventListener('click', () => armPalette(it, row));
-      details.appendChild(row);
+    for (const { sg, hits } of subs) {
+      const key = `${group.name}/${sg.name}`;
+      const inner = document.createElement('details');
+      inner.className = 'cat sub';
+      inner.open = term ? true : openSections.has(key);
+      inner.addEventListener('toggle', () => {
+        if (inner.open) {
+          openSections.add(key);
+          void fillThumbs(inner);
+        } else openSections.delete(key);
+      });
+      const subSummary = document.createElement('summary');
+      subSummary.innerHTML =
+        `<span class="caret">▸</span>${sg.name}<span class="count">${hits.length}</span>`;
+      inner.appendChild(subSummary);
+      for (const it of hits) inner.appendChild(makeRow(it));
+      outer.appendChild(inner);
+      if (inner.open) void fillThumbs(inner);
     }
-    paletteEl.appendChild(details);
-    if (details.open) void fillThumbs(details);
+    paletteEl.appendChild(outer);
   }
 }
 

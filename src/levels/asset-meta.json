@@ -850,5 +850,737 @@
    0.5338
   ],
   "standYFrac": 0.95
+ },
+ "/models/kenney-survival/Barrel.glb": {
+  "height": 0.344,
+  "sizeXZ": [
+   0.2365,
+   0.2365
+  ],
+  "standYFrac": 1,
+  "baseXZFrac": [
+   1,
+   1
+  ]
+ },
+ "/models/kenney-survival/Barrel Open.glb": {
+  "height": 0.344,
+  "sizeXZ": [
+   0.2365,
+   0.2365
+  ],
+  "standYFrac": 1,
+  "baseXZFrac": [
+   1,
+   1
+  ]
+ },
+ "/models/kenney-survival/Bedroll.glb": {
+  "height": 0.0897,
+  "sizeXZ": [
+   0.2604,
+   0.0897
+  ],
+  "standYFrac": 0.9667,
+  "baseXZFrac": [
+   1,
+   1
+  ]
+ },
+ "/models/kenney-survival/Bedroll Frame.glb": {
+  "height": 0.1477,
+  "sizeXZ": [
+   0.2722,
+   0.6063
+  ],
+  "standYFrac": 0.8667,
+  "baseXZFrac": [
+   1,
+   1
+  ]
+ },
+ "/models/kenney-survival/Bedroll-efwd5fjuMU.glb": {
+  "height": 0.0748,
+  "sizeXZ": [
+   0.2604,
+   0.6076
+  ],
+  "standYFrac": 0.6,
+  "baseXZFrac": [
+   1,
+   1
+  ]
+ },
+ "/models/kenney-survival/Box.glb": {
+  "height": 0.25,
+  "sizeXZ": [
+   0.25,
+   0.25
+  ],
+  "standYFrac": 1,
+  "baseXZFrac": [
+   1,
+   1
+  ]
+ },
+ "/models/kenney-survival/Box Open.glb": {
+  "height": 0.3063,
+  "sizeXZ": [
+   0.25,
+   0.25
+  ],
+  "standYFrac": 0.9,
+  "baseXZFrac": [
+   1,
+   1
+  ]
+ },
+ "/models/kenney-survival/Campfire.glb": {
+  "height": 0.2812,
+  "sizeXZ": [
+   0.43,
+   0.2692
+  ],
+  "standYFrac": 0.9833,
+  "baseXZFrac": [
+   1,
+   1
+  ]
+ },
+ "/models/kenney-survival/Chest.glb": {
+  "height": 0.2628,
+  "sizeXZ": [
+   0.2604,
+   0.2604
+  ],
+  "standYFrac": 1,
+  "baseXZFrac": [
+   1,
+   1
+  ]
+ },
+ "/models/kenney-survival/Fence Fortified.glb": {
+  "height": 0.5175,
+  "sizeXZ": [
+   0.5,
+   0.053
+  ],
+  "standYFrac": 1,
+  "baseXZFrac": [
+   1,
+   1
+  ]
+ },
+ "/models/kenney-survival/Fence Frame.glb": {
+  "height": 0.5175,
+  "sizeXZ": [
+   0.5,
+   0.0428
+  ],
+  "standYFrac": 1,
+  "baseXZFrac": [
+   1,
+   1
+  ]
+ },
+ "/models/kenney-survival/Fish.glb": {
+  "height": 0.1063,
+  "sizeXZ": [
+   0.2049,
+   0.0653
+  ],
+  "standYFrac": 0.65,
+  "baseXZFrac": [
+   1,
+   1
+  ]
+ },
+ "/models/kenney-survival/Fishing Stand.glb": {
+  "height": 0.276,
+  "sizeXZ": [
+   0.3945,
+   0.2533
+  ],
+  "standYFrac": 0.9833,
+  "baseXZFrac": [
+   1,
+   1
+  ]
+ },
+ "/models/kenney-survival/Floor.glb": {
+  "height": 0.04,
+  "sizeXZ": [
+   0.4893,
+   0.4893
+  ],
+  "standYFrac": 1,
+  "baseXZFrac": [
+   1,
+   1
+  ]
+ },
+ "/models/kenney-survival/Grass.glb": {
+  "height": 0.1425,
+  "sizeXZ": [
+   0.2345,
+   0.2573
+  ],
+  "standYFrac": 1,
+  "baseXZFrac": [
+   1,
+   1
+  ]
+ },
+ "/models/kenney-survival/Grass-uEgE0AfnPF.glb": {
+  "height": 0.1425,
+  "sizeXZ": [
+   0.4759,
+   0.4873
+  ],
+  "standYFrac": 1,
+  "baseXZFrac": [
+   1,
+   1
+  ]
+ },
+ "/models/kenney-survival/Pickaxe.glb": {
+  "height": 0.24,
+  "sizeXZ": [
+   0.1786,
+   0.0387
+  ],
+  "standYFrac": 1,
+  "baseXZFrac": [
+   1,
+   1
+  ]
+ },
+ "/models/kenney-survival/Resource Stone.glb": {
+  "height": 0.1068,
+  "sizeXZ": [
+   0.1653,
+   0.1422
+  ],
+  "standYFrac": 1,
+  "baseXZFrac": [
+   1,
+   1
+  ]
+ },
+ "/models/kenney-survival/Rock.glb": {
+  "height": 0.51,
+  "sizeXZ": [
+   0.7837,
+   0.5468
+  ],
+  "standYFrac": 1,
+  "baseXZFrac": [
+   1,
+   1
+  ]
+ },
+ "/models/kenney-survival/Rock Flat.glb": {
+  "height": 0.165,
+  "sizeXZ": [
+   1.7864,
+   1.4478
+  ],
+  "standYFrac": 1,
+  "baseXZFrac": [
+   1,
+   1
+  ]
+ },
+ "/models/kenney-survival/Rock Flat Grass.glb": {
+  "height": 0.165,
+  "sizeXZ": [
+   1.7864,
+   1.4478
+  ],
+  "standYFrac": 1,
+  "baseXZFrac": [
+   1,
+   1
+  ]
+ },
+ "/models/kenney-survival/Rock-cBqdRdLDDL.glb": {
+  "height": 0.4186,
+  "sizeXZ": [
+   0.7991,
+   0.7247
+  ],
+  "standYFrac": 1,
+  "baseXZFrac": [
+   1,
+   1
+  ]
+ },
+ "/models/kenney-survival/Rock-iEKF2FGasY.glb": {
+  "height": 0.3927,
+  "sizeXZ": [
+   0.5552,
+   0.4324
+  ],
+  "standYFrac": 1,
+  "baseXZFrac": [
+   1,
+   1
+  ]
+ },
+ "/models/kenney-survival/Shovel.glb": {
+  "height": 0.29,
+  "sizeXZ": [
+   0.0709,
+   0.0309
+  ],
+  "standYFrac": 1,
+  "baseXZFrac": [
+   1,
+   1
+  ]
+ },
+ "/models/kenney-survival/Signpost.glb": {
+  "height": 0.4601,
+  "sizeXZ": [
+   0.2141,
+   0.043
+  ],
+  "standYFrac": 1,
+  "baseXZFrac": [
+   1,
+   1
+  ]
+ },
+ "/models/kenney-survival/Signpost Single.glb": {
+  "height": 0.4601,
+  "sizeXZ": [
+   0.2086,
+   0.043
+  ],
+  "standYFrac": 1,
+  "baseXZFrac": [
+   1,
+   1
+  ]
+ },
+ "/models/kenney-survival/Structure.glb": {
+  "height": 0.5175,
+  "sizeXZ": [
+   0.5,
+   0.5
+  ],
+  "standYFrac": 0.8,
+  "baseXZFrac": [
+   1,
+   1
+  ]
+ },
+ "/models/kenney-survival/Structure Base.glb": {
+  "height": 0.5375,
+  "sizeXZ": [
+   0.5,
+   0.5
+  ],
+  "standYFrac": 1,
+  "baseXZFrac": [
+   1,
+   1
+  ]
+ },
+ "/models/kenney-survival/Structure Cloth.glb": {
+  "height": 0.5175,
+  "sizeXZ": [
+   0.5,
+   0.5
+  ],
+  "standYFrac": 0.85,
+  "baseXZFrac": [
+   1,
+   1
+  ]
+ },
+ "/models/kenney-survival/Structure Roof.glb": {
+  "height": 0.6845,
+  "sizeXZ": [
+   0.5328,
+   0.503
+  ],
+  "standYFrac": 0.8667,
+  "baseXZFrac": [
+   0.9829,
+   0.9991
+  ]
+ },
+ "/models/kenney-survival/Tent.glb": {
+  "height": 0.4598,
+  "sizeXZ": [
+   0.5392,
+   0.5623
+  ],
+  "standYFrac": 0.9,
+  "baseXZFrac": [
+   1,
+   1
+  ]
+ },
+ "/models/kenney-survival/Tent Frame.glb": {
+  "height": 0.4598,
+  "sizeXZ": [
+   0.5392,
+   0.5623
+  ],
+  "standYFrac": 0.9,
+  "baseXZFrac": [
+   1,
+   1
+  ]
+ },
+ "/models/kenney-survival/Tent Half.glb": {
+  "height": 0.4598,
+  "sizeXZ": [
+   0.5392,
+   0.5623
+  ],
+  "standYFrac": 0.9,
+  "baseXZFrac": [
+   1,
+   1
+  ]
+ },
+ "/models/kenney-survival/Tool Axe.glb": {
+  "height": 0.256,
+  "sizeXZ": [
+   0.1145,
+   0.0387
+  ],
+  "standYFrac": 0.9333,
+  "baseXZFrac": [
+   1,
+   1
+  ]
+ },
+ "/models/kenney-survival/Tool Hoe.glb": {
+  "height": 0.24,
+  "sizeXZ": [
+   0.0848,
+   0.0709
+  ],
+  "standYFrac": 1,
+  "baseXZFrac": [
+   1,
+   1
+  ]
+ },
+ "/models/kenney-survival/Tree.glb": {
+  "height": 1.411,
+  "sizeXZ": [
+   0.5529,
+   0.5262
+  ],
+  "standYFrac": 1,
+  "baseXZFrac": [
+   1,
+   1
+  ]
+ },
+ "/models/kenney-survival/Tree Fall.glb": {
+  "height": 1.3489,
+  "sizeXZ": [
+   0.5529,
+   0.5262
+  ],
+  "standYFrac": 1,
+  "baseXZFrac": [
+   1,
+   1
+  ]
+ },
+ "/models/kenney-survival/Tree Fall Large.glb": {
+  "height": 1.711,
+  "sizeXZ": [
+   0.5529,
+   0.5262
+  ],
+  "standYFrac": 1,
+  "baseXZFrac": [
+   1,
+   1
+  ]
+ },
+ "/models/kenney-survival/Tree Large.glb": {
+  "height": 1.711,
+  "sizeXZ": [
+   0.5529,
+   0.5262
+  ],
+  "standYFrac": 1,
+  "baseXZFrac": [
+   1,
+   1
+  ]
+ },
+ "/models/kenney-survival/Twig.glb": {
+  "height": 0.0624,
+  "sizeXZ": [
+   0.1711,
+   0.1711
+  ],
+  "standYFrac": 0.4167,
+  "baseXZFrac": [
+   1,
+   1
+  ]
+ },
+ "/models/kenney-survival/Workbench.glb": {
+  "height": 0.2553,
+  "sizeXZ": [
+   0.2888,
+   0.2688
+  ],
+  "standYFrac": 0.8833,
+  "baseXZFrac": [
+   0.9797,
+   1
+  ]
+ },
+ "/models/kenney-survival/Workbench Anvil.glb": {
+  "height": 0.2745,
+  "sizeXZ": [
+   0.3092,
+   0.2688
+  ],
+  "standYFrac": 0.85,
+  "baseXZFrac": [
+   1,
+   1
+  ]
+ },
+ "/models/kenney-survival/Workbench Grind.glb": {
+  "height": 0.2801,
+  "sizeXZ": [
+   0.2604,
+   0.3125
+  ],
+  "standYFrac": 0.7,
+  "baseXZFrac": [
+   1,
+   1
+  ]
+ },
+ "/models/terrain/Ground Rolling.glb": {
+  "height": 0.3542,
+  "sizeXZ": [
+   2,
+   1.9092
+  ],
+  "standYFrac": 0.6333,
+  "baseXZFrac": [
+   1,
+   1
+  ]
+ },
+ "/models/terrain/Mountain.glb": {
+  "height": 1.3697,
+  "sizeXZ": [
+   1.4965,
+   1.1173
+  ],
+  "standYFrac": 0.9833,
+  "baseXZFrac": [
+   1,
+   1
+  ]
+ },
+ "/models/woods/Woods Boulder.glb": {
+  "height": 1.8259,
+  "sizeXZ": [
+   3.038,
+   3.3751
+  ],
+  "standYFrac": 0.9833,
+  "baseXZFrac": [
+   1,
+   1
+  ]
+ },
+ "/models/woods/Woods Boulder Flat.glb": {
+  "height": 1.2345,
+  "sizeXZ": [
+   2.908,
+   2.8192
+  ],
+  "standYFrac": 0.9333,
+  "baseXZFrac": [
+   1,
+   1
+  ]
+ },
+ "/models/woods/Woods Bush.glb": {
+  "height": 1.2518,
+  "sizeXZ": [
+   1.5293,
+   1.5717
+  ],
+  "standYFrac": 0.9667,
+  "baseXZFrac": [
+   1,
+   1
+  ]
+ },
+ "/models/woods/Woods Bush Small.glb": {
+  "height": 1.2137,
+  "sizeXZ": [
+   1.402,
+   1.4985
+  ],
+  "standYFrac": 0.9833,
+  "baseXZFrac": [
+   1,
+   1
+  ]
+ },
+ "/models/woods/Woods Ground.glb": {
+  "height": 1.6845,
+  "sizeXZ": [
+   13.9995,
+   15.2236
+  ],
+  "standYFrac": 0.9333,
+  "baseXZFrac": [
+   1,
+   1
+  ]
+ },
+ "/models/woods/Woods Grove.glb": {
+  "height": 5.1542,
+  "sizeXZ": [
+   3.6627,
+   7.6196
+  ],
+  "standYFrac": 0.95,
+  "baseXZFrac": [
+   1,
+   1
+  ]
+ },
+ "/models/woods/Woods Grove Large.glb": {
+  "height": 5.3634,
+  "sizeXZ": [
+   3.9105,
+   5.047
+  ],
+  "standYFrac": 0.95,
+  "baseXZFrac": [
+   1,
+   1
+  ]
+ },
+ "/models/woods/Woods Grove Small.glb": {
+  "height": 4.523,
+  "sizeXZ": [
+   4.1932,
+   4.2805
+  ],
+  "standYFrac": 0.9667,
+  "baseXZFrac": [
+   1,
+   1
+  ]
+ },
+ "/models/woods/Woods Rock.glb": {
+  "height": 0.9917,
+  "sizeXZ": [
+   1.3725,
+   1.4389
+  ],
+  "standYFrac": 0.9167,
+  "baseXZFrac": [
+   1,
+   1
+  ]
+ },
+ "/models/woods/Woods Rock Cluster.glb": {
+  "height": 1.1326,
+  "sizeXZ": [
+   1.8293,
+   1.9602
+  ],
+  "standYFrac": 0.6333,
+  "baseXZFrac": [
+   1,
+   1
+  ]
+ },
+ "/models/woods/Woods Tree A.glb": {
+  "height": 4.8905,
+  "sizeXZ": [
+   2.1434,
+   2.7052
+  ],
+  "standYFrac": 0.9667,
+  "baseXZFrac": [
+   1,
+   1
+  ]
+ },
+ "/models/woods/Woods Tree B.glb": {
+  "height": 4.6101,
+  "sizeXZ": [
+   2.1303,
+   1.9789
+  ],
+  "standYFrac": 0.9833,
+  "baseXZFrac": [
+   1,
+   1
+  ]
+ },
+ "/models/woods/Woods Tree C.glb": {
+  "height": 4.5553,
+  "sizeXZ": [
+   1.9897,
+   2.3243
+  ],
+  "standYFrac": 0.9833,
+  "baseXZFrac": [
+   1,
+   1
+  ]
+ },
+ "/models/woods/Woods Tree D.glb": {
+  "height": 4.4036,
+  "sizeXZ": [
+   2.1914,
+   2.2825
+  ],
+  "standYFrac": 0.95,
+  "baseXZFrac": [
+   1,
+   1
+  ]
+ },
+ "/models/woods/Woods Tree E.glb": {
+  "height": 3.8229,
+  "sizeXZ": [
+   2.5764,
+   2.8689
+  ],
+  "standYFrac": 0.95,
+  "baseXZFrac": [
+   1,
+   1
+  ]
+ },
+ "/models/woods/Woods Tree F.glb": {
+  "height": 3.692,
+  "sizeXZ": [
+   1.5843,
+   1.8165
+  ],
+  "standYFrac": 0.9667,
+  "baseXZFrac": [
+   1,
+   1
+  ]
  }
 }

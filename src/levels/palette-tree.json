@@ -1,0 +1,1501 @@
+[
+ {
+  "name": "Terrain",
+  "groups": [
+   {
+    "name": "Ground",
+    "clip": null,
+    "items": [
+     [
+      "Ground Rolling",
+      "/models/terrain/Ground Rolling.glb"
+     ],
+     [
+      "Woods Ground",
+      "/models/woods/Woods Ground.glb"
+     ]
+    ]
+   },
+   {
+    "name": "Hills",
+    "clip": null,
+    "items": [
+     [
+      "Mountain",
+      "/models/terrain/Mountain.glb"
+     ]
+    ]
+   },
+   {
+    "name": "Rocks",
+    "clip": null,
+    "items": [
+     [
+      "Rock",
+      "/models/quaternius-pirate/Rock.glb"
+     ],
+     [
+      "Rock 2",
+      "/models/quaternius-pirate/Rock-4vHWF8XUBn.glb"
+     ],
+     [
+      "Rock 3",
+      "/models/quaternius-pirate/Rock-6cytS1cPiL.glb"
+     ],
+     [
+      "Rock 4",
+      "/models/quaternius-pirate/Rock-BvlfuHFAuI.glb"
+     ],
+     [
+      "Rock 5",
+      "/models/quaternius-pirate/Rock-KvXSMwoftt.glb"
+     ],
+     [
+      "Rock 6",
+      "/models/quaternius-pirate/Rock-cg6yBEddtZ.glb"
+     ],
+     [
+      "Rocks",
+      "/models/quaternius-pirate/Rocks.glb"
+     ],
+     [
+      "Rocks 2",
+      "/models/quaternius-pirate/Rocks-38eDa0gjwZ.glb"
+     ],
+     [
+      "Rocks 3",
+      "/models/quaternius-pirate/Rocks-IFU6cm2Xow.glb"
+     ],
+     [
+      "Rocks 4",
+      "/models/quaternius-pirate/Rocks-e1rgb5i2kF.glb"
+     ],
+     [
+      "Rocks 5",
+      "/models/quaternius-pirate/Rocks-fy3szRMvuE.glb"
+     ],
+     [
+      "Pebble Round",
+      "/models/stylized-nature-megakit/Pebble Round.glb"
+     ],
+     [
+      "Pebble Round 2",
+      "/models/stylized-nature-megakit/Pebble Round-KYtJ6JNXh2.glb"
+     ],
+     [
+      "Pebble Round 3",
+      "/models/stylized-nature-megakit/Pebble Round-icVsN3lmVy.glb"
+     ],
+     [
+      "Pebble Round 4",
+      "/models/stylized-nature-megakit/Pebble Round-kAMfq1uJUY.glb"
+     ],
+     [
+      "Pebble Round 5",
+      "/models/stylized-nature-megakit/Pebble Round-nMf8LHOsbM.glb"
+     ],
+     [
+      "Pebble Square",
+      "/models/stylized-nature-megakit/Pebble Square.glb"
+     ],
+     [
+      "Pebble Square 2",
+      "/models/stylized-nature-megakit/Pebble Square-2YtLzwgsWp.glb"
+     ],
+     [
+      "Pebble Square 3",
+      "/models/stylized-nature-megakit/Pebble Square-6juX57sLHe.glb"
+     ],
+     [
+      "Pebble Square 4",
+      "/models/stylized-nature-megakit/Pebble Square-Mm4RMgwNO8.glb"
+     ],
+     [
+      "Pebble Square 5",
+      "/models/stylized-nature-megakit/Pebble Square-l5XiYQj1oD.glb"
+     ],
+     [
+      "Pebble Square 6",
+      "/models/stylized-nature-megakit/Pebble Square-s71L3q1nXN.glb"
+     ],
+     [
+      "Rock Medium",
+      "/models/stylized-nature-megakit/Rock Medium.glb"
+     ],
+     [
+      "Rock Medium 2",
+      "/models/stylized-nature-megakit/Rock Medium-JQxF95498B.glb"
+     ],
+     [
+      "Rock Medium 3",
+      "/models/stylized-nature-megakit/Rock Medium-s1OJ3bBzqc.glb"
+     ],
+     [
+      "Rock Path Round Small",
+      "/models/stylized-nature-megakit/Rock Path Round Small.glb"
+     ],
+     [
+      "Rock Path Round Small 2",
+      "/models/stylized-nature-megakit/Rock Path Round Small-GMttpOEFKT.glb"
+     ],
+     [
+      "Rock Path Round Small 3",
+      "/models/stylized-nature-megakit/Rock Path Round Small-yHEdadj5I0.glb"
+     ],
+     [
+      "Rock Path Round Thin",
+      "/models/stylized-nature-megakit/Rock Path Round Thin.glb"
+     ],
+     [
+      "Rock Path Round Wide",
+      "/models/stylized-nature-megakit/Rock Path Round Wide.glb"
+     ],
+     [
+      "Rock Path Square Smal",
+      "/models/stylized-nature-megakit/Rock Path Square Smal.glb"
+     ],
+     [
+      "Rock Path Square Smal 2",
+      "/models/stylized-nature-megakit/Rock Path Square Smal-cI9XBpVijV.glb"
+     ],
+     [
+      "Rock Path Square Smal 3",
+      "/models/stylized-nature-megakit/Rock Path Square Smal-w4TKZMjjcw.glb"
+     ],
+     [
+      "Rock Path Square Thin",
+      "/models/stylized-nature-megakit/Rock Path Square Thin.glb"
+     ],
+     [
+      "Rock Path Square Wide",
+      "/models/stylized-nature-megakit/Rock Path Square Wide.glb"
+     ],
+     [
+      "Woods Boulder",
+      "/models/woods/Woods Boulder.glb"
+     ],
+     [
+      "Woods Boulder Flat",
+      "/models/woods/Woods Boulder Flat.glb"
+     ],
+     [
+      "Woods Rock",
+      "/models/woods/Woods Rock.glb"
+     ],
+     [
+      "Woods Rock Cluster",
+      "/models/woods/Woods Rock Cluster.glb"
+     ],
+     [
+      "Rock 7",
+      "/models/kenney-survival/Rock.glb"
+     ],
+     [
+      "Rock Flat",
+      "/models/kenney-survival/Rock Flat.glb"
+     ],
+     [
+      "Rock Flat Grass",
+      "/models/kenney-survival/Rock Flat Grass.glb"
+     ],
+     [
+      "Rock 8",
+      "/models/kenney-survival/Rock-cBqdRdLDDL.glb"
+     ],
+     [
+      "Rock 9",
+      "/models/kenney-survival/Rock-iEKF2FGasY.glb"
+     ]
+    ]
+   }
+  ]
+ },
+ {
+  "name": "Nature",
+  "groups": [
+   {
+    "name": "Bushes",
+    "clip": null,
+    "items": [
+     [
+      "Bush",
+      "/models/stylized-nature-megakit/Bush.glb"
+     ],
+     [
+      "Bush with Flowers",
+      "/models/stylized-nature-megakit/Bush with Flowers.glb"
+     ],
+     [
+      "Fern",
+      "/models/stylized-nature-megakit/Fern.glb"
+     ],
+     [
+      "Plant",
+      "/models/stylized-nature-megakit/Plant.glb"
+     ],
+     [
+      "Plant Big",
+      "/models/stylized-nature-megakit/Plant Big.glb"
+     ],
+     [
+      "Plant Big 2",
+      "/models/stylized-nature-megakit/Plant Big-MbhbP7JrTI.glb"
+     ],
+     [
+      "Plant 2",
+      "/models/stylized-nature-megakit/Plant-xH5gNlQxAZ.glb"
+     ],
+     [
+      "Woods Bush",
+      "/models/woods/Woods Bush.glb"
+     ],
+     [
+      "Woods Bush Small",
+      "/models/woods/Woods Bush Small.glb"
+     ]
+    ]
+   },
+   {
+    "name": "Flowers",
+    "clip": null,
+    "items": [
+     [
+      "Clover",
+      "/models/stylized-nature-megakit/Clover.glb"
+     ],
+     [
+      "Clover 2",
+      "/models/stylized-nature-megakit/Clover-u5SOgBFiut.glb"
+     ],
+     [
+      "Flower Group",
+      "/models/stylized-nature-megakit/Flower Group.glb"
+     ],
+     [
+      "Flower Group 2",
+      "/models/stylized-nature-megakit/Flower Group-LqTljN6Wg2.glb"
+     ],
+     [
+      "Flower Petal",
+      "/models/stylized-nature-megakit/Flower Petal.glb"
+     ],
+     [
+      "Flower Petal 2",
+      "/models/stylized-nature-megakit/Flower Petal-LqvxG9OBOU.glb"
+     ],
+     [
+      "Flower Petal 3",
+      "/models/stylized-nature-megakit/Flower Petal-eVE0j49ux9.glb"
+     ],
+     [
+      "Flower Petal 4",
+      "/models/stylized-nature-megakit/Flower Petal-niuBUEJdvM.glb"
+     ],
+     [
+      "Flower Petal 5",
+      "/models/stylized-nature-megakit/Flower Petal-tzG4JcqYWs.glb"
+     ],
+     [
+      "Flower Single",
+      "/models/stylized-nature-megakit/Flower Single.glb"
+     ],
+     [
+      "Flower Single 2",
+      "/models/stylized-nature-megakit/Flower Single-GvfHo0roi3.glb"
+     ],
+     [
+      "Mushroom",
+      "/models/stylized-nature-megakit/Mushroom.glb"
+     ],
+     [
+      "Mushroom Laetiporus",
+      "/models/stylized-nature-megakit/Mushroom Laetiporus.glb"
+     ]
+    ]
+   },
+   {
+    "name": "Grass",
+    "clip": null,
+    "items": [
+     [
+      "Grass",
+      "/models/stylized-nature-megakit/Grass.glb"
+     ],
+     [
+      "Grass Wispy",
+      "/models/stylized-nature-megakit/Grass Wispy.glb"
+     ],
+     [
+      "Grass Wispy 2",
+      "/models/stylized-nature-megakit/Grass Wispy-Msr9zx66VU.glb"
+     ],
+     [
+      "Tall Grass",
+      "/models/stylized-nature-megakit/Tall Grass.glb"
+     ],
+     [
+      "Grass 2",
+      "/models/kenney-survival/Grass.glb"
+     ],
+     [
+      "Grass 3",
+      "/models/kenney-survival/Grass-uEgE0AfnPF.glb"
+     ],
+     [
+      "Twig",
+      "/models/kenney-survival/Twig.glb"
+     ]
+    ]
+   },
+   {
+    "name": "Trees",
+    "clip": null,
+    "items": [
+     [
+      "Dead Tree",
+      "/models/stylized-nature-megakit/Dead Tree.glb"
+     ],
+     [
+      "Dead Tree 2",
+      "/models/stylized-nature-megakit/Dead Tree-CD4edbPSGm.glb"
+     ],
+     [
+      "Dead Tree 3",
+      "/models/stylized-nature-megakit/Dead Tree-Mcd2zYqyww.glb"
+     ],
+     [
+      "Dead Tree 4",
+      "/models/stylized-nature-megakit/Dead Tree-MlmK5488ou.glb"
+     ],
+     [
+      "Dead Tree 5",
+      "/models/stylized-nature-megakit/Dead Tree-n8FhMgMldD.glb"
+     ],
+     [
+      "Pine",
+      "/models/stylized-nature-megakit/Pine.glb"
+     ],
+     [
+      "Pine 2",
+      "/models/stylized-nature-megakit/Pine-699sFuLCN2.glb"
+     ],
+     [
+      "Pine 3",
+      "/models/stylized-nature-megakit/Pine-79gmlLnweB.glb"
+     ],
+     [
+      "Pine 4",
+      "/models/stylized-nature-megakit/Pine-Zt62gceKXZ.glb"
+     ],
+     [
+      "Pine 5",
+      "/models/stylized-nature-megakit/Pine-rfnxJv0Rqa.glb"
+     ],
+     [
+      "Tree",
+      "/models/stylized-nature-megakit/Tree.glb"
+     ],
+     [
+      "Tree 2",
+      "/models/stylized-nature-megakit/Tree-QVOop92WmG.glb"
+     ],
+     [
+      "Tree 3",
+      "/models/stylized-nature-megakit/Tree-aVOxaHRPWe.glb"
+     ],
+     [
+      "Tree 4",
+      "/models/stylized-nature-megakit/Tree-qZtx0AHhcy.glb"
+     ],
+     [
+      "Tree 5",
+      "/models/stylized-nature-megakit/Tree-t9KbsfYdXz.glb"
+     ],
+     [
+      "Twisted Tree",
+      "/models/stylized-nature-megakit/Twisted Tree.glb"
+     ],
+     [
+      "Twisted Tree 2",
+      "/models/stylized-nature-megakit/Twisted Tree-7PDBpElkQr.glb"
+     ],
+     [
+      "Twisted Tree 3",
+      "/models/stylized-nature-megakit/Twisted Tree-8oraKn9m0x.glb"
+     ],
+     [
+      "Twisted Tree 4",
+      "/models/stylized-nature-megakit/Twisted Tree-9aWlx82xUf.glb"
+     ],
+     [
+      "Twisted Tree 5",
+      "/models/stylized-nature-megakit/Twisted Tree-GVTsMmuzv7.glb"
+     ],
+     [
+      "Woods Grove",
+      "/models/woods/Woods Grove.glb"
+     ],
+     [
+      "Woods Grove Large",
+      "/models/woods/Woods Grove Large.glb"
+     ],
+     [
+      "Woods Grove Small",
+      "/models/woods/Woods Grove Small.glb"
+     ],
+     [
+      "Woods Tree A",
+      "/models/woods/Woods Tree A.glb"
+     ],
+     [
+      "Woods Tree B",
+      "/models/woods/Woods Tree B.glb"
+     ],
+     [
+      "Woods Tree C",
+      "/models/woods/Woods Tree C.glb"
+     ],
+     [
+      "Woods Tree D",
+      "/models/woods/Woods Tree D.glb"
+     ],
+     [
+      "Woods Tree E",
+      "/models/woods/Woods Tree E.glb"
+     ],
+     [
+      "Woods Tree F",
+      "/models/woods/Woods Tree F.glb"
+     ],
+     [
+      "Tree 6",
+      "/models/kenney-survival/Tree.glb"
+     ],
+     [
+      "Tree Fall",
+      "/models/kenney-survival/Tree Fall.glb"
+     ],
+     [
+      "Tree Fall Large",
+      "/models/kenney-survival/Tree Fall Large.glb"
+     ],
+     [
+      "Tree Large",
+      "/models/kenney-survival/Tree Large.glb"
+     ],
+     [
+      "Palm Tree",
+      "/models/quaternius-pirate/Palm Tree.glb"
+     ],
+     [
+      "Palm Tree 2",
+      "/models/quaternius-pirate/Palm Tree-A6cKJYFsIb.glb"
+     ],
+     [
+      "Palm Tree 3",
+      "/models/quaternius-pirate/Palm Tree-P0tgwyXBgr.glb"
+     ]
+    ]
+   }
+  ]
+ },
+ {
+  "name": "Characters",
+  "groups": [
+   {
+    "name": "Animals",
+    "clip": "Idle",
+    "items": [
+     [
+      "Alpaca",
+      "/models/animated-animal-pack/Alpaca.glb"
+     ],
+     [
+      "Bull",
+      "/models/animated-animal-pack/Bull.glb"
+     ],
+     [
+      "Cow",
+      "/models/animated-animal-pack/Cow.glb"
+     ],
+     [
+      "Deer",
+      "/models/animated-animal-pack/Deer.glb"
+     ],
+     [
+      "Donkey",
+      "/models/animated-animal-pack/Donkey.glb"
+     ],
+     [
+      "Fox",
+      "/models/animated-animal-pack/Fox.glb"
+     ],
+     [
+      "Horse",
+      "/models/animated-animal-pack/Horse.glb"
+     ],
+     [
+      "Husky",
+      "/models/animated-animal-pack/Husky.glb"
+     ],
+     [
+      "Shiba Inu",
+      "/models/animated-animal-pack/Shiba Inu.glb"
+     ],
+     [
+      "Stag",
+      "/models/animated-animal-pack/Stag.glb"
+     ],
+     [
+      "White Horse",
+      "/models/animated-animal-pack/White Horse.glb"
+     ],
+     [
+      "Wolf",
+      "/models/animated-animal-pack/Wolf.glb"
+     ]
+    ]
+   },
+   {
+    "name": "Enemies",
+    "clip": "Idle",
+    "items": [
+     [
+      "Frog",
+      "/models/animated-enemies/Frog.glb"
+     ],
+     [
+      "Rat",
+      "/models/animated-enemies/Rat.glb"
+     ],
+     [
+      "Snake",
+      "/models/animated-enemies/Snake.glb"
+     ],
+     [
+      "Spider",
+      "/models/animated-enemies/Spider.glb"
+     ],
+     [
+      "Wasp",
+      "/models/animated-enemies/Wasp.glb"
+     ]
+    ]
+   },
+   {
+    "name": "Fish",
+    "clip": "Swimming_Normal",
+    "items": [
+     [
+      "Anglerfish",
+      "/models/animated-fish-bundle/Anglerfish.glb"
+     ],
+     [
+      "Armored Catfish",
+      "/models/animated-fish-bundle/Armored Catfish.glb"
+     ],
+     [
+      "Betta",
+      "/models/animated-fish-bundle/Betta.glb"
+     ],
+     [
+      "Black Lion Fish",
+      "/models/animated-fish-bundle/Black Lion Fish.glb"
+     ],
+     [
+      "Blobfish",
+      "/models/animated-fish-bundle/Blobfish.glb"
+     ],
+     [
+      "Blue Goldfish",
+      "/models/animated-fish-bundle/Blue Goldfish.glb"
+     ],
+     [
+      "Blue Tang",
+      "/models/animated-fish-bundle/Blue Tang.glb"
+     ],
+     [
+      "Boat",
+      "/models/animated-fish-bundle/Boat.glb"
+     ],
+     [
+      "Butterfly Fish",
+      "/models/animated-fish-bundle/Butterfly Fish.glb"
+     ],
+     [
+      "Cardinal Fish",
+      "/models/animated-fish-bundle/Cardinal Fish.glb"
+     ],
+     [
+      "Clownfish",
+      "/models/animated-fish-bundle/Clownfish.glb"
+     ],
+     [
+      "Coral Grouper",
+      "/models/animated-fish-bundle/Coral Grouper.glb"
+     ],
+     [
+      "Cowfish",
+      "/models/animated-fish-bundle/Cowfish.glb"
+     ],
+     [
+      "Dock Long",
+      "/models/animated-fish-bundle/Dock Long.glb"
+     ],
+     [
+      "Dock Long No Rope",
+      "/models/animated-fish-bundle/Dock Long No Rope.glb"
+     ],
+     [
+      "Dock Stairs",
+      "/models/animated-fish-bundle/Dock Stairs.glb"
+     ],
+     [
+      "Dock Wide",
+      "/models/animated-fish-bundle/Dock Wide.glb"
+     ],
+     [
+      "Fishing Rod",
+      "/models/animated-fish-bundle/Fishing Rod.glb"
+     ],
+     [
+      "Fishing Rod 2",
+      "/models/animated-fish-bundle/Fishing Rod-0YAR0Lg58p.glb"
+     ],
+     [
+      "Fishing Rod 3",
+      "/models/animated-fish-bundle/Fishing Rod-9AOHhRPHE7.glb"
+     ],
+     [
+      "Fishing Rod 4",
+      "/models/animated-fish-bundle/Fishing Rod-aOabqWh68m.glb"
+     ],
+     [
+      "Fishing Rod 5",
+      "/models/animated-fish-bundle/Fishing Rod-lDlWQjn9Zg.glb"
+     ],
+     [
+      "Flatfish",
+      "/models/animated-fish-bundle/Flatfish.glb"
+     ],
+     [
+      "Flower Horn",
+      "/models/animated-fish-bundle/Flower Horn.glb"
+     ],
+     [
+      "Goblin Shark",
+      "/models/animated-fish-bundle/Goblin Shark.glb"
+     ],
+     [
+      "Goldfish",
+      "/models/animated-fish-bundle/Goldfish.glb"
+     ],
+     [
+      "Humphead",
+      "/models/animated-fish-bundle/Humphead.glb"
+     ],
+     [
+      "Koi",
+      "/models/animated-fish-bundle/Koi.glb"
+     ],
+     [
+      "Lionfish",
+      "/models/animated-fish-bundle/Lionfish.glb"
+     ],
+     [
+      "Lure",
+      "/models/animated-fish-bundle/Lure.glb"
+     ],
+     [
+      "Lure 2",
+      "/models/animated-fish-bundle/Lure-2dkfIrm95d.glb"
+     ],
+     [
+      "Lure 3",
+      "/models/animated-fish-bundle/Lure-3PCaOuRgtU.glb"
+     ],
+     [
+      "Lure 4",
+      "/models/animated-fish-bundle/Lure-JknXyvHxtD.glb"
+     ],
+     [
+      "Lure 5",
+      "/models/animated-fish-bundle/Lure-h6fXsojX9b.glb"
+     ],
+     [
+      "Lure 6",
+      "/models/animated-fish-bundle/Lure-swjBRN0kVZ.glb"
+     ],
+     [
+      "Mandarin Fish",
+      "/models/animated-fish-bundle/Mandarin Fish.glb"
+     ],
+     [
+      "Moorish Idol",
+      "/models/animated-fish-bundle/Moorish Idol.glb"
+     ],
+     [
+      "Parrot Fish",
+      "/models/animated-fish-bundle/Parrot Fish.glb"
+     ],
+     [
+      "Piranha",
+      "/models/animated-fish-bundle/Piranha.glb"
+     ],
+     [
+      "Puffer",
+      "/models/animated-fish-bundle/Puffer.glb"
+     ],
+     [
+      "Red Snapper",
+      "/models/animated-fish-bundle/Red Snapper.glb"
+     ],
+     [
+      "Royal Gramma",
+      "/models/animated-fish-bundle/Royal Gramma.glb"
+     ],
+     [
+      "Shark",
+      "/models/animated-fish-bundle/Shark.glb"
+     ],
+     [
+      "Sunfish",
+      "/models/animated-fish-bundle/Sunfish.glb"
+     ],
+     [
+      "Swordfish",
+      "/models/animated-fish-bundle/Swordfish.glb"
+     ],
+     [
+      "Tang",
+      "/models/animated-fish-bundle/Tang.glb"
+     ],
+     [
+      "Tetra",
+      "/models/animated-fish-bundle/Tetra.glb"
+     ],
+     [
+      "Tuna",
+      "/models/animated-fish-bundle/Tuna.glb"
+     ],
+     [
+      "Turbot",
+      "/models/animated-fish-bundle/Turbot.glb"
+     ],
+     [
+      "Worm",
+      "/models/animated-fish-bundle/Worm.glb"
+     ],
+     [
+      "Yellow Tang",
+      "/models/animated-fish-bundle/Yellow Tang.glb"
+     ],
+     [
+      "Zebra Clown Fish",
+      "/models/animated-fish-bundle/Zebra Clown Fish.glb"
+     ]
+    ]
+   },
+   {
+    "name": "Monsters",
+    "clip": "Idle",
+    "items": [
+     [
+      "Alien",
+      "/models/ultimate-monsters/Alien.glb"
+     ],
+     [
+      "Alien 2",
+      "/models/ultimate-monsters/Alien-RRliSQBP7r.glb"
+     ],
+     [
+      "Alpaking",
+      "/models/ultimate-monsters/Alpaking.glb"
+     ],
+     [
+      "Alpaking Evolved",
+      "/models/ultimate-monsters/Alpaking Evolved.glb"
+     ],
+     [
+      "Armabee",
+      "/models/ultimate-monsters/Armabee.glb"
+     ],
+     [
+      "Armabee Evolved",
+      "/models/ultimate-monsters/Armabee Evolved.glb"
+     ],
+     [
+      "Birb",
+      "/models/ultimate-monsters/Birb.glb"
+     ],
+     [
+      "Blue Demon",
+      "/models/ultimate-monsters/Blue Demon.glb"
+     ],
+     [
+      "Bunny",
+      "/models/ultimate-monsters/Bunny.glb"
+     ],
+     [
+      "Cactoro",
+      "/models/ultimate-monsters/Cactoro.glb"
+     ],
+     [
+      "Cactoro 2",
+      "/models/ultimate-monsters/Cactoro-IGn9lhdama.glb"
+     ],
+     [
+      "Cat",
+      "/models/ultimate-monsters/Cat.glb"
+     ],
+     [
+      "Chicken",
+      "/models/ultimate-monsters/Chicken.glb"
+     ],
+     [
+      "Demon",
+      "/models/ultimate-monsters/Demon.glb"
+     ],
+     [
+      "Demon 2",
+      "/models/ultimate-monsters/Demon-LnfIziKv4o.glb"
+     ],
+     [
+      "Dino",
+      "/models/ultimate-monsters/Dino.glb"
+     ],
+     [
+      "Dragon",
+      "/models/ultimate-monsters/Dragon.glb"
+     ],
+     [
+      "Dragon Evolved",
+      "/models/ultimate-monsters/Dragon Evolved.glb"
+     ],
+     [
+      "Fish",
+      "/models/ultimate-monsters/Fish.glb"
+     ],
+     [
+      "Fish 2",
+      "/models/ultimate-monsters/Fish-ypEYhCImAB.glb"
+     ],
+     [
+      "Frog",
+      "/models/ultimate-monsters/Frog.glb"
+     ],
+     [
+      "Ghost",
+      "/models/ultimate-monsters/Ghost.glb"
+     ],
+     [
+      "Ghost Skull",
+      "/models/ultimate-monsters/Ghost Skull.glb"
+     ],
+     [
+      "Glub",
+      "/models/ultimate-monsters/Glub.glb"
+     ],
+     [
+      "Glub Evolved",
+      "/models/ultimate-monsters/Glub Evolved.glb"
+     ],
+     [
+      "Goleling",
+      "/models/ultimate-monsters/Goleling.glb"
+     ],
+     [
+      "Goleling Evolved",
+      "/models/ultimate-monsters/Goleling Evolved.glb"
+     ],
+     [
+      "Green Blob",
+      "/models/ultimate-monsters/Green Blob.glb"
+     ],
+     [
+      "Green Spiky Blob",
+      "/models/ultimate-monsters/Green Spiky Blob.glb"
+     ],
+     [
+      "Hywirl",
+      "/models/ultimate-monsters/Hywirl.glb"
+     ],
+     [
+      "Monkroose",
+      "/models/ultimate-monsters/Monkroose.glb"
+     ],
+     [
+      "Mushnub",
+      "/models/ultimate-monsters/Mushnub.glb"
+     ],
+     [
+      "Mushnub Evolved",
+      "/models/ultimate-monsters/Mushnub Evolved.glb"
+     ],
+     [
+      "Mushroom King",
+      "/models/ultimate-monsters/Mushroom King.glb"
+     ],
+     [
+      "Ninja",
+      "/models/ultimate-monsters/Ninja.glb"
+     ],
+     [
+      "Ninja 2",
+      "/models/ultimate-monsters/Ninja-xGYmeDpfTu.glb"
+     ],
+     [
+      "Orc",
+      "/models/ultimate-monsters/Orc.glb"
+     ],
+     [
+      "Orc Enemy",
+      "/models/ultimate-monsters/Orc Enemy.glb"
+     ],
+     [
+      "Pigeon",
+      "/models/ultimate-monsters/Pigeon.glb"
+     ],
+     [
+      "Pink Blob",
+      "/models/ultimate-monsters/Pink Blob.glb"
+     ],
+     [
+      "Squidle",
+      "/models/ultimate-monsters/Squidle.glb"
+     ],
+     [
+      "Tribal",
+      "/models/ultimate-monsters/Tribal.glb"
+     ],
+     [
+      "Wizard",
+      "/models/ultimate-monsters/Wizard.glb"
+     ],
+     [
+      "Yeti",
+      "/models/ultimate-monsters/Yeti.glb"
+     ],
+     [
+      "Yeti 2",
+      "/models/ultimate-monsters/Yeti-ceRHrn8HHE.glb"
+     ]
+    ]
+   },
+   {
+    "name": "People",
+    "clip": "Idle",
+    "items": [
+     [
+      "Adventurer",
+      "/models/ultimate-modular-men-pack/Adventurer.glb"
+     ],
+     [
+      "Astronaut",
+      "/models/ultimate-modular-men-pack/Astronaut.glb"
+     ],
+     [
+      "Beach Character",
+      "/models/ultimate-modular-men-pack/Beach Character.glb"
+     ],
+     [
+      "Business Man",
+      "/models/ultimate-modular-men-pack/Business Man.glb"
+     ],
+     [
+      "Casual Character",
+      "/models/ultimate-modular-men-pack/Casual Character.glb"
+     ],
+     [
+      "Farmer",
+      "/models/ultimate-modular-men-pack/Farmer.glb"
+     ],
+     [
+      "Hoodie Character",
+      "/models/ultimate-modular-men-pack/Hoodie Character.glb"
+     ],
+     [
+      "King",
+      "/models/ultimate-modular-men-pack/King.glb"
+     ],
+     [
+      "Punk",
+      "/models/ultimate-modular-men-pack/Punk.glb"
+     ],
+     [
+      "Swat",
+      "/models/ultimate-modular-men-pack/Swat.glb"
+     ],
+     [
+      "Worker",
+      "/models/ultimate-modular-men-pack/Worker.glb"
+     ],
+     [
+      "Adventurer 2",
+      "/models/ultimate-modular-women-pack/Adventurer.glb"
+     ],
+     [
+      "Animated Woman",
+      "/models/ultimate-modular-women-pack/Animated Woman.glb"
+     ],
+     [
+      "Animated Woman 2",
+      "/models/ultimate-modular-women-pack/Animated Woman-nIItLV9nxS.glb"
+     ],
+     [
+      "Medieval",
+      "/models/ultimate-modular-women-pack/Medieval.glb"
+     ],
+     [
+      "Punk 2",
+      "/models/ultimate-modular-women-pack/Punk.glb"
+     ],
+     [
+      "Sci Fi Character",
+      "/models/ultimate-modular-women-pack/Sci Fi Character.glb"
+     ],
+     [
+      "Soldier",
+      "/models/ultimate-modular-women-pack/Soldier.glb"
+     ],
+     [
+      "Suit",
+      "/models/ultimate-modular-women-pack/Suit.glb"
+     ],
+     [
+      "Witch",
+      "/models/ultimate-modular-women-pack/Witch.glb"
+     ],
+     [
+      "Worker 2",
+      "/models/ultimate-modular-women-pack/Worker.glb"
+     ],
+     [
+      "Man",
+      "/models/animated-men-pack/Man.glb"
+     ],
+     [
+      "Man in Long Sleeves",
+      "/models/animated-men-pack/Man in Long Sleeves.glb"
+     ],
+     [
+      "Man in Suit",
+      "/models/animated-men-pack/Man in Suit.glb"
+     ],
+     [
+      "Man 2",
+      "/models/animated-men-pack/Man-fjHyMd5Wxw.glb"
+     ],
+     [
+      "Woman",
+      "/models/animated-women-pack/Woman.glb"
+     ],
+     [
+      "Woman Casual",
+      "/models/animated-women-pack/Woman Casual.glb"
+     ],
+     [
+      "Woman in Dress",
+      "/models/animated-women-pack/Woman in Dress.glb"
+     ],
+     [
+      "Woman in Tank Top",
+      "/models/animated-women-pack/Woman in Tank Top.glb"
+     ],
+     [
+      "Anne",
+      "/models/quaternius-pirate/Anne.glb"
+     ],
+     [
+      "Henry",
+      "/models/quaternius-pirate/Henry.glb"
+     ],
+     [
+      "Mako",
+      "/models/quaternius-pirate/Mako.glb"
+     ],
+     [
+      "Pirate Captain",
+      "/models/quaternius-pirate/Pirate Captain.glb"
+     ],
+     [
+      "Sharky",
+      "/models/quaternius-pirate/Sharky.glb"
+     ],
+     [
+      "Skeleton",
+      "/models/quaternius-pirate/Skeleton.glb"
+     ]
+    ]
+   }
+  ]
+ },
+ {
+  "name": "Structures",
+  "groups": [
+   {
+    "name": "Buildings",
+    "clip": null,
+    "items": [
+     [
+      "Dock",
+      "/models/quaternius-pirate/Dock.glb"
+     ],
+     [
+      "Dock Broken",
+      "/models/quaternius-pirate/Dock Broken.glb"
+     ],
+     [
+      "House",
+      "/models/quaternius-pirate/House.glb"
+     ],
+     [
+      "House 2",
+      "/models/quaternius-pirate/House-2kytqGs4rH.glb"
+     ],
+     [
+      "House 3",
+      "/models/quaternius-pirate/House-g7eSJLFi4V.glb"
+     ],
+     [
+      "Post",
+      "/models/quaternius-pirate/Post.glb"
+     ],
+     [
+      "Sawmill",
+      "/models/quaternius-pirate/Sawmill.glb"
+     ],
+     [
+      "Bedroll",
+      "/models/kenney-survival/Bedroll.glb"
+     ],
+     [
+      "Bedroll Frame",
+      "/models/kenney-survival/Bedroll Frame.glb"
+     ],
+     [
+      "Bedroll 2",
+      "/models/kenney-survival/Bedroll-efwd5fjuMU.glb"
+     ],
+     [
+      "Campfire",
+      "/models/kenney-survival/Campfire.glb"
+     ],
+     [
+      "Fence Fortified",
+      "/models/kenney-survival/Fence Fortified.glb"
+     ],
+     [
+      "Fence Frame",
+      "/models/kenney-survival/Fence Frame.glb"
+     ],
+     [
+      "Fishing Stand",
+      "/models/kenney-survival/Fishing Stand.glb"
+     ],
+     [
+      "Floor",
+      "/models/kenney-survival/Floor.glb"
+     ],
+     [
+      "Signpost",
+      "/models/kenney-survival/Signpost.glb"
+     ],
+     [
+      "Signpost Single",
+      "/models/kenney-survival/Signpost Single.glb"
+     ],
+     [
+      "Structure",
+      "/models/kenney-survival/Structure.glb"
+     ],
+     [
+      "Structure Base",
+      "/models/kenney-survival/Structure Base.glb"
+     ],
+     [
+      "Structure Cloth",
+      "/models/kenney-survival/Structure Cloth.glb"
+     ],
+     [
+      "Structure Roof",
+      "/models/kenney-survival/Structure Roof.glb"
+     ],
+     [
+      "Tent",
+      "/models/kenney-survival/Tent.glb"
+     ],
+     [
+      "Tent Frame",
+      "/models/kenney-survival/Tent Frame.glb"
+     ],
+     [
+      "Tent Half",
+      "/models/kenney-survival/Tent Half.glb"
+     ],
+     [
+      "Workbench",
+      "/models/kenney-survival/Workbench.glb"
+     ],
+     [
+      "Workbench Anvil",
+      "/models/kenney-survival/Workbench Anvil.glb"
+     ],
+     [
+      "Workbench Grind",
+      "/models/kenney-survival/Workbench Grind.glb"
+     ]
+    ]
+   },
+   {
+    "name": "Ships",
+    "clip": null,
+    "items": [
+     [
+      "Anchor",
+      "/models/quaternius-pirate/Anchor.glb"
+     ],
+     [
+      "Ship",
+      "/models/quaternius-pirate/Ship.glb"
+     ],
+     [
+      "Small Ship",
+      "/models/quaternius-pirate/Small Ship.glb"
+     ]
+    ]
+   }
+  ]
+ },
+ {
+  "name": "Items",
+  "groups": [
+   {
+    "name": "Props",
+    "clip": null,
+    "items": [
+     [
+      "Barrel",
+      "/models/quaternius-pirate/Barrel.glb"
+     ],
+     [
+      "Bird",
+      "/models/quaternius-pirate/Bird.glb"
+     ],
+     [
+      "Bucket",
+      "/models/quaternius-pirate/Bucket.glb"
+     ],
+     [
+      "Bucket of Fish",
+      "/models/quaternius-pirate/Bucket of Fish.glb"
+     ],
+     [
+      "Chicken Leg",
+      "/models/quaternius-pirate/Chicken Leg.glb"
+     ],
+     [
+      "Fish Mackerel",
+      "/models/quaternius-pirate/Fish Mackerel.glb"
+     ],
+     [
+      "Fish Tuna",
+      "/models/quaternius-pirate/Fish Tuna.glb"
+     ],
+     [
+      "Large Bone",
+      "/models/quaternius-pirate/Large Bone.glb"
+     ],
+     [
+      "Lute",
+      "/models/quaternius-pirate/Lute.glb"
+     ],
+     [
+      "Paper",
+      "/models/quaternius-pirate/Paper.glb"
+     ],
+     [
+      "Prop Bottle",
+      "/models/quaternius-pirate/Prop Bottle.glb"
+     ],
+     [
+      "Prop Bottle 2",
+      "/models/quaternius-pirate/Prop Bottle-uRzqB8lopZ.glb"
+     ],
+     [
+      "Red X",
+      "/models/quaternius-pirate/Red X.glb"
+     ],
+     [
+      "Shark",
+      "/models/quaternius-pirate/Shark.glb"
+     ],
+     [
+      "Skeleton",
+      "/models/quaternius-pirate/Skeleton-yq5ATpujSt.glb"
+     ],
+     [
+      "Tentacle",
+      "/models/quaternius-pirate/Tentacle.glb"
+     ],
+     [
+      "Wheat Icon",
+      "/models/quaternius-pirate/Wheat Icon.glb"
+     ],
+     [
+      "Wood",
+      "/models/quaternius-pirate/Wood.glb"
+     ],
+     [
+      "Barrel 2",
+      "/models/kenney-survival/Barrel.glb"
+     ],
+     [
+      "Barrel Open",
+      "/models/kenney-survival/Barrel Open.glb"
+     ],
+     [
+      "Box",
+      "/models/kenney-survival/Box.glb"
+     ],
+     [
+      "Box Open",
+      "/models/kenney-survival/Box Open.glb"
+     ],
+     [
+      "Chest",
+      "/models/kenney-survival/Chest.glb"
+     ],
+     [
+      "Fish",
+      "/models/kenney-survival/Fish.glb"
+     ],
+     [
+      "Resource Stone",
+      "/models/kenney-survival/Resource Stone.glb"
+     ]
+    ]
+   },
+   {
+    "name": "Treasure",
+    "clip": null,
+    "items": [
+     [
+      "Chest Closed",
+      "/models/quaternius-pirate/Chest Closed.glb"
+     ],
+     [
+      "Chest Gold",
+      "/models/quaternius-pirate/Chest Gold.glb"
+     ],
+     [
+      "Coins",
+      "/models/quaternius-pirate/Coins.glb"
+     ],
+     [
+      "Gem Blue",
+      "/models/quaternius-pirate/Gem Blue.glb"
+     ],
+     [
+      "Gem Green",
+      "/models/quaternius-pirate/Gem Green.glb"
+     ],
+     [
+      "Gem Pink",
+      "/models/quaternius-pirate/Gem Pink.glb"
+     ],
+     [
+      "Gold Bag",
+      "/models/quaternius-pirate/Gold Bag.glb"
+     ],
+     [
+      "Gold ore",
+      "/models/quaternius-pirate/Gold ore.glb"
+     ],
+     [
+      "Skull",
+      "/models/quaternius-pirate/Skull.glb"
+     ],
+     [
+      "Skull 2",
+      "/models/quaternius-pirate/Skull-VGtSTNRf2O.glb"
+     ]
+    ]
+   },
+   {
+    "name": "Weapons",
+    "clip": null,
+    "items": [
+     [
+      "Axe",
+      "/models/quaternius-pirate/Axe.glb"
+     ],
+     [
+      "Axe Rifle",
+      "/models/quaternius-pirate/Axe Rifle.glb"
+     ],
+     [
+      "Axe 2",
+      "/models/quaternius-pirate/Axe-FkzZ6I1zjT.glb"
+     ],
+     [
+      "Bomb",
+      "/models/quaternius-pirate/Bomb.glb"
+     ],
+     [
+      "Cannon",
+      "/models/quaternius-pirate/Cannon.glb"
+     ],
+     [
+      "Cutlass",
+      "/models/quaternius-pirate/Cutlass.glb"
+     ],
+     [
+      "Dagger",
+      "/models/quaternius-pirate/Dagger.glb"
+     ],
+     [
+      "Pistol",
+      "/models/quaternius-pirate/Pistol.glb"
+     ],
+     [
+      "Rifle",
+      "/models/quaternius-pirate/Rifle.glb"
+     ],
+     [
+      "Shotgun",
+      "/models/quaternius-pirate/Shotgun.glb"
+     ],
+     [
+      "Sword",
+      "/models/quaternius-pirate/Sword.glb"
+     ],
+     [
+      "Sword 2",
+      "/models/quaternius-pirate/Sword-Ds2bJiNI5w.glb"
+     ],
+     [
+      "Swords",
+      "/models/quaternius-pirate/Swords.glb"
+     ],
+     [
+      "Pickaxe",
+      "/models/kenney-survival/Pickaxe.glb"
+     ],
+     [
+      "Shovel",
+      "/models/kenney-survival/Shovel.glb"
+     ],
+     [
+      "Tool Axe",
+      "/models/kenney-survival/Tool Axe.glb"
+     ],
+     [
+      "Tool Hoe",
+      "/models/kenney-survival/Tool Hoe.glb"
+     ]
+    ]
+   }
+  ]
+ }
+]

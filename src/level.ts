@@ -16,7 +16,9 @@ const META = assetMeta as unknown as Record<string, AssetMeta>;
 
 /** Metadata for a src path, keyed by bare model name. */
 function metaFor(src: string): AssetMeta | undefined {
-  return META[src.split('/').pop()!.replace(/\.glb$/, '')];
+  // Full path first: several packs ship a "Barrel", a "Box", a "Tree". Keying
+  // on the bare name alone let one pack's collider silently describe another's.
+  return META[src] ?? META[src.split('/').pop()!.replace(/\.glb$/, '')];
 }
 
 /**
@@ -1346,7 +1348,9 @@ export function endCarry(
 export async function analyzeAssets(files: string[]) {
   const out: Record<string, unknown> = {};
   for (const file of files) {
-    const src = P(file);
+    // Accept a bare pirate-kit name or a full path, so packs added later can
+    // be analysed without the helper assuming one directory.
+    const src = file.includes('/') ? file : P(file);
     let model: THREE.Group;
     try {
       model = await loadModel(src);
