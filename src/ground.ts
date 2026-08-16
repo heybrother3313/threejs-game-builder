@@ -1,0 +1,147 @@
+import * as THREE from 'three';
+import type { State } from 'vibegame';
+import { Body, BodyType, Collider } from 'vibegame/physics';
+import { getScene } from 'vibegame/rendering';
+import { Transform } from 'vibegame/transforms';
+
+/**
+ * The island floor: rolling ground every level gets for free.
+ *
+ * This replaces the flat sand slab. It is generated rather than authored for
+ * three reasons: the height is a FUNCTION, so looking up "how high is the
+ * ground at (x, z)" costs no raycast and everything from prop placement to
+ * NPC pathing can call it every frame; the relief can be tuned to stay inside
+ * the character controller's step height; and the rim can be faded to zero so
+ * the ground meets the shoreline with no seam — the failure mode of dropping
+ * in a rectangular terrain model.
+ *
+ * Collision is a grid of thin boxes sampled from the same function. The engine
+ * exposes only cuboid/ball/capsule colliders (no Rapier heightfield or
+ * trimesh), so a proxy is the honest approximation; cells are small enough
+ * that neighbouring steps stay well under the 0.3m autostep and it walks as a
+ * slope rather than a staircase.
+ */
+
+/** The playfield, matching the island slab in index.html. */
+export const ISLAND = { x: 13, z: 9 };
+/**
+ * Peak relief in metres. Measured, not guessed: at 0.85 three collision cells
+ * stepped 0.328m and would have been invisible walls against the engine's
+ * 0.3m autostep. 0.74 puts the worst step at 0.29.
+ */
+const AMPLITUDE = 0.74;
+/** Visual resolution. */
+const SEG_X = 104;
+const SEG_Z = 72;
+/** Collision resolution — coarser than the visual, still under the step. */
+const CELL = 1.0;
+
+/**
+ * Smooth pseudo-random relief: a few sine octaves. Deterministic, cheap, and
+ * continuous, which matters — a discontinuous field would put a cliff between
+ * two collision cells and read as an invisible wall.
+ */
+function relief(x: number, z: number): number {
+  return (
+    Math.sin(x * 0.21 + 1.3) * Math.cos(z * 0.19 - 0.7) * 0.55 +
+    Math.sin(x * 0.4 - 2.1) * Math.cos(z * 0.37 + 1.9) * 0.28 +
+    Math.sin((x + z) * 0.13 + 0.4) * 0.3 +
+    Math.cos((x - z) * 0.31 - 1.1) * 0.14
+  );
+}
+
+/**
+ * Fade to zero at the coast. Without this the terrain ends in a cliff at the
+ * island edge and the shoreline skirt can't hide it.
+ */
+function coastFade(x: number, z: number): number {
+  const fx = Math.min(1, Math.max(0, (ISLAND.x - Math.abs(x)) / 3.5));
+  const fz = Math.min(1, Math.max(0, (ISLAND.z - Math.abs(z)) / 3.5));
+  const t = Math.min(fx, fz);
+  return t * t * (3 - 2 * t); // smoothstep
+}
+
+/** Ground height at a world position. O(1) — call it per frame, per entity. */
+export function islandHeight(x: number, z: number): number {
+  if (Math.abs(x) > ISLAND.x || Math.abs(z) > ISLAND.z) return 0;
+  return relief(x, z) * AMPLITUDE * coastFade(x, z);
+}
+
+const SAND = new THREE.Color('#e8d6a0');
+const GRASS = new THREE.Color('#9dbf6a');
+const DRY = new THREE.Color('#d8c48d');
+
+let mesh: THREE.Mesh | null = null;
+
+export function initIslandGround(state: State) {
+  const scene = getScene(state);
+  if (!scene || mesh) return;
+
+  const geo = new THREE.PlaneGeometry(ISLAND.x * 2, ISLAND.z * 2, SEG_X, SEG_Z);
+  geo.rotateX(-Math.PI / 2);
+  const pos = geo.getAttribute('position') as THREE.BufferAttribute;
+  const colors = new Float32Array(pos.count * 3);
+  const c = new THREE.Color();
+  for (let i = 0; i < pos.count; i++) {
+    const x = pos.getX(i);
+    const z = pos.getZ(i);
+    const h = islandHeight(x, z);
+    pos.setY(i, h);
+    // Sand at the waterline, dry grass on the rises — the colour carries the
+    // relief, since ambient-heavy lighting flattens the facets.
+    const t = Math.min(1, Math.max(0, (h + 0.15) / 0.7));
+    c.copy(SAND).lerp(DRY, Math.min(1, t * 1.6)).lerp(GRASS, Math.max(0, t - 0.35) * 1.5);
+    const jitter = 0.965 + 0.05 * Math.abs(Math.sin(x * 51.9 + z * 24.3));
+    colors[i * 3] = c.r * jitter;
+    colors[i * 3 + 1] = c.g * jitter;
+    colors[i * 3 + 2] = c.b * jitter;
+  }
+  geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+  geo.computeVertexNormals();
+  mesh = new THREE.Mesh(
+    geo,
+    new THREE.MeshLambertMaterial({ vertexColors: true, flatShading: true })
+  );
+  mesh.receiveShadow = true;
+  scene.add(mesh);
+
+  buildColliders(state);
+}
+
+/** One thin box per cell, positioned from the height function directly. */
+function buildColliders(state: State) {
+  const nx = Math.ceil((ISLAND.x * 2) / CELL);
+  const nz = Math.ceil((ISLAND.z * 2) / CELL);
+  const cx = (ISLAND.x * 2) / nx;
+  const cz = (ISLAND.z * 2) / nz;
+  const thick = 1.2;
+  for (let i = 0; i < nx; i++) {
+    for (let j = 0; j < nz; j++) {
+      const x = -ISLAND.x + cx * (i + 0.5);
+      const z = -ISLAND.z + cz * (j + 0.5);
+      // Sample the cell's corners too: a box topped at the centre height would
+      // let you clip through the high shoulder of a rising cell.
+      const h = Math.max(
+        islandHeight(x, z),
+        islandHeight(x - cx / 2, z - cz / 2),
+        islandHeight(x + cx / 2, z - cz / 2),
+        islandHeight(x - cx / 2, z + cz / 2),
+        islandHeight(x + cx / 2, z + cz / 2)
+      );
+      const cy = h - thick / 2;
+      const e = state.createEntity();
+      state.addComponent(e, Transform, {
+        posX: x, posY: cy, posZ: z,
+        rotY: 0, rotW: 1, eulerY: 0, scaleX: 1, scaleY: 1, scaleZ: 1,
+      });
+      state.addComponent(e, Body, {
+        type: BodyType.Fixed,
+        posX: x, posY: cy, posZ: z,
+        rotY: 0, rotW: 1, eulerY: 0, mass: 0, gravityScale: 0,
+      });
+      state.addComponent(e, Collider, {
+        shape: 0, sizeX: cx * 1.02, sizeY: thick, sizeZ: cz * 1.02,
+      });
+    }
+  }
+}

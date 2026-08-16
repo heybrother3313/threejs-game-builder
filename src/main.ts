@@ -52,6 +52,7 @@ import {
 import { travelTo, worldName } from './worlds';
 import { grantLoot, lootCounts, updateLootPickup } from './loot';
 import { initAtmosphere, updateWater } from './atmosphere';
+import { initIslandGround } from './ground';
 import { aiConfig, runAssistant } from './assistant';
 import {
   analyzeAssets,
@@ -756,6 +757,7 @@ withSystem(PlatformSlipSystem)
 
     brightenScene(state);
     initAtmosphere(state);
+    initIslandGround(state);
 
     await loadLevel(state);
 

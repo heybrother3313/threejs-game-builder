@@ -6,6 +6,7 @@ import { Body, BodyType, Collider } from 'vibegame/physics';
 import { getScene } from 'vibegame/rendering';
 import { Transform } from 'vibegame/transforms';
 import type { NpcConfig } from './npc';
+import { islandHeight } from './ground';
 import { isLoot } from './loot';
 import assetMeta from './levels/asset-meta.json';
 import defaultLevel from './levels/default-level.json';
@@ -655,7 +656,7 @@ const groundRay = new THREE.Raycaster();
 const GROUND_PROBE = new THREE.Vector3(0, -1, 0);
 
 export function groundHeightAt(x: number, z: number): number {
-  let best = 0;
+  let best = islandHeight(x, z);
   for (const item of placed) {
     if (!item.entry.groundMesh) continue;
     groundRay.set(new THREE.Vector3(x, 60, z), GROUND_PROBE);

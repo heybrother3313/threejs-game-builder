@@ -77,8 +77,10 @@
            builds the controller, so it can't be changed from script later. The
            stock 0.08 reads as hovering on the thin raft deck. -->
       <player pos="0 1 0" character-controller="offset: 0.02"></player>
-      <!-- Sand base -->
-      <static-part pos="0 -0.5 0" shape="box" size="26 1 18" color="#e8d6a0"></static-part>
+      <!-- The floor is generated (src/ground.ts): rolling relief with real
+           colliders, faded to zero at the coast so it meets the shoreline.
+           This slab is only the mass beneath it, sunk out of sight. -->
+      <static-part pos="0 -1.4 0" shape="box" size="26 1 18" color="#e8d6a0"></static-part>
       <!-- No water aprons: the sea is real now (atmosphere.ts) — rectangular
            water slabs read as a table edge from any downward camera angle. -->
 
