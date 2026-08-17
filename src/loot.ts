@@ -100,6 +100,29 @@ function ensureTray() {
 }
 
 /** Rebuild the rows; `popped` briefly bumps the row that just changed. */
+/**
+ * Packs a tray icon might live in, most likely first.
+ *
+ * The path used to be hardcoded to the pirate kit, which was fine while
+ * everything in the inventory came from there. A caught fish does not — it is
+ * granted straight to the counts, never touching the floor — so the icon has
+ * to be looked for more widely. thumbFor returns null for a model that isn't
+ * there, so trying in order costs a miss and nothing else.
+ */
+const TRAY_PACKS = [
+  '/models/quaternius-pirate/',
+  '/models/animated-fish-bundle/',
+  '/models/kenney-survival/',
+];
+
+async function trayThumb(name: string): Promise<string | null> {
+  for (const pack of TRAY_PACKS) {
+    const url = await thumbFor(`${pack}${name}.glb`);
+    if (url) return url;
+  }
+  return null;
+}
+
 function renderTray(popped?: string) {
   if (!tray) return;
   for (const name of Object.keys(counts)) {
@@ -111,7 +134,7 @@ function renderTray(popped?: string) {
       slot.dataset.loot = name;
       const img = document.createElement('img');
       img.alt = name;
-      void thumbFor(`/models/quaternius-pirate/${name}.glb`).then((url) => {
+      void trayThumb(name).then((url) => {
         if (url) img.src = url;
       });
       const n = document.createElement('span');

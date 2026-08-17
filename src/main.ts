@@ -66,7 +66,18 @@ import { FISTS, bladeFor, isFishingRod, isHandThrowable, type Blade } from './we
 /** Bare model name, for the hand label. */
 const nameOfSrc = (src: string) => src.split('/').pop()!.replace('.glb', '');
 import { initAtmosphere, updateWater } from './atmosphere';
-import { beginCast, isCastOut, isReeling, reelIn, startReel, updateFishing } from './fishing';
+import {
+  beginCast,
+  beginCharge,
+  endCharge,
+  isCastOut,
+  isCharging,
+  isReeling,
+  reelIn,
+  startReel,
+  tryHook,
+  updateFishing,
+} from './fishing';
 import { clearIslandGround, initIslandGround, setIslandSize } from './ground';
 import { sizeFor } from './starters';
 import { currentWorldId } from './worlds';
@@ -227,6 +238,10 @@ let castReleaseFrac = 0.38;
  */
 let reelSeconds = 1.1;
 let pendingCast: { t: number } | null = null;
+/** Power a released wind-up asked for, 0..1, waiting to become a cast. */
+let wantsCast: number | null = null;
+/** Power the swing now in progress was wound up to. */
+let castPower = 1;
 /** Rod tip at the moment of release, and again every frame for the line. */
 const castTipScratch = new THREE.Vector3();
 
@@ -235,7 +250,14 @@ const lastPlayerPos = new THREE.Vector3();
 
 window.addEventListener('keyup', (e) => {
   if (RUN_KEYS.has(e.code)) running = false;
+  // Letting go of a wind-up is what actually casts, and how far.
+  if (e.code === 'KeyF' && isCharging()) wantsCast = endCharge();
 });
+
+/** A held rod with no line out winds up rather than acting on the press. */
+function fishingWindUp(): boolean {
+  return !!heldItem && isFishingRod(heldItem.entry.src) && !isCastOut();
+}
 
 window.addEventListener('keydown', (e) => {
   if (e.repeat || buildMode) return;
@@ -254,7 +276,12 @@ window.addEventListener('keydown', (e) => {
     lastRunKey = e.code;
   }
   if (e.code === 'KeyE') wantsGrab = true;
-  else if (e.code === 'KeyF') wantsThrow = true;
+  else if (e.code === 'KeyF') {
+    // The longer you hold, the further it goes. Everything else — reeling,
+    // throwing, punching — still acts the moment you press.
+    if (fishingWindUp()) beginCharge();
+    else wantsThrow = true;
+  }
 });
 
 /**
@@ -272,11 +299,18 @@ const onGameCanvas = (ev: Event) => (ev.target as HTMLElement | null)?.id === 'g
 
 window.addEventListener('mousedown', (e) => {
   mouseDownAt = onGameCanvas(e) ? { x: e.clientX, y: e.clientY, button: e.button } : null;
+  // Holding the left button winds a cast up, the same as holding F.
+  if (mouseDownAt && !buildMode && e.button === 0 && fishingWindUp()) beginCharge();
 });
 
 window.addEventListener('mouseup', (e) => {
   const down = mouseDownAt;
   mouseDownAt = null;
+  // A wind-up is deliberate, so it casts however far the pointer wandered.
+  if (isCharging() && e.button === 0) {
+    wantsCast = endCharge();
+    return;
+  }
   if (!down || buildMode || down.button !== e.button) return;
   if (Math.hypot(e.clientX - down.x, e.clientY - down.y) > CLICK_SLOP) return;
   const code = e.button === 0 ? 'KeyF' : e.button === 2 ? 'KeyE' : null;
@@ -687,7 +721,7 @@ const CarrySystem: System = {
               Transform.posY[player] + 1,
               Transform.posZ[player]
             );
-        if (scene) beginCast(scene, from, -Math.sin(heading), -Math.cos(heading));
+        if (scene) beginCast(scene, from, -Math.sin(heading), -Math.cos(heading), castPower);
         cutSwing(THROW_FOLLOW_THROUGH);
         attackHold = Math.min(attackHold, THROW_FOLLOW_THROUGH);
         pendingCast = null;
@@ -712,24 +746,33 @@ const CarrySystem: System = {
     // A rod is not thrown. F casts it, and F again reels the lure back in —
     // the rod stays in the hand throughout, which is the whole difference
     // between this and the branch below.
-    if (wantsThrow && heldItem && isFishingRod(heldItem.entry.src) && !pendingCast) {
-      if (isCastOut()) {
-        // Reel: the swing played backwards from where the cast cut it, with
-        // the lure winding in over exactly that motion.
+    if (heldItem && isFishingRod(heldItem.entry.src) && !pendingCast) {
+      // Line already out: F strikes and reels. Striking during a bite lands
+      // the fish; striking at any other moment just brings the lure back, so
+      // being late costs you the catch and never the lure.
+      if (wantsThrow && isCastOut()) {
         if (!isReeling()) {
+          const hooked = tryHook();
+          if (hooked) grantLoot(hooked, 1);
           const back = playerReverseSwing(castReleaseFrac, reelSeconds);
           attackHold = Math.min(back, ATTACK_HOLD_MAX);
           attackFacing = heading;
           startReel(back > 0 ? back : reelSeconds);
         }
-      } else {
+        wantsGrab = wantsThrow = false;
+        return;
+      }
+      // A wind-up was let go: cast at the power it reached.
+      if (wantsCast !== null) {
+        castPower = wantsCast;
+        wantsCast = null;
         const dur = playerSwing();
         attackHold = Math.min(dur, ATTACK_HOLD_MAX);
         attackFacing = heading;
         pendingCast = { t: dur > 0 ? dur * castReleaseFrac : SWING_CONTACT };
+        wantsGrab = wantsThrow = false;
+        return;
       }
-      wantsGrab = wantsThrow = false;
-      return;
     }
     if (wantsThrow && heldItem && !pendingThrow) {
       // Release as a FRACTION of the clip, not the melee contact time. Ethan

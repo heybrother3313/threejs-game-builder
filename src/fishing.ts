@@ -20,8 +20,13 @@ import { ISLAND, islandHeight } from './ground';
 
 /** A lure is light and lands soon; real g reads as a thrown rock. */
 const GRAVITY = 12;
-const CAST_SPEED = 13;
-const CAST_LIFT = 5;
+/** Cast power runs between these. A tap still reaches water from a dock. */
+const CAST_SPEED_MIN = 7;
+const CAST_SPEED_MAX = 17;
+const CAST_LIFT_MIN = 3.2;
+const CAST_LIFT_MAX = 6;
+/** How long the bar takes to fill. Long enough to aim for a middle reading. */
+const CHARGE_SECONDS = 1.2;
 /** Segments in the line. Enough to sag, few enough to rebuild per frame. */
 const LINE_POINTS = 14;
 /** How far the slack line droops, as a fraction of how far it spans. */
@@ -31,8 +36,48 @@ const LURE_RADIUS = 0.07;
 /** Where the lure hangs off the tip when the line is not out. */
 const STOW_DROP = 0.4;
 
+/** How long the water stays quiet before something takes an interest. */
+const BITE_MIN = 2.2;
+const BITE_MAX = 6.5;
+/** How long you have to strike once it does. Miss it and the fish is gone. */
+const BITE_WINDOW = 1.0;
+
+/**
+ * What is down there, by how far out the lure landed.
+ *
+ * Measured with waterDistance, which is the same distance the water's colour
+ * uses — so the darker blue you cast into really is where the better fish
+ * are, and casting further is a decision rather than a habit. The bands are
+ * scaled to what a cast from the shore can actually reach (roughly 0..15),
+ * not to the colour ramp's own constants, which run to 40 and would call
+ * every reachable cast "shallow".
+ */
+const CATCH_TABLE: { within: number; fish: string[] }[] = [
+  {
+    within: 3,
+    fish: ['Clownfish', 'Goldfish', 'Cardinal Fish', 'Butterfly Fish', 'Zebra Clown Fish'],
+  },
+  { within: 8, fish: ['Parrot Fish', 'Blue Tang', 'Mandarin Fish', 'Cowfish', 'Red Snapper'] },
+  { within: Infinity, fish: ['Tuna', 'Swordfish', 'Sunfish', 'Anglerfish', 'Goblin Shark'] },
+];
+
+/** What would bite at (x, z). */
+function fishFor(x: number, z: number): string {
+  const d = waterDistance(x, z);
+  const band = CATCH_TABLE.find((b) => d < b.within) ?? CATCH_TABLE[CATCH_TABLE.length - 1];
+  return band.fish[Math.floor(Math.random() * band.fish.length)];
+}
+
+function nextBiteDelay(): number {
+  return BITE_MIN + Math.random() * (BITE_MAX - BITE_MIN);
+}
+
 type Cast = {
-  state: 'flying' | 'floating' | 'reeling';
+  state: 'flying' | 'floating' | 'bite' | 'reeling';
+  /** Seconds of quiet water left before something takes the lure. */
+  biteIn: number;
+  /** How long the current bite has been going, against BITE_WINDOW. */
+  biteT: number;
   pos: THREE.Vector3;
   vel: THREE.Vector3;
   /** Seconds since it settled — drives the bob, and later the bite. */
@@ -113,15 +158,92 @@ function ensureVisuals(scene: THREE.Scene) {
   line.visible = true;
 }
 
-/** Let go of the lure. `from` is the rod tip; (fx, fz) the way the caster faces. */
-export function beginCast(scene: THREE.Scene, from: THREE.Vector3, fx: number, fz: number) {
+/* ------------------------------------------------------------- power --- */
+
+let charge = 0;
+let charging = false;
+let barEl: HTMLDivElement | null = null;
+let barFill: HTMLDivElement | null = null;
+
+/** Hold to wind up. The bar fills and stays full; it does not bounce back. */
+export function beginCharge() {
+  charging = true;
+  charge = 0;
+}
+
+/** How hard the cast would go right now, 0..1. */
+export function chargeAmount(): number {
+  return charge;
+}
+
+export function isCharging(): boolean {
+  return charging;
+}
+
+/** Let go of the wind-up and report the power it reached. */
+export function endCharge(): number {
+  const power = charge;
+  charging = false;
+  charge = 0;
+  drawBar();
+  return power;
+}
+
+/** Fill the bar while the button is down. Called every frame. */
+function updateCharge(dt: number) {
+  if (charging) charge = Math.min(1, charge + dt / CHARGE_SECONDS);
+  drawBar();
+}
+
+function drawBar() {
+  if (!barEl) {
+    if (!charging) return;
+    barEl = document.createElement('div');
+    barEl.id = 'cast-power';
+    barEl.style.cssText =
+      'position:fixed;left:50%;bottom:88px;transform:translateX(-50%);z-index:18;' +
+      'display:none;width:220px;height:18px;background:var(--surface,#fff);' +
+      'border:3px solid var(--border-strong,#111);border-radius:10px;' +
+      'box-shadow:0 4px 0 var(--border-strong,#111);overflow:hidden;';
+    barFill = document.createElement('div');
+    barFill.style.cssText =
+      'height:100%;width:0%;background:var(--color-coral,#fd9b9b);' +
+      'transition:width 40ms linear;';
+    barEl.appendChild(barFill);
+    document.body.appendChild(barEl);
+  }
+  barEl.style.display = charging ? 'block' : 'none';
+  if (barFill) {
+    barFill.style.width = `${Math.round(charge * 100)}%`;
+    // Reads as "wound up" without needing a number on it.
+    barFill.style.background =
+      charge > 0.85 ? 'var(--color-lime,#b7e26b)' : 'var(--color-coral,#fd9b9b)';
+  }
+}
+
+/**
+ * Let go of the lure. `from` is the rod tip; (fx, fz) the way the caster
+ * faces; `power` is 0..1 from the wind-up.
+ */
+export function beginCast(
+  scene: THREE.Scene,
+  from: THREE.Vector3,
+  fx: number,
+  fz: number,
+  power = 1
+) {
   ensureVisuals(scene);
+  const p = Math.max(0, Math.min(1, power));
+  const speed = CAST_SPEED_MIN + (CAST_SPEED_MAX - CAST_SPEED_MIN) * p;
+  const lift = CAST_LIFT_MIN + (CAST_LIFT_MAX - CAST_LIFT_MIN) * p;
   cast = {
     state: 'flying',
     pos: from.clone(),
-    vel: new THREE.Vector3(fx * CAST_SPEED, CAST_LIFT, fz * CAST_SPEED),
+    vel: new THREE.Vector3(fx * speed, lift, fz * speed),
     restT: 0,
     onWater: false,
+    biteIn: nextBiteDelay(),
+    biteT: 0,
     reelFrom: new THREE.Vector3(),
     reelT: 0,
     reelDur: 0,
@@ -148,9 +270,45 @@ export function isReeling(): boolean {
   return cast?.state === 'reeling';
 }
 
+/**
+ * Strike. Returns what you hooked, or null if there was nothing on the line.
+ *
+ * Called on the same key that reels, so a late strike still winds the line in
+ * — you are never punished with a stuck lure for being slow, only with an
+ * empty hook.
+ */
+export function tryHook(): string | null {
+  if (!cast || cast.state !== 'bite') return null;
+  const fish = fishFor(cast.pos.x, cast.pos.z);
+  showBite(false);
+  return fish;
+}
+
+let biteEl: HTMLDivElement | null = null;
+
+/** The one cue that a fish is on, since the lure's dip is small at distance. */
+function showBite(on: boolean) {
+  if (!biteEl) {
+    if (!on) return;
+    biteEl = document.createElement('div');
+    biteEl.id = 'fish-bite';
+    biteEl.style.cssText =
+      'position:fixed;left:50%;top:30%;transform:translate(-50%,-50%);z-index:18;' +
+      'display:none;background:var(--color-sky,#8fd4ea);color:var(--text-primary,#111);' +
+      'border:3px solid var(--border-strong,#111);border-radius:14px;' +
+      'box-shadow:0 5px 0 var(--border-strong,#111);padding:10px 22px;' +
+      'font-family:var(--font-display,sans-serif);font-weight:700;font-size:22px;' +
+      'letter-spacing:.04em;text-transform:uppercase;';
+    biteEl.innerHTML = 'Fish on! &nbsp;<b>F</b>';
+    document.body.appendChild(biteEl);
+  }
+  biteEl.style.display = on ? 'block' : 'none';
+}
+
 /** Reel in: the lure and its line come off the water and out of the scene. */
 export function reelIn() {
   cast = null;
+  showBite(false);
   if (lure) lure.visible = false;
   if (line) line.visible = false;
 }
@@ -173,6 +331,7 @@ export function lureSpot(): { x: number; z: number; onWater: boolean; restT: num
  * anchoring itself to the origin.
  */
 export function updateFishing(dt: number, tip: THREE.Vector3 | null, scene: THREE.Scene | null) {
+  updateCharge(dt);
   // No rod in the hand: there is nothing to hang a line from, so both meshes
   // go away rather than anchoring themselves to the origin.
   if (!tip) {
@@ -214,11 +373,29 @@ export function updateFishing(dt: number, tip: THREE.Vector3 | null, scene: THRE
       cast.onWater = isOverWater(cast.pos.x, cast.pos.z);
       cast.vel.set(0, 0, 0);
     }
+  } else if (cast.state === 'bite') {
+    cast.biteT += dt;
+    // The lure is being pulled under in tugs — the tell you are striking at.
+    cast.pos.y = WATER_Y - 0.06 - Math.abs(Math.sin(cast.biteT * 18)) * 0.09;
+    if (cast.biteT >= BITE_WINDOW) {
+      // Missed it. The water goes quiet again and something else comes along.
+      cast.state = 'floating';
+      cast.biteT = 0;
+      cast.biteIn = nextBiteDelay();
+      showBite(false);
+    }
   } else {
     cast.restT += dt;
     // Riding the swell. On sand it just sits there.
     if (cast.onWater) {
       cast.pos.y = WATER_Y + Math.sin(cast.restT * 2.2) * 0.03;
+      // Only open water holds fish. A lure on the sand is a lure on the sand.
+      cast.biteIn -= dt;
+      if (cast.biteIn <= 0) {
+        cast.state = 'bite';
+        cast.biteT = 0;
+        showBite(true);
+      }
     }
   }
   lure.position.copy(cast.pos);
