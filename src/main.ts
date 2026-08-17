@@ -34,6 +34,7 @@ import {
   initCharacterVisual,
   playerHitReact,
   playerSwing,
+  cutSwing,
   playerAnimDebug,
   heldWeaponPosition,
   setHeldWeapon,
@@ -197,6 +198,10 @@ let pendingThrow: { t: number; speed: number; lift: number } | null = null;
  * the contact and a little follow-through, then hand movement back.
  */
 const ATTACK_HOLD_MAX = 0.5;
+/** How much of the swing survives the release, in seconds. */
+const THROW_FOLLOW_THROUGH = 0.12;
+/** Where in the Weapon clip the arm is up and the object should leave. */
+const THROW_RELEASE_FRAC = 0.12;
 
 /** Last drawn player position, for input handlers that run outside systems. */
 const lastPlayerPos = new THREE.Vector3();
@@ -585,6 +590,11 @@ const CarrySystem: System = {
       pendingThrow.t -= Math.min(state.time.deltaTime, 0.05);
       if (pendingThrow.t <= 0) {
         releaseItem(pendingThrow.speed, pendingThrow.lift);
+        // The Weapon clip's back half is a follow-through for a blade that is
+        // still in your hand. Once the object has left, that arc is wrong —
+        // cut it and let movement resume.
+        cutSwing(THROW_FOLLOW_THROUGH);
+        attackHold = Math.min(attackHold, THROW_FOLLOW_THROUGH);
         pendingThrow = null;
       }
     }
@@ -605,9 +615,19 @@ const CarrySystem: System = {
       return;
     }
     if (wantsThrow && heldItem && !pendingThrow) {
-      attackHold = Math.min(playerSwing(), ATTACK_HOLD_MAX);
+      // Release as a FRACTION of the clip, not the melee contact time. Ethan
+      // scrubbed the Weapon clip and found the throw pose — arm up, weight
+      // forward — about an eighth of the way in. SWING_CONTACT is 0.32s tuned
+      // for where a blade connects, which is a different moment and drifts
+      // against clips of different length.
+      const dur = playerSwing();
+      attackHold = Math.min(dur, ATTACK_HOLD_MAX);
       attackFacing = heading;
-      pendingThrow = { t: SWING_CONTACT, speed: CARRY.throwSpeed, lift: CARRY.throwLift };
+      pendingThrow = {
+        t: dur > 0 ? dur * THROW_RELEASE_FRAC : SWING_CONTACT,
+        speed: CARRY.throwSpeed,
+        lift: CARRY.throwLift,
+      };
       wantsGrab = wantsThrow = false;
       return;
     }

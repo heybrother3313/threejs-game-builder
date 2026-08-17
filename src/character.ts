@@ -350,6 +350,19 @@ export function playerSwing(): number {
   return swingT;
 }
 
+/**
+ * End the swing early, leaving `hold` seconds of follow-through.
+ *
+ * A throw borrows the Weapon clip, which reads well enough as a throw for the
+ * wind-up and release — but it is a swing, so its back half brings the arm all
+ * the way round on an object that has already gone. Cutting it just after the
+ * release keeps the part that looks right and drops the part that doesn't.
+ */
+export function cutSwing(hold: number) {
+  if (!swinging) return;
+  swingT = Math.min(swingT, Math.max(0, hold));
+}
+
 /** Flinch when struck. Shares the swing timer: both briefly own the rig. */
 export function playerHitReact() {
   const a = actions['HitReact'];
