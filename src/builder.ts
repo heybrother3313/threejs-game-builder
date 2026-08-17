@@ -120,6 +120,18 @@ let panning = false;
 let marquee: { x0: number; y0: number; x1: number; y1: number } | null = null;
 let marqueeEl: HTMLDivElement | null = null;
 let painting = false;
+/**
+ * Scatter brush: hold Cmd/Ctrl and drag with a piece armed to lay down a
+ * trail of it. Placing grass one click at a time is the kind of work that
+ * stops people building the thing they actually wanted to build.
+ */
+let scattering = false;
+let scatterLast: THREE.Vector3 | null = null;
+/** Randomise each drop's facing. On by default — a row of identical grass
+ *  tufts all pointing the same way reads as a texture bug, not a meadow. */
+let scatterRotate = true;
+/** How far the cursor must travel before the next drop, in world units. */
+const SCATTER_GAP = 0.85;
 const orbitPrev = new THREE.Vector2();
 let savedDistance = 0;
 let savedPitch = 0;
@@ -167,6 +179,10 @@ export function initBuilder(gameState: State, cameraEntityFn: () => number | und
     orbiting = false;
     panning = false;
     painting = false;
+    // Stay armed after a scatter stroke: you almost never want exactly one
+    // pass of grass, and re-arming between strokes is the whole friction.
+    scattering = false;
+    scatterLast = null;
     gizmoDrag = null;
   });
   window.addEventListener('wheel', onWheel, { passive: false });
@@ -373,6 +389,7 @@ function buildUi() {
       <button id="b-new">New from starter…</button>
       <button id="b-load">Load…</button>
       <button id="b-borders">Borders (B)</button>
+      <button id="b-scatter" class="on">Scatter spin: on</button>
       <button id="b-reset">Reset</button>
       <button id="b-anim" title="Preview animations while building">Anims: off</button>
       <button id="b-char" title="Choose your character">Character</button>
@@ -473,6 +490,12 @@ function buildUi() {
   ui.querySelector('#b-undo')!.addEventListener('click', () => void doUndo());
   ui.querySelector('#b-redo')!.addEventListener('click', () => void doRedo());
   ui.querySelector('#b-borders')!.addEventListener('click', toggleBorders);
+  ui.querySelector('#b-scatter')!.addEventListener('click', (e) => {
+    scatterRotate = !scatterRotate;
+    const el = e.currentTarget as HTMLElement;
+    el.textContent = `Scatter spin: ${scatterRotate ? 'on' : 'off'}`;
+    el.classList.toggle('on', scatterRotate);
+  });
   const animBtn = ui.querySelector('#b-anim') as HTMLButtonElement;
   animBtn.addEventListener('click', () => {
     buildAnims = !buildAnims;
@@ -1162,6 +1185,28 @@ function armPaint(name: string) {
   );
 }
 
+/**
+ * Drop the armed piece at a point. `spin` randomises the facing, which is
+ * what makes a scattered patch look grown rather than stamped.
+ */
+function dropArmed(at: THREE.Vector3, spin: boolean): Promise<PlacedItem | null> {
+  if (!armed) return Promise.resolve(null);
+  const entry: LevelEntry = {
+    src: armed.src,
+    x: +at.x.toFixed(2),
+    y: 0,
+    z: +at.z.toFixed(2),
+    rotY: spin ? +(Math.random() * Math.PI * 2).toFixed(3) : 0,
+    ...placementFit(armed.src),
+    solid: defaultSolidFor(armed.src),
+    ...(isGroundPiece(armed.src)
+      ? { groundMesh: true, solid: true, flatten: 0.3, y: -0.4 }
+      : {}),
+    ...(armed.clip ? { clip: armed.clip } : {}),
+  };
+  return instantiate(state, entry);
+}
+
 function disarm() {
   armed = null;
   paintColour = null;
@@ -1412,6 +1457,15 @@ function onPointerMove(ev: PointerEvent) {
   if (ghost && hit) ghost.position.set(hit.x, 0, hit.z);
   if (painting && hit) paintAt(hit);
 
+  // Keep dropping while the cursor travels. The gap stops a slow drag from
+  // burying the same square metre under fifty copies.
+  if (scattering && hit && armed) {
+    if (!scatterLast || hit.distanceTo(scatterLast) >= SCATTER_GAP) {
+      scatterLast = hit.clone();
+      void dropArmed(hit, scatterRotate).then(() => persist());
+    }
+  }
+
   // A click is not a drag until the pointer has clearly moved. Without this,
   // selecting an item snapped it to wherever the cursor happened to be.
   if (dragArmed && !dragging) {
@@ -1507,23 +1561,18 @@ function onPointerDown(ev: PointerEvent) {
   if (armed) {
     const hit = groundHit();
     if (!hit) return;
-    const entry: LevelEntry = {
-      src: armed.src,
-      x: +hit.x.toFixed(2),
-      y: 0,
-      z: +hit.z.toFixed(2),
-      rotY: 0,
-      ...placementFit(armed.src),
-      solid: defaultSolidFor(armed.src),
-      // Ground pieces are floors, not props: sampled collision + a squash
-      // that keeps their slopes inside the engine's step height.
-      ...(isGroundPiece(armed.src)
-        ? { groundMesh: true, solid: true, flatten: 0.3, y: -0.4 }
-        : {}),
-      ...(armed.clip ? { clip: armed.clip } : {}),
-    };
+    // Cmd/Ctrl-drag scatters instead of placing one. One history entry for the
+    // whole stroke, so undo takes back the patch you just painted rather than
+    // making you press it forty times.
+    if (ev.metaKey || ev.ctrlKey) {
+      mark(`scatter ${nameOf(armed.src)}`);
+      scattering = true;
+      scatterLast = hit.clone();
+      void dropArmed(hit, scatterRotate).then(() => persist());
+      return;
+    }
     mark('place');
-    void instantiate(state, entry).then((item) => {
+    void dropArmed(hit, false).then((item) => {
       if (item) {
         // New terrain changes the floor under everything already placed.
         if (item.entry.groundMesh) reseatOnGround(state);
