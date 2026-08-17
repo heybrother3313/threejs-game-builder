@@ -30,6 +30,11 @@ export type Objective = {
   radius?: number;
   /** Line shown when the step completes. */
   done?: string;
+  /** On completion, turn THIS piece into a travel portal to that world. The
+   *  reward for finishing an island has to be something that happens. */
+  unlockExit?: string;
+  /** Label for the unlocked portal. */
+  unlockLabel?: string;
 };
 
 /** Things the player has activated (E) or talked to, by entry identity. */
@@ -93,6 +98,12 @@ function satisfied(item: PlacedItem, px: number, pz: number): boolean {
 }
 
 /* ------------------------------------------------------------------ ui --- */
+
+/** Set by main.ts so an unlocked portal gets its ring drawn immediately. */
+let onUnlock: ((item: PlacedItem) => void) | null = null;
+export function setUnlockHook(fn: typeof onUnlock) {
+  onUnlock = fn;
+}
 
 let hud: HTMLDivElement | null = null;
 let banner: string | null = null;
@@ -163,6 +174,16 @@ export function updateObjectives(
     const o = forStep[0].entry.objective!;
     banner = o.done ?? o.text;
     bannerT = 2.2;
+    // Finishing has to DO something. A step can open a way off the island,
+    // right where you stand — ringing a bell for a ship you then have to walk
+    // forty metres to find is the same as nothing happening.
+    for (const item of forStep) {
+      const oo = item.entry.objective!;
+      if (!oo.unlockExit) continue;
+      item.entry.exitTo = oo.unlockExit;
+      item.entry.exitLabel = oo.unlockLabel ?? 'Leave the island';
+      onUnlock?.(item);
+    }
     return current;
   }
 

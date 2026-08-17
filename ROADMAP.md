@@ -72,7 +72,9 @@ What we're building toward, roughly ordered. Items graduate off the top.
 - [x] **Weapons** — blades change damage/reach when carried (F swings instead
       of throwing); bombs explode where they land with falloff damage, prop
       knockback and self-damage.
-- [ ] Swing animation for blades (currently reuses the punch clip).
+- [ ] **Swing animation for blades** — a sword still plays the Punch clip, so
+      an axe and a fist look identical even though they hit for 30 vs 14.
+      This is the biggest remaining "combat doesn't feel right" item.
 - [ ] **Fishing** — the survival kit ships a Fishing Stand and Fish props;
       fish stocks live in the lagoon already. Cast → wait → catch → inventory.
 - [ ] **Gardening** — plant seeds, wait (real time or steps), harvest into

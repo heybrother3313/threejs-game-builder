@@ -674,9 +674,14 @@ function blackreef(): LevelEntry[] {
     { src: V('Bonfire'), x: 5, y: 0, z: 6.5, rotY: 0, fitMaxDim: 1.6 },
     { src: V('Crate'), x: -5.5, y: 0, z: 7, rotY: 0.8, fitMaxDim: 0.9, solid: true },
     { src: P('Bomb'), x: -6.4, y: 0, z: 6.2, rotY: 0, fitHeight: 0.5, pickable: true },
-    { ...orc(-6, 9, 40, 'Coins'), objective: { step: 1, kind: 'defeat', text: 'Clear the burned village' } },
-    { ...orc(7, 7.5, 40, 'Coins'), objective: { step: 1, kind: 'defeat', text: 'Clear the burned village' } },
-    { ...orc(0.5, 5, 45, 'Gold ore'), objective: { step: 1, kind: 'defeat', text: 'Clear the burned village' } },
+    { ...orc(-6, 9, 26, 'Coins'), objective: { step: 1, kind: 'defeat', text: 'Clear the burned village' } },
+    { ...orc(7, 7.5, 26, 'Coins'), objective: { step: 1, kind: 'defeat', text: 'Clear the burned village' } },
+    { ...orc(0.5, 5, 30, 'Gold ore'), objective: { step: 1, kind: 'defeat', text: 'Clear the burned village' } },
+    // Ammunition where the fighting is. Two bombs for an island was a joke.
+    { src: P('Bomb'), x: -7.5, y: 0, z: 10.5, rotY: 0, fitHeight: 0.5, pickable: true },
+    { src: P('Bomb'), x: 8, y: 0, z: 6.2, rotY: 0, fitHeight: 0.5, pickable: true },
+    { src: P('Barrel'), x: 4, y: 0, z: 9, rotY: 0.7, fitHeight: 0.9, pickable: true },
+    { src: P('Barrel'), x: -4, y: 0, z: 6, rotY: 2.2, fitHeight: 0.9, pickable: true },
 
     // ---- 3. the pass: the warden's key, on the orc that took it ----
     { src: P('Post'), x: -2.2, y: 0, z: 2, rotY: 0, fitHeight: 2.6, solid: true },
@@ -685,7 +690,7 @@ function blackreef(): LevelEntry[] {
     { src: V('Fence'), x: 4.4, y: 0, z: 2, rotY: 0, fitMaxDim: 3, solid: true },
     {
       ...orc(0, 0.5, 90, 'Chest Gold'),
-      npc: { faction: 'hostile', behavior: 'guard', health: 90, damage: 11,
+      npc: { faction: 'hostile', behavior: 'guard', health: 55, damage: 10,
         speed: 2.1, aggroRadius: 8, attackRadius: 1.9, loot: 'Chest Gold',
         weapon: 'Cutlass' },
     },
@@ -709,18 +714,21 @@ function blackreef(): LevelEntry[] {
       src: M('Dragon Evolved'), x: 0, y: 0, z: -12, rotY: 0, fitHeight: 2.8, clip: 'Idle',
       objective: { step: 3, kind: 'defeat', text: 'Kill whatever guards the bell',
         done: 'The summit is clear' },
-      npc: { faction: 'hostile', behavior: 'guard', health: 150, damage: 16,
+      npc: { faction: 'hostile', behavior: 'guard', health: 95, damage: 14,
         speed: 2.4, aggroRadius: 9, attackRadius: 2, loot: 'Gold Bag' },
     },
     { src: P('Skull'), x: 2.5, y: 0, z: -13, rotY: 0.8, fitHeight: 0.45, solid: false },
     { src: P('Large Bone'), x: -2.4, y: 0, z: -13.5, rotY: 2.4, fitHeight: 0.4, solid: false },
     { src: P('Bomb'), x: 3.5, y: 0, z: -9, rotY: 0, fitHeight: 0.5, pickable: true },
+    { src: P('Bomb'), x: -3.2, y: 0, z: -9.5, rotY: 0, fitHeight: 0.5, pickable: true },
+    { src: P('Bomb'), x: 1.2, y: 0, z: -6.5, rotY: 0, fitHeight: 0.5, pickable: true },
 
     // ---- 6. ring it ----
     {
       src: V('Bell'), x: 0, y: 0, z: -16.5, rotY: 0, fitMaxDim: 1.6, solid: false,
       objective: { step: 4, kind: 'activate', text: 'Ring the bell',
-        done: 'The bell carries. A ship is coming.' },
+        done: 'The bell carries. A ship is coming.',
+        unlockExit: 'town-island', unlockLabel: 'Board the ship home' },
     },
 
     // ---- 7. the way home, on the beach you landed at ----

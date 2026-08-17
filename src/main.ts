@@ -45,13 +45,16 @@ import {
   SWING_CONTACT,
   playerIsDead,
   playerMelee,
+  aimAt,
   npcKey,
   npcRuntime,
   playerHealth,
   updateNpcs,
 } from './npc';
 import { travelTo, worldName } from './worlds';
-import { isTriggered, markTriggered, resetObjectives, updateObjectives } from './objectives';
+import {
+  isTriggered, markTriggered, resetObjectives, setUnlockHook, updateObjectives,
+} from './objectives';
 import { grantLoot, lootCounts, showHeld, updateLootPickup } from './loot';
 import { FISTS, bladeFor, type Blade } from './weapons';
 
@@ -75,6 +78,7 @@ import {
   updateLevel,
   type PlacedItem,
   spawnPoint,
+  syncMarker,
   groundHeightAt,
   reseatOnGround,
 } from './level';
@@ -350,10 +354,15 @@ function carryPose(
   };
 
   const STEPS = 8;
-  let pose = { x: px, y: py + CARRY.offsetUp, z: pz };
+  // A barrel is carried out in front in both arms; a blade is held down at
+  // the side. Using the barrel pose for a sword floats it at eye level.
+  const blade = heldItem ? bladeFor(heldItem) !== FISTS : false;
+  const upOff = blade ? 0.18 : CARRY.offsetUp;
+  let pose = { x: px, y: py + upOff, z: pz };
   for (let i = 0; i <= STEPS; i++) {
     const t = i / STEPS;
-    const reach = CARRY.offsetForward + t * (CARRY.minForward - CARRY.offsetForward);
+    const reach = (blade ? 0.45 : CARRY.offsetForward) +
+      t * (CARRY.minForward - (blade ? 0.45 : CARRY.offsetForward));
     const rise = CARRY.offsetUp + t * CARRY.blockedLift;
     pose = { x: px + fx * reach, y: py + rise, z: pz + fz * reach };
     if (!blocked(pose.x, pose.y, pose.z)) return pose;
@@ -482,8 +491,14 @@ const CarrySystem: System = {
     // Holding a blade, F is a SWING, not a throw — you don't lob your sword
     // at people. Everything else (barrels, bombs) still gets thrown.
     if (wantsThrow && heldItem && bladeFor(heldItem) !== FISTS) {
+      const b = bladeFor(heldItem);
+      const aim = aimAt(Transform.posX[player], Transform.posZ[player], fx, fz, b.reach);
+      if (aim !== null) heading = aim;
+      // heading and the character's forward differ by pi: forward is
+      // (-sin, -cos) of heading, which is why the first cut aimed backwards.
+      const afx = -Math.sin(heading), afz = -Math.cos(heading);
       playerSwing();
-      pendingPunch = { t: SWING_CONTACT, fx, fz, blade: bladeFor(heldItem) };
+      pendingPunch = { t: SWING_CONTACT, fx: afx, fz: afz, blade: b };
       wantsGrab = wantsThrow = false;
       return;
     }
@@ -497,8 +512,13 @@ const CarrySystem: System = {
     if (wantsThrow && heldItem === null && heldEntity === null) {
       // Swing now, connect partway through — matching how NPC blows land, and
       // how it reads on screen.
+      const aim = aimAt(Transform.posX[player], Transform.posZ[player], fx, fz, FISTS.reach);
+      if (aim !== null) heading = aim;
+      // heading and the character's forward differ by pi: forward is
+      // (-sin, -cos) of heading, which is why the first cut aimed backwards.
+      const afx = -Math.sin(heading), afz = -Math.cos(heading);
       playerSwing();
-      pendingPunch = { t: SWING_CONTACT, fx, fz, blade: FISTS };
+      pendingPunch = { t: SWING_CONTACT, fx: afx, fz: afz, blade: FISTS };
       wantsGrab = wantsThrow = false;
       return;
     }
@@ -827,6 +847,10 @@ withSystem(PlatformSlipSystem)
       facingX: -Math.sin(heading),
       facingZ: -Math.cos(heading),
     }));
+
+    // A freshly unlocked portal needs its blue ring drawn now, not on the
+    // next edit.
+    setUnlockHook((item) => syncMarker(state, item));
 
     initBuilder(state, () => cameraQuery(state.world)[0]);
 

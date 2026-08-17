@@ -106,6 +106,15 @@ type Runtime = {
    */
   parked: boolean;
   spokeTo: boolean;
+  /**
+   * Struck, so fighting back — for THIS visit only.
+   *
+   * This used to be written onto entry.npc.faction, which the level saves.
+   * One stray punch turned a friendly permanently hostile, and she came back
+   * angry every time the island reloaded. A grudge should not outlive the
+   * session that earned it.
+   */
+  provoked: boolean;
   /** Fetch quest delivered; wantsItem stops matching. */
   rewarded: boolean;
 };
@@ -396,6 +405,7 @@ export function npcRuntime(item: PlacedItem): Runtime {
       guiding: false,
       parked: false,
       spokeTo: false,
+      provoked: false,
       rewarded: false,
     };
     rt.set(item, r);
@@ -586,9 +596,7 @@ export function damageNpc(state: State, item: PlacedItem, amount: number, fromX:
     item.entry.npc.behavior = 'flee';
     return;
   }
-  if (item.entry.npc && item.entry.npc.faction !== 'hostile') {
-    item.entry.npc.faction = 'hostile';
-  }
+  r.provoked = true;
 }
 
 function hurtPlayer(amount: number, fromX: number, fromZ: number, px: number, pz: number) {
@@ -632,6 +640,33 @@ export function resolveLoot(loot?: string, faction?: string): string | undefined
   if (trimmed === 'none') return undefined;
   if (trimmed.includes('/')) return trimmed;
   return `/models/quaternius-pirate/${trimmed.replace(/\.glb$/i, '')}.glb`;
+}
+
+/**
+ * Where a swing should point.
+ *
+ * Getting hit shoves the player sideways, and after one knockback the enemy
+ * standing right beside you is outside the swing's cone — measured: three
+ * punches landed, then two whiffed at a range of 1.66m. Real action games
+ * nudge the attacker toward the target rather than demanding pixel aim, so a
+ * swing looks for anything living within reach in a wide arc and returns the
+ * heading that faces it.
+ */
+export function aimAt(px: number, pz: number, fx: number, fz: number, reach: number) {
+  let best: PlacedItem | null = null;
+  let bestD = reach + 0.6;
+  for (const item of placed) {
+    if (!ensureAlive(item) || npcRuntime(item).state === 'dead') continue;
+    const dx = item.obj.position.x - px;
+    const dz = item.obj.position.z - pz;
+    const d = Math.hypot(dx, dz);
+    if (d > bestD || d < 1e-3) continue;
+    if ((dx / d) * fx + (dz / d) * fz < -0.2) continue; // roughly ahead
+    best = item;
+    bestD = d;
+  }
+  if (!best) return null;
+  return Math.atan2(-(best.obj.position.x - px), -(best.obj.position.z - pz));
 }
 
 /**
@@ -845,7 +880,7 @@ export function updateNpcs(
 
     if (r.following) r.state = 'follow';
     else if (r.guiding) r.state = 'guide';
-    else if (cfg.faction === 'hostile' && toPlayer < aggro && canNotice && !talking)
+    else if ((cfg.faction === 'hostile' || r.provoked) && toPlayer < aggro && canNotice && !talking)
       r.state = toPlayer <= reach && canReach ? 'attack' : 'chase';
     else if (r.parked) r.state = 'idle';
     else if (cfg.behavior === 'flee' && toPlayer < aggro && canNotice) r.state = 'flee';

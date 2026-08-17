@@ -85,8 +85,13 @@ function relief(px: number, pz: number): number {
  * island edge and the shoreline skirt can't hide it.
  */
 function coastFade(x: number, z: number): number {
-  const fx = Math.min(1, Math.max(0, (ISLAND.x - Math.abs(x)) / 3.5));
-  const fz = Math.min(1, Math.max(0, (ISLAND.z - Math.abs(z)) / 3.5));
+  // The ramp must stretch with the island. At a fixed 3.5m the shore rose the
+  // full amplitude over 3.5 metres however big the island got, and since the
+  // collision cells GROW with the island, the riser at the coast outran the
+  // 0.3m autostep — the beach became a wall you could not climb.
+  const ramp = 3.5 * featureScale;
+  const fx = Math.min(1, Math.max(0, (ISLAND.x - Math.abs(x)) / ramp));
+  const fz = Math.min(1, Math.max(0, (ISLAND.z - Math.abs(z)) / ramp));
   const t = Math.min(fx, fz);
   return t * t * (3 - 2 * t); // smoothstep
 }
