@@ -714,13 +714,19 @@ export function aimAt(px: number, pz: number, fx: number, fz: number, reach: num
     const dx = item.obj.position.x - px;
     const dz = item.obj.position.z - pz;
     const d = Math.hypot(dx, dz);
+    // A NaN position poisons every comparison below it: `d > bestD` is FALSE
+    // for NaN, so the broken entity wins, sets bestD to NaN, and then nothing
+    // can beat it either. The function returned NaN, the caller assigned that
+    // to the camera heading, and the view came apart. One bad entity is enough.
+    if (!Number.isFinite(d)) continue;
     if (d > bestD || d < 1e-3) continue;
     if ((dx / d) * fx + (dz / d) * fz < -0.2) continue; // roughly ahead
     best = item;
     bestD = d;
   }
   if (!best) return null;
-  return Math.atan2(-(best.obj.position.x - px), -(best.obj.position.z - pz));
+  const a = Math.atan2(-(best.obj.position.x - px), -(best.obj.position.z - pz));
+  return Number.isFinite(a) ? a : null;
 }
 
 /**

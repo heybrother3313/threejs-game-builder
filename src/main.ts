@@ -162,6 +162,32 @@ let wantsThrow = false;
 
 /** A thrown punch waiting to connect. */
 let pendingPunch: { t: number; fx: number; fz: number; blade: Blade } | null = null;
+/**
+ * Seconds left in an attack, and the direction it committed to.
+ *
+ * Two problems, one cause: attacks used to leave movement completely alone.
+ * You kept full running speed through a punch, so the feet slid across the
+ * ground while the arms swung — skating. And the aim assist wrote `heading`,
+ * which the chase camera is PINNED to, so nudging your aim onto an enemy
+ * whipped the entire view round to the player-enemy axis. The enemy ended up
+ * running at the screen every time, and it read as the level reloading.
+ *
+ * So an attack now owns the body's facing for its duration and damps the
+ * throttle, and `heading` — the camera and the steering — is left alone.
+ */
+let attackHold = 0;
+let attackFacing: number | null = null;
+/** You plant to hit. Not zero: a dead stop reads as a hitch, not a commitment. */
+const ATTACK_SPEED = 0.3;
+/** A throw has no swing clip to measure, so it gets a fixed follow-through. */
+const THROW_HOLD = 0.3;
+/**
+ * Cap on the plant. Some Weapon clips run well over a second, and damping the
+ * throttle for that long turns every swing into a stumble — the fix for
+ * skating would have become a worse problem than the skating. Hold through
+ * the contact and a little follow-through, then hand movement back.
+ */
+const ATTACK_HOLD_MAX = 0.5;
 
 /** Last drawn player position, for input handlers that run outside systems. */
 const lastPlayerPos = new THREE.Vector3();
@@ -257,7 +283,9 @@ const RunSystem: System = {
   update: (state: State) => {
     for (const p of playerQuery(state.world)) {
       if (!baseSpeed) baseSpeed = Player.speed[p];
-      Player.speed[p] = running && !buildMode ? baseSpeed * RUN_MULTIPLIER : baseSpeed;
+      const sprint = running && !buildMode ? RUN_MULTIPLIER : 1;
+      // The attack damp wins over the sprint: you cannot swing at full pelt.
+      Player.speed[p] = baseSpeed * (attackHold > 0 ? ATTACK_SPEED : sprint);
     }
   },
 };
@@ -346,10 +374,13 @@ const ChaseCameraSystem: System = {
       OrbitCamera.currentYaw[cam] = heading;
       OrbitCamera.targetYaw[cam] = heading;
     }
-    if (steerInput === 0) return;
-    const half = (heading + Math.PI) / 2;
+    // An attack that turned to meet an enemy holds the body there until it
+    // lands; steering it away mid-swing would send the blow past them.
+    const face = attackHold > 0 && attackFacing !== null ? attackFacing : null;
+    if (face === null && steerInput === 0) return;
+    const half = ((face ?? heading) + Math.PI) / 2;
     for (const player of playerQuery(state.world)) {
-      if (InputState.moveY[player] !== 0) continue;
+      if (face === null && InputState.moveY[player] !== 0) continue;
       Body.rotX[player] = 0;
       Body.rotY[player] = Math.sin(half);
       Body.rotZ[player] = 0;
@@ -534,16 +565,19 @@ const CarrySystem: System = {
     if (wantsThrow && heldItem && bladeFor(heldItem) !== FISTS) {
       const b = bladeFor(heldItem);
       const aim = aimAt(Transform.posX[player], Transform.posZ[player], fx, fz, b.reach);
-      if (aim !== null) heading = aim;
+      const swing = aim !== null && Number.isFinite(aim) ? aim : heading;
       // heading and the character's forward differ by pi: forward is
       // (-sin, -cos) of heading, which is why the first cut aimed backwards.
-      const afx = -Math.sin(heading), afz = -Math.cos(heading);
-      playerSwing();
+      const afx = -Math.sin(swing), afz = -Math.cos(swing);
+      attackHold = Math.min(playerSwing(), ATTACK_HOLD_MAX);
+      attackFacing = swing;
       pendingPunch = { t: SWING_CONTACT, fx: afx, fz: afz, blade: b };
       wantsGrab = wantsThrow = false;
       return;
     }
     if (wantsThrow && heldItem) {
+      attackHold = THROW_HOLD;
+      attackFacing = heading;
       releaseItem(CARRY.throwSpeed, CARRY.throwLift);
       wantsGrab = wantsThrow = false;
       return;
@@ -554,11 +588,12 @@ const CarrySystem: System = {
       // Swing now, connect partway through — matching how NPC blows land, and
       // how it reads on screen.
       const aim = aimAt(Transform.posX[player], Transform.posZ[player], fx, fz, FISTS.reach);
-      if (aim !== null) heading = aim;
+      const swing = aim !== null && Number.isFinite(aim) ? aim : heading;
       // heading and the character's forward differ by pi: forward is
       // (-sin, -cos) of heading, which is why the first cut aimed backwards.
-      const afx = -Math.sin(heading), afz = -Math.cos(heading);
-      playerSwing();
+      const afx = -Math.sin(swing), afz = -Math.cos(swing);
+      attackHold = Math.min(playerSwing(), ATTACK_HOLD_MAX);
+      attackFacing = swing;
       pendingPunch = { t: SWING_CONTACT, fx: afx, fz: afz, blade: FISTS };
       wantsGrab = wantsThrow = false;
       return;
@@ -785,6 +820,10 @@ const VisualsSystem: System = {
     const dt = Math.min(state.time.deltaTime, 0.05);
     updateLevel(state, dt, playerPos);
     if (playerPos) lastPlayerPos.copy(playerPos);
+    if (attackHold > 0) {
+      attackHold -= dt;
+      if (attackHold <= 0) { attackHold = 0; attackFacing = null; }
+    }
     if (pendingPunch && p0 !== undefined) {
       pendingPunch.t -= dt;
       if (pendingPunch.t <= 0) {
