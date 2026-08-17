@@ -105,6 +105,24 @@ actually is.
 - [ ] **An equipped-weapon slot separate from the carried item.** You can hold
       one thing, so taking a bomb means dropping your sword. That tension is
       interesting once, annoying thereafter.
+- [ ] **Chasing enemies pile into each other.** Every pursuer steps at the
+      player's exact position — `faceAndStep(item, playerPos.x, playerPos.z…)`
+      with the same target for all of them — so a group closing from different
+      angles ends up in the same square metre, models interpenetrating, reading
+      as one thick enemy rather than three. Wanted: a separation pass that
+      pushes apart any two chasers within about a body's width, or a claimed
+      slot on a ring around the target so a pack surrounds you. Separation is
+      the cheaper of the two and probably enough.
+- [ ] **Thrown weapons sail over enemies' heads.** The hit test is a fixed
+      cylinder — `d < 1.1` horizontally, `|dy| < 2` vertically — measured
+      against the target's ORIGIN, which sits at its feet (`npc.ts:836`).
+      A throw arcs, so it passes over a tall model's head and still counts as
+      a miss, and that 1.1 is the same radius whether the target is a chicken
+      or an ogre. Wanted: size the hit volume from the model's measured bounds
+      (the collider pipeline already computes them) and centre it on the body
+      rather than the feet. Check for tunnelling while in there: the projectile
+      advances in per-frame steps, so a fast one can straddle a target between
+      samples and never register at all.
 - [ ] **Turn-based combat as a v2 MODE (Final Fantasy style).** Worth being
       clear-eyed: this is a fork, not a simplification. Its real appeal is
       that it decouples combat from animation timing, which has been the
