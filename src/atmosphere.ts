@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import type { State } from 'vibegame';
 import { getScene, threeCameras } from 'vibegame/rendering';
+import { ISLAND } from './ground';
 
 /**
  * The horizon. Without it the world ends at a flat clear-colour and every
@@ -72,13 +73,7 @@ export function initAtmosphere(state: State) {
   // walkable with nothing under it, and fish swimming over beach. A snug
   // rectangular shelf keeps the visual coastline within a step of the real
   // floor, so what looks like land IS land.
-  const shelf = new THREE.Mesh(
-    new THREE.BoxGeometry(27.5, 1.0, 19.5),
-    new THREE.MeshLambertMaterial({ color: 0xe8d6a0 })
-  );
-  shelf.position.y = -0.55; // top at -0.05, a hair under the sand top
-  shelf.receiveShadow = true;
-  scene.add(shelf);
+  buildShoreline(scene);
   // THE water: one animated sheet instead of two flat slabs. A vertex-colour
   // gradient runs shore→deep (light aqua over the reef, deep blue past it),
   // and a gentle multi-axis swell rolls the surface. The scene is lit mostly
@@ -96,8 +91,8 @@ export function initAtmosphere(state: State) {
   for (let i = 0; i < wpos.count; i++) {
     // Distance from the island's rectangle, not its centre — the gradient
     // should hug the coast on all sides equally.
-    const dx = Math.max(Math.abs(wpos.getX(i)) - 15, 0);
-    const dz = Math.max(Math.abs(wpos.getZ(i)) - 11, 0);
+    const dx = Math.max(Math.abs(wpos.getX(i)) - (ISLAND.x + 2), 0);
+    const dz = Math.max(Math.abs(wpos.getZ(i)) - (ISLAND.z + 2), 0);
     const d = Math.hypot(dx, dz);
     wc.copy(shoreC)
       .lerp(midC, Math.min(d / 10, 1))
@@ -142,6 +137,30 @@ export function initAtmosphere(state: State) {
       cam.updateProjectionMatrix();
     }
   }
+}
+
+let shelfMesh: THREE.Mesh | null = null;
+
+/** The sandy shelf hugging the island. Rebuilt when the island resizes. */
+function buildShoreline(scene: THREE.Scene) {
+  if (shelfMesh) {
+    scene.remove(shelfMesh);
+    shelfMesh.geometry.dispose();
+  }
+  const shelf = new THREE.Mesh(
+    new THREE.BoxGeometry(ISLAND.x * 2 + 1.5, 1.0, ISLAND.z * 2 + 1.5),
+    new THREE.MeshLambertMaterial({ color: 0xe8d6a0 })
+  );
+  shelf.position.y = -0.55; // top at -0.05, a hair under the sand top
+  shelf.receiveShadow = true;
+  scene.add(shelf);
+  shelfMesh = shelf;
+}
+
+/** Re-fit the shoreline after the island changes size. */
+export function resizeShoreline(state: State) {
+  const scene = getScene(state);
+  if (scene) buildShoreline(scene);
 }
 
 /**

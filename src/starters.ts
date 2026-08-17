@@ -28,6 +28,7 @@ const N = (n: string) => `/models/stylized-nature-megakit/${n}.glb`;
 const M = (n: string) => `/models/ultimate-monsters/${n}.glb`;
 const W = (n: string) => `/models/animated-women-pack/${n}.glb`;
 const MEN = (n: string) => `/models/animated-men-pack/${n}.glb`;
+const V = (n: string) => `/models/medieval-village/${n}.glb`;
 
 /**
  * A tiny LCG. Math.random would make every load of "Jungle outpost" a
@@ -42,8 +43,13 @@ function rng(seed: number) {
   };
 }
 
-/** The playable beach, in world units — everything is placed inside this. */
+/** The playable ground, in world units — everything is placed inside this. */
 const BOUNDS = { x: 12.5, z: 8.5 };
+/** Widen scatter/paint bounds when a starter builds a bigger island. */
+function useBounds(x: number, z: number) {
+  BOUNDS.x = x - 0.5;
+  BOUNDS.z = z - 0.5;
+}
 
 /** Paint a rectangle of ground tiles on the 2-unit grid. */
 function paintRect(
@@ -78,7 +84,7 @@ function paintBlob(
       const px = Math.round((cx + x) / 2) * 2;
       const pz = Math.round((cz + z) / 2) * 2;
       // Stay on the slab: a tile past the island edge floats over open sea.
-      if (Math.abs(px) > 13 || Math.abs(pz) > 9) continue;
+      if (Math.abs(px) > BOUNDS.x + 0.5 || Math.abs(pz) > BOUNDS.z + 0.5) continue;
       out.push({ src: 'paint', paint, x: px, y: 0, z: pz, rotY: 0 });
     }
   }
@@ -487,6 +493,7 @@ function blankSands(): LevelEntry[] {
  */
 function townIsland(): LevelEntry[] {
   const rand = rng(4242);
+  useBounds(20, 14);
   // A town is a CLEARING. Scatter that wanders into the square puts a pine
   // through the middle of the market, so the whole plaza and both roads are
   // claimed before a single tree is placed.
@@ -500,8 +507,9 @@ function townIsland(): LevelEntry[] {
     { x: 0, z: 2.6, r: 2.5 },    // the campfire
   ];
   const stall = (x: number, z: number, goods: string): LevelEntry[] => [
-    { src: P('Barrel'), x, y: 0, z, rotY: rand() * 6, fitHeight: 0.9, solid: true },
-    { src: P(goods), x, y: 0.9, z, rotY: rand() * 6, fitHeight: 0.4, pickable: true },
+    { src: V('Market Stand'), x, y: 0, z, rotY: 3.14, fitMaxDim: 3, solid: true },
+    { src: P(goods), x, y: 1.0, z: z + 0.3, rotY: rand() * 6, fitHeight: 0.4, pickable: true },
+    { src: V('Crate'), x: x + 1.1, y: 0, z: z + 0.6, rotY: rand() * 6, fitMaxDim: 0.8, solid: true },
   ];
   return [
     spawnFlag(0, 1),
@@ -515,14 +523,20 @@ function townIsland(): LevelEntry[] {
     },
     { src: P('Paper'), x: 0.42, y: 1.5, z: -1.5, rotY: 0, fitHeight: 0.5, solid: false },
 
-    // Town buildings around the square.
-    { src: P('House'), x: -7, y: 0, z: -4, rotY: 0.25, fitHeight: 4.4, solid: true },
-    { src: P('House'), x: 7, y: 0, z: -4, rotY: -0.25, fitHeight: 4, solid: true },
-    { src: P('House-2kytqGs4rH'), x: 0, y: 0, z: -7.5, rotY: 3.14, fitHeight: 3.6, solid: true },
-    { src: P('Sawmill'), x: -9.5, y: 0, z: 3, rotY: 1.2, fitMaxDim: 4.5, solid: true },
-    { src: '/models/kenney-survival/Workbench.glb', x: 9, y: 0, z: 2.4, rotY: -1, fitMaxDim: 2, solid: true },
-    { src: '/models/kenney-survival/Campfire.glb', x: 0, y: 0, z: 2.6, rotY: 0, fitHeight: 0.6 },
-    { src: '/models/kenney-survival/Tent.glb', x: 6.5, y: 0, z: 5, rotY: 2.4, fitMaxDim: 3, solid: true },
+    // A town made of buildings people live in, not beached pirate hulls.
+    { src: V('Fantasy Inn'), x: -9, y: 0, z: -5, rotY: 0.3, fitHeight: 6, solid: true },
+    { src: V('Fantasy House'), x: 8.5, y: 0, z: -5, rotY: -0.35, fitHeight: 5, solid: true },
+    { src: V('Fantasy House-BH2XHWUNmF'), x: -14, y: 0, z: 1, rotY: 1.3, fitHeight: 4.6, solid: true },
+    { src: V('Fantasy House-dcPho4SUA3'), x: 14, y: 0, z: 1.5, rotY: -1.3, fitHeight: 4.6, solid: true },
+    { src: V('Blacksmith'), x: 13, y: 0, z: -6.5, rotY: -0.8, fitHeight: 5, solid: true },
+    { src: V('Fantasy Stable'), x: -14.5, y: 0, z: -6, rotY: 0.9, fitHeight: 4.4, solid: true },
+    { src: V('Mill'), x: 0, y: 0, z: 9.5, rotY: 3.14, fitHeight: 8, solid: true },
+    { src: V('Bell Tower'), x: 0, y: 0, z: -9, rotY: 0, fitHeight: 7, solid: true },
+    { src: V('Well'), x: -3.5, y: 0, z: 2.5, rotY: 0.4, fitMaxDim: 1.8, solid: true },
+    { src: V('Bonfire'), x: 3.5, y: 0, z: 2.5, rotY: 0, fitMaxDim: 1.6 },
+    { src: V('Cart'), x: -6.5, y: 0, z: 4.5, rotY: 1.1, fitMaxDim: 2.6, solid: true },
+    { src: V('Hay'), x: -11.5, y: 0, z: -2, rotY: 0.5, fitMaxDim: 1.8, solid: true },
+    { src: V('Gazebo'), x: 9.5, y: 0, z: 5.5, rotY: 0.6, fitMaxDim: 4, solid: true },
 
     // The market: three stalls along the road.
     ...stall(-3.4, -3.2, 'Fish Tuna'),
@@ -606,14 +620,23 @@ export type Starter = {
   id: string;
   name: string;
   blurb: string;
+  /** Half-extents. Objective islands want room to travel; puzzle islands
+   *  want to be crossed in seconds. Defaults to the classic 26x18. */
+  size?: { x: number; z: number };
   build: () => LevelEntry[];
 };
+
+/** The island size a world should be built at. */
+export function sizeFor(id: string) {
+  return STARTERS.find((s) => s.id === id)?.size ?? { x: 13, z: 9 };
+}
 
 export const STARTERS: Starter[] = [
   {
     id: 'town-island',
     name: 'Ketch Harbour (town)',
     blurb: 'The hub: a quest board, folk who want things, and ships to everywhere.',
+    size: { x: 20, z: 14 },
     build: townIsland,
   },
   {

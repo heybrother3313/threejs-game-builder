@@ -1,4 +1,5 @@
 import type { State } from 'vibegame';
+import { ISLAND } from './ground';
 import {
   LevelEntry,
   PAINT_TILE,
@@ -117,7 +118,8 @@ export const QUICK_PROMPTS: { label: string; prompt: string }[] = [
 /* ------------------------------------------------------------ catalog --- */
 
 const MODEL_DIRS: { dir: string; hint: string }[] = [
-  { dir: 'quaternius-pirate', hint: 'pirate props, buildings, ships, weapons, treasure, a few characters' },
+  { dir: 'quaternius-pirate', hint: 'pirate props, ships, weapons, treasure, a few characters' },
+  { dir: 'medieval-village', hint: 'PROPER VILLAGE BUILDINGS — Fantasy House/Inn/Blacksmith/Stable/Barracks, Mill, Well, Bell Tower, Market Stand, Cart. Use these for towns, not the pirate House (a beached hull).' },
   { dir: 'ultimate-monsters', hint: 'animated creatures — best pick for enemies and monster NPCs' },
   { dir: 'animated-animal-pack', hint: 'animated wildlife (fox, deer, wolf, horse…)' },
   { dir: 'animated-fish-bundle', hint: 'animated fish (clip "Swimming_Normal") plus docks and boats' },
@@ -413,7 +415,7 @@ async function applyPatch(state: State, patch: Patch, raw: string): Promise<AiRe
         if (Math.hypot(dx, dz) > r) continue;
         const x = Math.round((op.cx + dx) / PAINT_TILE) * PAINT_TILE;
         const z = Math.round((op.cz + dz) / PAINT_TILE) * PAINT_TILE;
-        if (Math.abs(x) > 13 || Math.abs(z) > 19) continue;
+        if (Math.abs(x) > ISLAND.x || Math.abs(z) > ISLAND.z) continue;
         const existing = placed.find((i) => i.entry.paint && i.entry.x === x && i.entry.z === z);
         if (existing) {
           if (existing.entry.paint === op.color) continue;

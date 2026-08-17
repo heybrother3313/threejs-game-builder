@@ -57,7 +57,9 @@ import { FISTS, bladeFor, type Blade } from './weapons';
 /** Bare model name, for the hand label. */
 const nameOfSrc = (src: string) => src.split('/').pop()!.replace('.glb', '');
 import { initAtmosphere, updateWater } from './atmosphere';
-import { initIslandGround } from './ground';
+import { clearIslandGround, initIslandGround, setIslandSize } from './ground';
+import { sizeFor } from './starters';
+import { currentWorldId } from './worlds';
 import { aiConfig, runAssistant } from './assistant';
 import {
   analyzeAssets,
@@ -773,6 +775,8 @@ withSystem(PlatformSlipSystem)
     }
 
     brightenScene(state);
+    const isle = sizeFor(currentWorldId());
+    setIslandSize(isle.x, isle.z);
     initAtmosphere(state);
     initIslandGround(state);
 
@@ -846,7 +850,16 @@ withSystem(PlatformSlipSystem)
         toggleBuildMode,
         analyzeAssets,
         placed,
-        ground: { groundHeightAt, reseatOnGround: () => reseatOnGround(state) },
+        ground: {
+          groundHeightAt,
+          reseatOnGround: () => reseatOnGround(state),
+          resize: (x: number, z: number) => {
+            clearIslandGround(state);
+            setIslandSize(x, z);
+            initIslandGround(state);
+            reseatOnGround(state);
+          },
+        },
         instantiate: (entry: Parameters<typeof instantiate>[1]) => instantiate(state, entry),
         setClip,
         getCamera: () => threeCameras.get(cameraQuery(state.world)[0]),

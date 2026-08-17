@@ -22,8 +22,27 @@ import { Transform } from 'vibegame/transforms';
  * slope rather than a staircase.
  */
 
-/** The playfield, matching the island slab in index.html. */
+/**
+ * The playfield half-extents. Set per world before the ground is built — an
+ * objective island wants room to travel through, a puzzle island wants to be
+ * crossed in seconds, and everything downstream (slab, skirt, scatter bounds,
+ * paint clamps) reads this rather than a literal.
+ */
 export const ISLAND = { x: 13, z: 9 };
+
+/**
+ * Terrain features stay the same SIZE as the island grows rather than
+ * multiplying: a big island should have a few big hills you walk over, not a
+ * hundred small ones. Frequency scales down with extent, which also keeps
+ * slopes gentle enough for the collider grid to stay coarse.
+ */
+let featureScale = 1;
+
+export function setIslandSize(x: number, z: number) {
+  ISLAND.x = x;
+  ISLAND.z = z;
+  featureScale = Math.max(1, Math.sqrt((x * z) / (13 * 9)));
+}
 /**
  * Peak relief in metres. Height is measured UP FROM ZERO, never below it —
  * the base slab's top sits at y=0, so a hollow that dipped under it would
@@ -32,9 +51,8 @@ export const ISLAND = { x: 13, z: 9 };
  * on top of the slab means the grid and the slab agree everywhere.
  */
 const AMPLITUDE = 1.15;
-/** Visual resolution. */
-const SEG_X = 104;
-const SEG_Z = 72;
+/** Visual resolution: a fixed metres-per-quad, so a bigger island isn't coarser. */
+const QUAD = 0.25;
 /**
  * Collision resolution. Each cell is a FLAT-topped box, so the walkable
  * surface is a staircase however smooth the visual is — and at 1.0m the
@@ -44,14 +62,16 @@ const SEG_Z = 72;
  * the cell quarters the riser; the box count is still trivial for Rapier
  * static cuboids.
  */
-const CELL = 0.5;
+const CELL_BASE = 0.5;
 
 /**
  * Smooth pseudo-random relief: a few sine octaves. Deterministic, cheap, and
  * continuous, which matters — a discontinuous field would put a cliff between
  * two collision cells and read as an invisible wall.
  */
-function relief(x: number, z: number): number {
+function relief(px: number, pz: number): number {
+  const x = px / featureScale;
+  const z = pz / featureScale;
   return (
     Math.sin(x * 0.21 + 1.3) * Math.cos(z * 0.19 - 0.7) * 0.55 +
     Math.sin(x * 0.4 - 2.1) * Math.cos(z * 0.37 + 1.9) * 0.28 +
@@ -85,12 +105,28 @@ const GRASS = new THREE.Color('#9dbf6a');
 const DRY = new THREE.Color('#d8c48d');
 
 let mesh: THREE.Mesh | null = null;
+let baseMesh: THREE.Mesh | null = null;
+let owned: number[] = [];
+
+/** Tear down the ground so it can be rebuilt at a different island size. */
+export function clearIslandGround(state: State) {
+  const scene = getScene(state);
+  for (const e of owned) if (state.exists(e)) state.destroyEntity(e);
+  owned = [];
+  if (mesh && scene) scene.remove(mesh);
+  if (baseMesh && scene) scene.remove(baseMesh);
+  mesh = null;
+  baseMesh = null;
+}
 
 export function initIslandGround(state: State) {
   const scene = getScene(state);
   if (!scene || mesh) return;
 
-  const geo = new THREE.PlaneGeometry(ISLAND.x * 2, ISLAND.z * 2, SEG_X, SEG_Z);
+  const geo = new THREE.PlaneGeometry(
+    ISLAND.x * 2, ISLAND.z * 2,
+    Math.round((ISLAND.x * 2) / QUAD), Math.round((ISLAND.z * 2) / QUAD)
+  );
   geo.rotateX(-Math.PI / 2);
   const pos = geo.getAttribute('position') as THREE.BufferAttribute;
   const colors = new Float32Array(pos.count * 3);
@@ -118,11 +154,38 @@ export function initIslandGround(state: State) {
   mesh.receiveShadow = true;
   scene.add(mesh);
 
+  // The mass under the relief: its top sits at exactly 0, which is where the
+  // terrain bottoms out, so the two agree everywhere and the grid's rim is
+  // never a drop.
+  const base = new THREE.Mesh(
+    new THREE.BoxGeometry(ISLAND.x * 2, 1, ISLAND.z * 2),
+    new THREE.MeshLambertMaterial({ color: 0xe8d6a0 })
+  );
+  base.position.y = -0.5;
+  scene.add(base);
+  baseMesh = base;
+  const e = state.createEntity();
+  state.addComponent(e, Transform, {
+    posX: 0, posY: -0.5, posZ: 0,
+    rotY: 0, rotW: 1, eulerY: 0, scaleX: 1, scaleY: 1, scaleZ: 1,
+  });
+  state.addComponent(e, Body, {
+    type: BodyType.Fixed, posX: 0, posY: -0.5, posZ: 0,
+    rotY: 0, rotW: 1, eulerY: 0, mass: 0, gravityScale: 0,
+  });
+  state.addComponent(e, Collider, {
+    shape: 0, sizeX: ISLAND.x * 2, sizeY: 1, sizeZ: ISLAND.z * 2,
+  });
+  owned.push(e);
+
   buildColliders(state);
 }
 
 /** One thin box per cell, positioned from the height function directly. */
 function buildColliders(state: State) {
+  // Slopes flatten as the island grows (features keep their size), so cells
+  // can grow with it and the box count stays roughly constant.
+  const CELL = CELL_BASE * featureScale;
   const nx = Math.ceil((ISLAND.x * 2) / CELL);
   const nz = Math.ceil((ISLAND.z * 2) / CELL);
   const cx = (ISLAND.x * 2) / nx;
@@ -155,6 +218,7 @@ function buildColliders(state: State) {
       state.addComponent(e, Collider, {
         shape: 0, sizeX: cx * 1.02, sizeY: thick, sizeZ: cz * 1.02,
       });
+      owned.push(e);
     }
   }
 }

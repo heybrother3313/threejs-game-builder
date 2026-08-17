@@ -7,6 +7,7 @@ import {
   syncMarker, type PlacedItem,
 } from './level';
 import { getScene } from 'vibegame/rendering';
+import { ISLAND } from './ground';
 
 /**
  * NPC behaviour, combat, and conversation.
@@ -430,7 +431,7 @@ function isSwimmer(item: PlacedItem) {
 
 /** True if (x, z) is on the island slab — land, as far as a fish cares. */
 function onLand(x: number, z: number) {
-  return Math.abs(x) < 13.8 && Math.abs(z) < 9.8;
+  return Math.abs(x) < ISLAND.x + 0.8 && Math.abs(z) < ISLAND.z + 0.8;
 }
 
 function faceAndStep(item: PlacedItem, tx: number, tz: number, speed: number, dt: number) {

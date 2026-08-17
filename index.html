@@ -81,10 +81,9 @@
            a descent is a series of small drops off each plateau, and without
            snapping the player free-falls each one (the "skipping"). -->
       <player pos="0 1 0" character-controller="offset: 0.02; snapDist: 0.9"></player>
-      <!-- The floor is generated (src/ground.ts): rolling relief with real
-           colliders, faded to zero at the coast so it meets the shoreline.
-           This slab is only the mass beneath it, sunk out of sight. -->
-      <static-part pos="0 -0.5 0" shape="box" size="26 1 18" color="#e8d6a0"></static-part>
+      <!-- The floor, its base slab and the shoreline are all generated
+           (src/ground.ts, src/atmosphere.ts) because their size follows the
+           world's island extents, which the XML can't know. -->
       <!-- No water aprons: the sea is real now (atmosphere.ts) — rectangular
            water slabs read as a table edge from any downward camera angle. -->
 

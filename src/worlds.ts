@@ -10,7 +10,9 @@ import {
   serialize,
   spawnPoint,
 } from './level';
-import { STARTERS } from './starters';
+import { STARTERS, sizeFor } from './starters';
+import { clearIslandGround, initIslandGround, setIslandSize } from './ground';
+import { resizeShoreline } from './atmosphere';
 import { clearHistory } from './history';
 
 /**
@@ -92,6 +94,11 @@ export async function travelTo(state: State, id: string): Promise<THREE.Vector3 
     // write that island's entries into another island's save.
     clearHistory();
 
+    // The destination's island may be a different size than the one you left.
+    clearIslandGround(state);
+    setIslandSize(sizeFor(id).x, sizeFor(id).z);
+    initIslandGround(state);
+    resizeShoreline(state);
     for (const item of [...placed]) {
       if (!item.entry.follow) removeItem(state, item);
     }

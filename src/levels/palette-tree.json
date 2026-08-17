@@ -1134,6 +1134,104 @@
   "name": "Structures",
   "groups": [
    {
+    "name": "Village",
+    "clip": null,
+    "items": [
+     [
+      "Bell Tower",
+      "/models/medieval-village/Bell Tower.glb"
+     ],
+     [
+      "Blacksmith",
+      "/models/medieval-village/Blacksmith.glb"
+     ],
+     [
+      "Door Round",
+      "/models/medieval-village/Door Round.glb"
+     ],
+     [
+      "Door Straight",
+      "/models/medieval-village/Door Straight.glb"
+     ],
+     [
+      "Fantasy Barracks",
+      "/models/medieval-village/Fantasy Barracks.glb"
+     ],
+     [
+      "Fantasy House",
+      "/models/medieval-village/Fantasy House.glb"
+     ],
+     [
+      "Fantasy House 2",
+      "/models/medieval-village/Fantasy House-BH2XHWUNmF.glb"
+     ],
+     [
+      "Fantasy House 3",
+      "/models/medieval-village/Fantasy House-dcPho4SUA3.glb"
+     ],
+     [
+      "Fantasy Inn",
+      "/models/medieval-village/Fantasy Inn.glb"
+     ],
+     [
+      "Fantasy Sawmill",
+      "/models/medieval-village/Fantasy Sawmill.glb"
+     ],
+     [
+      "Fantasy Stable",
+      "/models/medieval-village/Fantasy Stable.glb"
+     ],
+     [
+      "Fence",
+      "/models/medieval-village/Fence.glb"
+     ],
+     [
+      "Gazebo",
+      "/models/medieval-village/Gazebo.glb"
+     ],
+     [
+      "Market Stand",
+      "/models/medieval-village/Market Stand.glb"
+     ],
+     [
+      "Market Stand 2",
+      "/models/medieval-village/Market Stand-DGIM5HGISb.glb"
+     ],
+     [
+      "Mill",
+      "/models/medieval-village/Mill.glb"
+     ],
+     [
+      "Path Straight",
+      "/models/medieval-village/Path Straight.glb"
+     ],
+     [
+      "Round Window",
+      "/models/medieval-village/Round Window.glb"
+     ],
+     [
+      "Sawmill Saw",
+      "/models/medieval-village/Sawmill Saw.glb"
+     ],
+     [
+      "Stairs",
+      "/models/medieval-village/Stairs.glb"
+     ],
+     [
+      "Well",
+      "/models/medieval-village/Well.glb"
+     ],
+     [
+      "Window",
+      "/models/medieval-village/Window.glb"
+     ],
+     [
+      "Window 2",
+      "/models/medieval-village/Window-EY1zrFcme9.glb"
+     ]
+    ]
+   },
+   {
     "name": "Buildings",
     "clip": null,
     "items": [
@@ -1373,6 +1471,70 @@
      [
       "Resource Stone",
       "/models/kenney-survival/Resource Stone.glb"
+     ],
+     [
+      "Bag",
+      "/models/medieval-village/Bag.glb"
+     ],
+     [
+      "Bag Open",
+      "/models/medieval-village/Bag Open.glb"
+     ],
+     [
+      "Bags",
+      "/models/medieval-village/Bags.glb"
+     ],
+     [
+      "Barrel 3",
+      "/models/medieval-village/Barrel.glb"
+     ],
+     [
+      "Bell",
+      "/models/medieval-village/Bell.glb"
+     ],
+     [
+      "Bench",
+      "/models/medieval-village/Bench.glb"
+     ],
+     [
+      "Bench 2",
+      "/models/medieval-village/Bench-7uSlZo3n9Y.glb"
+     ],
+     [
+      "Bonfire",
+      "/models/medieval-village/Bonfire.glb"
+     ],
+     [
+      "Cart",
+      "/models/medieval-village/Cart.glb"
+     ],
+     [
+      "Cauldron",
+      "/models/medieval-village/Cauldron.glb"
+     ],
+     [
+      "Crate",
+      "/models/medieval-village/Crate.glb"
+     ],
+     [
+      "Hay",
+      "/models/medieval-village/Hay.glb"
+     ],
+     [
+      "Package",
+      "/models/medieval-village/Package.glb"
+     ],
+     [
+      "Package 2",
+      "/models/medieval-village/Package-kYvD6QCQRd.glb"
+     ],
+     [
+      "Rocks",
+      "/models/medieval-village/Rocks.glb"
+     ],
+     [
+      "Smoke",
+      "/models/medieval-village/Smoke.glb"
      ]
     ]
    },
