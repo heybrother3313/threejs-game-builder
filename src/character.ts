@@ -407,11 +407,37 @@ export function playerSwing(): number {
   const a = (armed && actions['Weapon']) || actions['Punch'];
   if (!a || dead) return 0;
   a.reset().fadeIn(0.06).play();
+  // reset() does not restore timeScale, and a reel leaves it at -1. Without
+  // this, the first reel makes every later swing play backwards.
+  a.timeScale = 1;
   current?.fadeOut(0.06);
   current = a;
   swingT = a.getClip().duration;
   swinging = true;
   currentState = -1; // force a re-read of the movement state when the swing ends
+  return swingT;
+}
+
+/**
+ * The swing, backwards. A reel is a cast run in reverse.
+ *
+ * Starts from `fromFrac` through the clip — the cast cuts at its release
+ * fraction, so winding back from that same point returns the arm along the
+ * path it took, and the two motions are symmetric.
+ */
+export function playerReverseSwing(fromFrac: number): number {
+  const a = (armed && actions['Weapon']) || actions['Punch'];
+  if (!a || dead) return 0;
+  const dur = a.getClip().duration;
+  const from = Math.max(0, Math.min(dur, dur * fromFrac));
+  a.reset().fadeIn(0.06).play();
+  a.time = from;
+  a.timeScale = -1;
+  current?.fadeOut(0.06);
+  current = a;
+  swingT = from; // at -1x it reaches the start in exactly this long
+  swinging = true;
+  currentState = -1;
   return swingT;
 }
 

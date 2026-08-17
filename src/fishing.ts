@@ -28,14 +28,21 @@ const LINE_POINTS = 14;
 const SAG = 0.16;
 const LURE_RADIUS = 0.07;
 
+/** Where the lure hangs off the tip when the line is not out. */
+const STOW_DROP = 0.4;
+
 type Cast = {
-  state: 'flying' | 'floating';
+  state: 'flying' | 'floating' | 'reeling';
   pos: THREE.Vector3;
   vel: THREE.Vector3;
   /** Seconds since it settled — drives the bob, and later the bite. */
   restT: number;
   /** True if it came down on water rather than sand. */
   onWater: boolean;
+  /** Where the reel started from, and how long it runs. */
+  reelFrom: THREE.Vector3;
+  reelT: number;
+  reelDur: number;
 };
 
 let cast: Cast | null = null;
@@ -115,8 +122,30 @@ export function beginCast(scene: THREE.Scene, from: THREE.Vector3, fx: number, f
     vel: new THREE.Vector3(fx * CAST_SPEED, CAST_LIFT, fz * CAST_SPEED),
     restT: 0,
     onWater: false,
+    reelFrom: new THREE.Vector3(),
+    reelT: 0,
+    reelDur: 0,
   };
   lure!.position.copy(cast.pos);
+}
+
+/**
+ * Wind the lure back to the rod over `seconds`.
+ *
+ * Paired with the swing played backwards, so the line comes in over exactly
+ * the motion that put it out. Reeling a lure that is still in the air is
+ * allowed — you changed your mind mid-cast, which is a thing people do.
+ */
+export function startReel(seconds: number) {
+  if (!cast || cast.state === 'reeling') return;
+  cast.state = 'reeling';
+  cast.reelFrom.copy(cast.pos);
+  cast.reelT = 0;
+  cast.reelDur = Math.max(0.12, seconds);
+}
+
+export function isReeling(): boolean {
+  return cast?.state === 'reeling';
 }
 
 /** Reel in: the lure and its line come off the water and out of the scene. */
@@ -143,8 +172,37 @@ export function lureSpot(): { x: number; z: number; onWater: boolean; restT: num
  * lost it — and the line has nowhere to hang from, so it hides rather than
  * anchoring itself to the origin.
  */
-export function updateFishing(dt: number, tip: THREE.Vector3 | null) {
-  if (!cast || !lure || !line) return;
+export function updateFishing(dt: number, tip: THREE.Vector3 | null, scene: THREE.Scene | null) {
+  // No rod in the hand: there is nothing to hang a line from, so both meshes
+  // go away rather than anchoring themselves to the origin.
+  if (!tip) {
+    if (lure) lure.visible = false;
+    if (line) line.visible = false;
+    return;
+  }
+  if (scene) ensureVisuals(scene);
+  if (!lure || !line) return;
+
+  // Line not out: the lure hangs off the tip so the rod reads as rigged
+  // rather than as a bare stick. It is the same two meshes, which is why the
+  // lure visibly LEAVES the tip when you cast.
+  if (!cast) {
+    lure.position.set(tip.x, tip.y - STOW_DROP, tip.z);
+    drawLine(tip, lure.position);
+    return;
+  }
+
+  if (cast.state === 'reeling') {
+    cast.reelT += dt;
+    const t = Math.min(1, cast.reelT / cast.reelDur);
+    // Ease out: it leaves the water quickly and arrives gently.
+    const e = 1 - (1 - t) * (1 - t);
+    cast.pos.lerpVectors(cast.reelFrom, tip, e);
+    lure.position.copy(cast.pos);
+    drawLine(tip, cast.pos);
+    if (t >= 1) reelIn();
+    return;
+  }
 
   if (cast.state === 'flying') {
     cast.vel.y -= GRAVITY * dt;
@@ -164,17 +222,18 @@ export function updateFishing(dt: number, tip: THREE.Vector3 | null) {
     }
   }
   lure.position.copy(cast.pos);
+  drawLine(tip, cast.pos);
+}
 
-  if (!tip) {
-    line.visible = false;
-    return;
-  }
+/** Hang the line between two points, with the slack a loose line carries. */
+function drawLine(from: THREE.Vector3, to: THREE.Vector3) {
+  if (!line) return;
   line.visible = true;
-  tipScratch.copy(tip);
-  // Slack hangs between rod and lure. A quadratic through a dropped control
-  // point is not a real catenary, but at this length nothing else reads.
-  const span = tipScratch.distanceTo(cast.pos);
-  ctrlScratch.copy(tipScratch).add(cast.pos).multiplyScalar(0.5);
+  tipScratch.copy(from);
+  // A quadratic through a dropped control point is not a real catenary, but
+  // at this length nothing else reads.
+  const span = tipScratch.distanceTo(to);
+  ctrlScratch.copy(tipScratch).add(to).multiplyScalar(0.5);
   ctrlScratch.y -= span * SAG;
   const attr = line.geometry.getAttribute('position') as THREE.BufferAttribute;
   for (let i = 0; i < LINE_POINTS; i++) {
@@ -185,7 +244,7 @@ export function updateFishing(dt: number, tip: THREE.Vector3 | null) {
       .copy(tipScratch)
       .multiplyScalar(inv * inv)
       .addScaledVector(ctrlScratch, 2 * inv * t)
-      .addScaledVector(cast.pos, t * t);
+      .addScaledVector(to, t * t);
     attr.setXYZ(i, pointScratch.x, pointScratch.y, pointScratch.z);
   }
   attr.needsUpdate = true;

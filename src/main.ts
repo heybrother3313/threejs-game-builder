@@ -35,6 +35,7 @@ import {
   playerHitReact,
   playerSwing,
   cutSwing,
+  playerReverseSwing,
   playerAnimDebug,
   heldWeaponPosition,
   heldWeaponTip,
@@ -65,7 +66,7 @@ import { FISTS, bladeFor, isFishingRod, isHandThrowable, type Blade } from './we
 /** Bare model name, for the hand label. */
 const nameOfSrc = (src: string) => src.split('/').pop()!.replace('.glb', '');
 import { initAtmosphere, updateWater } from './atmosphere';
-import { beginCast, isCastOut, reelIn, updateFishing } from './fishing';
+import { beginCast, isCastOut, isReeling, reelIn, startReel, updateFishing } from './fishing';
 import { clearIslandGround, initIslandGround, setIslandSize } from './ground';
 import { sizeFor } from './starters';
 import { currentWorldId } from './worlds';
@@ -377,6 +378,15 @@ const SteerSystem: System = {
         InputState.moveY[player] = 0;
         steerInput = 0;
         continue;
+      }
+      // Fishing roots you. A line in the water and a player walking away is
+      // a lure dragged across the bay, so trying to walk gives up the cast
+      // instead — you are never stuck, it just costs you the line. Turning
+      // stays free: you can watch the water without reeling in.
+      if (isCastOut()) {
+        if (InputState.moveY[player] !== 0 || InputState.jump[player] !== 0) reelIn();
+        InputState.moveY[player] = 0;
+        InputState.jump[player] = 0;
       }
       const turn = InputState.moveX[player];
       steerInput = turn;
@@ -696,7 +706,14 @@ const CarrySystem: System = {
     // between this and the branch below.
     if (wantsThrow && heldItem && isFishingRod(heldItem.entry.src) && !pendingCast) {
       if (isCastOut()) {
-        reelIn();
+        // Reel: the swing played backwards from where the cast cut it, with
+        // the lure winding in over exactly that motion.
+        if (!isReeling()) {
+          const back = playerReverseSwing(castReleaseFrac);
+          attackHold = Math.min(back, ATTACK_HOLD_MAX);
+          attackFacing = heading;
+          startReel(back > 0 ? back : 0.3);
+        }
       } else {
         const dur = playerSwing();
         attackHold = Math.min(dur, ATTACK_HOLD_MAX);
@@ -956,7 +973,8 @@ const VisualsSystem: System = {
     // the swell, and the rod tip goes wherever the hand does.
     updateFishing(
       state.time.deltaTime,
-      heldWeaponTip(castTipScratch) ? castTipScratch : null
+      heldWeaponTip(castTipScratch) ? castTipScratch : null,
+      getScene(state)
     );
     const p0 = playerQuery(state.world)[0];
     const playerPos =
