@@ -383,9 +383,14 @@ let hooked: {
  * on a 0.95m fish that is over a metre of air, which reads as hovering however
  * carefully the thing is seated — seating cannot fix a fish that spends most
  * of the cycle off the ground. Blending the action against the bind pose keeps
- * the motion and cuts the excursion. Tunable via __game.setFlopWeight(w).
+ * the motion and cuts the excursion.
+ *
+ * 0.2 was settled by looking at it, not by measuring it. Every instrument to
+ * hand reported the excursion as unchanged by this weight, and every one of
+ * them was wrong — bone sweeps included, since they sampled after the fish had
+ * already been banked. Still tunable via __game.setFlopWeight(w).
  */
-let flopWeight = 0.5;
+let flopWeight = 0.2;
 
 export function setFlopWeight(w: number): number {
   flopWeight = Math.min(1, Math.max(0.05, w));
