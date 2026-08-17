@@ -559,10 +559,22 @@ export function damageNpc(state: State, item: PlacedItem, amount: number, fromX:
     r.state = 'dead';
     item.dead = true; // stops level.ts walking the corpse along its path
     r.t = 0;
-    // Not every rig has a Death clip. When one doesn't, play() leaves the
-    // PREVIOUS loop running — so a frog with only a hop cycle went on hopping
-    // after it died, drifting and stretching as the loop carried on. Freeze
-    // the mixer instead: a still corpse beats a lively one.
+    /*
+     * Death has to STOP the other clips, not fade them.
+     *
+     * play() fades the outgoing action out — which leaves it playing at zero
+     * weight, and a LOOPING clip keeps advancing forever. So a frog that died
+     * mid-hop kept hopping underneath its death pose, the two blending into
+     * the stretched shape. Death is final: every other action is stopped
+     * outright, and only then does the death clip start.
+     *
+     * The freeze is the fallback for a rig with no death clip at all, where
+     * a still corpse beats a lively one.
+     */
+    if (item.mixer) item.mixer.stopAllAction();
+    r.action = undefined;
+    r.actionName = undefined;
+    item.currentAction = undefined;
     if (!play(item, 'death', true) && item.mixer) item.mixer.timeScale = 0;
     // Defeated NPCs stop blocking and drop their loot.
     for (const e of item.solidEs) {
