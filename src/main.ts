@@ -203,11 +203,11 @@ const THROW_FOLLOW_THROUGH = 0.12;
 /**
  * Where in the Weapon clip the arm is up and the object should leave.
  *
- * Eyeballed off the clip rather than derived — 0.25 and 0.33 both looked
- * right to Ethan, so it sits between them and is tunable live via
- * __game.setThrowRelease(f) instead of costing a rebuild per guess.
+ * Eyeballed off the clip rather than derived: Ethan scrubbed to 25%, then
+ * 33%, then landed on 0.38 watching it in motion. Still tunable live via
+ * __game.setThrowRelease(f), since this is a feel value and feel values move.
  */
-let throwReleaseFrac = 0.3;
+let throwReleaseFrac = 0.38;
 
 /** Last drawn player position, for input handlers that run outside systems. */
 const lastPlayerPos = new THREE.Vector3();
