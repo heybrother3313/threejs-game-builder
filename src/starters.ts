@@ -29,6 +29,12 @@ const M = (n: string) => `/models/ultimate-monsters/${n}.glb`;
 const W = (n: string) => `/models/animated-women-pack/${n}.glb`;
 const MEN = (n: string) => `/models/animated-men-pack/${n}.glb`;
 const V = (n: string) => `/models/medieval-village/${n}.glb`;
+const S = (n: string) => `/models/kenney-survival/${n}.glb`;
+const FISH = (n: string) => `/models/animated-fish-bundle/${n}.glb`;
+
+/** The rod tiers ship behind hashed filenames; name the two a level uses. */
+const ROD_I = FISH('Fishing Rod');
+const ROD_III = FISH('Fishing Rod-lDlWQjn9Zg');
 
 /**
  * A tiny LCG. Math.random would make every load of "Jungle outpost" a
@@ -310,6 +316,19 @@ function fishingVillage(): LevelEntry[] {
       path: [[x, z], [x + 3, z + 1.5], [x, z + 3], [x - 3, z + 1.5]] as [number, number][],
     };
   });
+  // The reef above is off the far shore, which left the dock you actually
+  // stand on facing empty water. These work the near bay instead, out past the
+  // end of the boards and inside a cast of them.
+  const bayFish: LevelEntry[] = ['Goldfish', 'Mandarin Fish', 'Parrot Fish'].map((name, i) => {
+    const x = +(-4 + i * 4).toFixed(2);
+    const z = +(-12.5 - rand() * 2).toFixed(2);
+    return {
+      src: FISH(name),
+      x, y: -0.45, z, rotY: +(rand() * Math.PI * 2).toFixed(3), fitHeight: 0.45, solid: false,
+      clip: 'Swimming_Normal', speed: 1.1,
+      path: [[x, z], [x + 2.5, z - 1], [x, z - 2.5], [x - 2.5, z - 1]] as [number, number][],
+    };
+  });
   // A market stall is a barrel with produce ON it plus a bucket beside it —
   // composition sells the place; the same props scattered read as litter.
   const stall = (x: number, z: number, produce: string): LevelEntry[] => [
@@ -336,6 +355,20 @@ function fishingVillage(): LevelEntry[] {
     { src: P('Bucket of Fish'), x: 0.2, y: 0, z: -6.6, rotY: 0.5, fitHeight: 0.5, pickable: true },
     { src: P('Anchor'), x: -3.2, y: 0, z: -7.5, rotY: 0.8, fitMaxDim: 1.3, solid: false },
     { src: P('Lute'), x: 4.2, y: 0, z: -5.7, rotY: 2, fitHeight: 0.7, pickable: true },
+
+    // Where you pick up a rod — a fishing village without one was the thing
+    // actually missing. It sits on the west waterfront rather than beside the
+    // market, because a talkable NPC within 3m beats a pickup to the E key:
+    // by the stalls you got "talk to Henry" instead of a rod, and the man on
+    // patrol walks the road behind them. The rods stand rather than lie
+    // because an entry only carries a Y rotation.
+    { src: S('Fishing Stand'), x: -6.6, y: 0, z: -8.6, rotY: 3.4, fitMaxDim: 1.9, solid: true },
+    { src: ROD_I, x: -5.7, y: 0, z: -8.2, rotY: 0.4, fitMaxDim: 1.5, pickable: true },
+    { src: ROD_III, x: -7.5, y: 0, z: -8.9, rotY: 5.4, fitMaxDim: 1.6, pickable: true },
+    // Dressing, deliberately NOT pickable: sitting closer to the approach than
+    // the rods did, they meant walking up and pressing E handed you a fish.
+    { src: FISH('Lure'), x: -6.9, y: 0, z: -7.9, rotY: 1.1, fitMaxDim: 0.3, solid: false },
+    { src: S('Fish'), x: -6.0, y: 0, z: -7.6, rotY: 2.4, fitMaxDim: 0.5, solid: false },
     // Offshore drama: a shark works the bay, a tentacle marks the deep end.
     {
       src: P('Shark'), x: -4, y: -0.65, z: 12, rotY: 1, fitHeight: 0.9, solid: false, clip: 'Idle',
@@ -370,6 +403,7 @@ function fishingVillage(): LevelEntry[] {
     },
     { src: P('Bird'), x: -0.5, y: 0, z: -9.6, rotY: 3, fitHeight: 0.35, clip: 'Idle', solid: false },
     ...fish,
+    ...bayFish,
     ...scatter(
       [
         { src: P('Palm Tree'), height: [4, 6], solid: true },
