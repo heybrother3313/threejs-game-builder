@@ -74,7 +74,7 @@ import {
   isCharging,
   isReeling,
   reelIn,
-  setFishRest,
+  setFlopWeight,
   startReel,
   takeCatch,
   tryHook,
@@ -1192,8 +1192,8 @@ withSystem(PlatformSlipSystem)
           reelSeconds = Math.min(4, Math.max(0.2, s));
           return reelSeconds;
         },
-        /** How high a landed fish sits, as a fraction of its half-depth. */
-        setFishRest,
+        /** How much of the flop animation to play, 0..1. Lower = less air. */
+        setFlopWeight,
         setHeading: (h: number) => {
           heading = h;
         },

@@ -359,29 +359,38 @@ let hookedName: string | null = null;
 let hooked: {
   pivot: THREE.Group;
   mixer: THREE.AnimationMixer;
+  action: THREE.AnimationAction;
   /** One loop of the flop, so the landing can be counted in flops. */
   flopSeconds: number;
-  /** How far its belly sits below the mouth when it lies flat. */
-  halfHeight: number;
+  /**
+   * How far below the pivot the fish's lowest point ever gets while flopping.
+   *
+   * MEASURED, by sampling the clip and watching the bones — which follow the
+   * animation, unlike a Box3, which reports the bind pose and so cannot see
+   * the motion at all. Seat the pivot this far up and the bottom of the flop
+   * just brushes the sand instead of hovering over it.
+   */
+  flopDip: number;
   /** How far the body reaches below the mouth when it hangs nose-up. */
   bodyLength: number;
 } | null = null;
 
 /**
- * How much of the fish's half-depth counts as "belly".
+ * How much of the flop to actually play, 0..1.
  *
- * This has to be a dialled number rather than a measured one. Box3 on a
- * skinned mesh reports the BIND pose, so measuring says the fish rests exactly
- * on the sand while the Out_Of_Water pose is visibly holding it above — the
- * measurement cannot see the animation that causes the problem. So: one knob,
- * used for both where it settles and how far it may sink, tunable live via
- * __game.setFishRest(f). Lower sits it deeper.
+ * The clip is authored for a fish thrashing in open space and swings the
+ * skeleton through more than a body length of vertical travel. At full weight
+ * on a 0.95m fish that is over a metre of air, which reads as hovering however
+ * carefully the thing is seated — seating cannot fix a fish that spends most
+ * of the cycle off the ground. Blending the action against the bind pose keeps
+ * the motion and cuts the excursion. Tunable via __game.setFlopWeight(w).
  */
-let fishRest = 0.7;
+let flopWeight = 0.5;
 
-export function setFishRest(f: number): number {
-  fishRest = Math.min(1.5, Math.max(0.05, f));
-  return fishRest;
+export function setFlopWeight(w: number): number {
+  flopWeight = Math.min(1, Math.max(0.05, w));
+  if (hooked) hooked.action.setEffectiveWeight(flopWeight);
+  return flopWeight;
 }
 let caughtReady: string | null = null;
 
@@ -457,14 +466,21 @@ async function attachFish(name: string) {
     const clips = animationsFor(src);
     // Clip names come through namespaced ("Fish_Armature|Out_Of_Water").
     const clip = clips.find((c) => c.name.split('|').pop() === OUT_OF_WATER) ?? clips[0] ?? null;
-    if (clip) mixer.clipAction(clip).play();
+    if (!clip) return;
+    const action = mixer.clipAction(clip);
+    // Damped against the bind pose: the clip is authored for open space and
+    // throws the body further than a fish on sand ever would.
+    action.setEffectiveWeight(flopWeight);
+    action.play();
+    mixer.update(0);
     hooked = {
       pivot,
       mixer,
-      flopSeconds: clip?.duration || 0.8,
-      // The pivot is the mouth, so the body straddles it. Lying flat, that
-      // puts half the fish under the sand unless it is lifted.
-      halfHeight: Number.isFinite(size.y) ? ((size.y * model.scale.y) / 2) * fishRest : 0.1,
+      action,
+      flopSeconds: clip.duration || 0.8,
+      // Measured off the damped motion, so the seat matches what will be
+      // played rather than what the clip would do at full weight.
+      flopDip: measureFlopDip(pivot, mixer, action, clip),
       // Nose-up, the whole body hangs BELOW the mouth — which is why it used
       // to sink through the sand on the way down, while still pitched.
       bodyLength: Number.isFinite(scaled.max.z - scaled.min.z) ? scaled.max.z - scaled.min.z : 0.5,
@@ -490,19 +506,81 @@ function seatFish() {
   hooked.pivot.rotation.set(-Math.PI / 2, 0, 0);
 }
 
+const dipScratch = new THREE.Vector3();
+
+/**
+ * How far below its pivot the fish ever reaches over one flop.
+ *
+ * Runs the clip through in steps and, at each, asks the SKELETON where it is —
+ * bones move with the animation, where a bounding box does not. That is the
+ * whole reason this exists: every previous attempt measured a Box3, which
+ * reports the bind pose, so it could not see the motion causing the problem.
+ *
+ * The lowest bone sits inside the body, so the belly hangs lower still; that
+ * gap is taken from the bind pose, the one place where box and bones describe
+ * the same shape. Sixteen poses on a six-bone rig, once per catch.
+ */
+function measureFlopDip(
+  pivot: THREE.Group,
+  mixer: THREE.AnimationMixer,
+  action: THREE.AnimationAction,
+  clip: THREE.AnimationClip
+): number {
+  const lowestBone = () => {
+    let m = Infinity;
+    pivot.traverse((o) => {
+      if ((o as THREE.Bone).isBone) m = Math.min(m, o.getWorldPosition(dipScratch).y);
+    });
+    return m;
+  };
+  const lowestSkin = () => {
+    let m = Infinity;
+    pivot.traverse((o) => {
+      const mesh = o as THREE.Mesh;
+      if (!mesh.isMesh || !mesh.geometry) return;
+      mesh.geometry.computeBoundingBox();
+      const bb = mesh.geometry.boundingBox;
+      if (!bb) return;
+      dipScratch.set(0, bb.min.y, 0);
+      mesh.localToWorld(dipScratch);
+      m = Math.min(m, dipScratch.y);
+    });
+    return m;
+  };
+
+  pivot.updateMatrixWorld(true);
+  const bindBone = lowestBone();
+  const bindSkin = lowestSkin();
+  const belly = Number.isFinite(bindBone) && Number.isFinite(bindSkin) ? bindBone - bindSkin : 0;
+
+  const was = action.time;
+  let dip = 0;
+  const STEPS = 16;
+  for (let i = 0; i < STEPS; i++) {
+    action.time = (i / STEPS) * clip.duration;
+    mixer.update(0);
+    pivot.updateMatrixWorld(true);
+    const b = lowestBone();
+    if (Number.isFinite(b)) dip = Math.min(dip, b - pivot.position.y);
+  }
+  action.time = was;
+  mixer.update(0);
+  return Math.max(0, -dip + belly);
+}
+
 /**
  * Never let the fish through the sand, at any angle it happens to be at.
  *
  * The pivot is the MOUTH, so what hangs below it depends entirely on pitch:
- * a whole body length when it is nose-up on the line, only its belly once it
- * is flat. Clamping against a single number was what let it vanish through
- * the ground partway down.
+ * a whole body length when it is nose-up on the line, only the flop's reach
+ * once it is flat. Clamping against a single number was what let it vanish
+ * through the ground partway down.
  */
 function keepAboveGround() {
   if (!hooked) return;
   const p = hooked.pivot;
   const pitch = Math.abs(p.rotation.x);
-  const below = hooked.bodyLength * Math.sin(pitch) + hooked.halfHeight * Math.cos(pitch);
+  const below = hooked.bodyLength * Math.sin(pitch) + hooked.flopDip * Math.cos(pitch);
   const floor = restHeight(p.position.x, p.position.z) + below;
   if (p.position.y < floor) p.position.y = floor;
 }
@@ -553,7 +631,8 @@ export function fishingDebug() {
     pivotY: hooked ? +hooked.pivot.position.y.toFixed(2) : null,
     pitch: hooked ? +hooked.pivot.rotation.x.toFixed(2) : null,
     target: +fishTo.y.toFixed(2),
-    halfHeight: hooked ? +hooked.halfHeight.toFixed(3) : null,
+    flopDip: hooked ? +hooked.flopDip.toFixed(3) : null,
+    flopWeight,
     bodyLength: hooked ? +hooked.bodyLength.toFixed(3) : null,
   };
 }
@@ -659,7 +738,7 @@ export function updateFishing(dt: number, tip: THREE.Vector3 | null, scene: THRE
       if (name && hooked) {
         fishFrom.copy(hooked.pivot.position);
         // Straight down from the rod tip: that is the sand in front of you.
-        fishTo.set(tip.x, restHeight(tip.x, tip.z) + hooked.halfHeight, tip.z);
+        fishTo.set(tip.x, restHeight(tip.x, tip.z) + hooked.flopDip, tip.z);
         fishPhase = 'dropping';
         fishT = 0;
         cast = null;
