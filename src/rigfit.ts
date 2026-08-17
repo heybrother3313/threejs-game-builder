@@ -91,13 +91,13 @@ function groupOf(src: string) {
 
 /** Sensible starting pose for the kind of thing being fitted. */
 function preferredClip(): string {
-  // A blade is judged mid-swing, a thrown thing during the wind-up (Punch is
-  // the closest thing these rigs have to one), and a rod just hangs there.
-  const g = groupOf(current.weapon);
-  const want =
-    g === 'Melee' ? ['Weapon', 'Punch']
-    : g === 'Thrown' ? ['Punch', 'Weapon', 'Idle']
-    : ['Idle', 'Walk'];
+  // Always Weapon. I defaulted thrown items to Punch and rods to Idle on the
+  // theory that you judge each against the motion it belongs to — but the game
+  // plays the Weapon clip whenever the character is holding ANYTHING, so that
+  // is the pose the fit has to look right in. Fitting against Punch tuned it
+  // for a pose the player never sees while armed. The dropdown still switches
+  // freely; only the default changed.
+  const want = ['Weapon', 'Punch', 'Idle'];
   for (const w of want) {
     const hit = clips.find((a) => a.name.split('|').includes(w));
     if (hit) return hit.name;
@@ -488,6 +488,18 @@ function tick() {
 function saveFit(character: string, weapon: string, fit: Fit, allWeapons: boolean) {
   const fits = localFits();
   const c = character.split('/').pop();
-  fits[allWeapons ? `${c}|*` : `${c}|${weapon.split('/').pop()}`] = fit;
+  if (allWeapons) {
+    // Write every key, not just the `|*` wildcard.
+    //
+    // fitFor prefers an exact Character|Weapon match and only falls back to
+    // the wildcard, and the shipped file now carries an exact entry for every
+    // pair. So a wildcard save was silently shadowed by the seeded specifics —
+    // the button reported success and changed nothing. Being explicit means
+    // "save for all" survives whatever the shipped defaults happen to contain.
+    fits[`${c}|*`] = fit;
+    for (const w of WEAPONS) fits[`${c}|${w.src.split('/').pop()}`] = fit;
+  } else {
+    fits[`${c}|${weapon.split('/').pop()}`] = fit;
+  }
   localStorage.setItem(KEY, JSON.stringify(fits));
 }
