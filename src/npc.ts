@@ -1,7 +1,9 @@
 import * as THREE from 'three';
 import type { State } from 'vibegame';
 import { grantLoot, setLootTrayVisible, spendLoot } from './loot';
-import { FISTS, blastFlash, explode, isBomb } from './weapons';
+import {
+  FISTS, attachWeaponToHand, blastFlash, explode, isBomb, weaponSrc,
+} from './weapons';
 import {
   findClip, groundHeightAt, instantiate, loadModel, persist, placed, removeItem,
   syncMarker, type PlacedItem,
@@ -115,11 +117,23 @@ type Runtime = {
    * session that earned it.
    */
   provoked: boolean;
+  /** The weapon model hanging in this one's hand, so death can take it away. */
+  heldWeapon?: THREE.Object3D;
   /** Fetch quest delivered; wantsItem stops matching. */
   rewarded: boolean;
 };
 
 const rt = new WeakMap<PlacedItem, Runtime>();
+
+/**
+ * Models that already hold a weapon in their mesh. Attaching one to these
+ * gives them two, and the built-in one can't be taken away on death because
+ * it's part of the skin — so they drop a matching pickup instead.
+ */
+const ARMED_BY_DEFAULT = /Orc|Blue Demon|Mushroom King|Wizard|Ninja|Tribal/;
+function comesArmed(src: string) {
+  return ARMED_BY_DEFAULT.test(src.split('/').pop() ?? '');
+}
 
 /** Clip names differ per pack; try the plausible ones in order. */
 const CLIPS: Record<string, string[]> = {
@@ -409,6 +423,15 @@ export function npcRuntime(item: PlacedItem): Runtime {
       rewarded: false,
     };
     rt.set(item, r);
+    // Put its weapon in its hand — but only if it hasn't already got one.
+    // Orc, Blue Demon and Mushroom King ship holding a weapon as part of the
+    // mesh; attaching a second gives them two.
+    const held = r;
+    if (cfg.weapon && (item.clips?.length ?? 0) > 0 && !comesArmed(item.entry.src)) {
+      void attachWeaponToHand(item.obj, weaponSrc(cfg.weapon), 0.7).then((m) => {
+        if (m) held.heldWeapon = m;
+      });
+    }
   }
   return r;
 }
@@ -535,15 +558,24 @@ export function damageNpc(state: State, item: PlacedItem, amount: number, fromX:
       if (state.exists(e)) state.destroyEntity(e);
     }
     item.solidEs = [];
-    // Its weapon falls where it stood — not popped like loot, because you
-    // want to see whose it was.
+    // Take the weapon out of its hand and lay it on the ground there. Not
+    // popped like loot: you want to see whose it was, at the spot it fell.
     const weapon = item.entry.npc?.weapon;
     if (weapon) {
+      const hand = r.heldWeapon;
+      const drop = new THREE.Vector3();
+      if (hand) {
+        hand.getWorldPosition(drop);
+        hand.parent?.remove(hand);
+        r.heldWeapon = undefined;
+      } else {
+        drop.set(item.obj.position.x + 0.5, 0, item.obj.position.z + 0.3);
+      }
       void instantiate(state, {
-        src: weapon.includes('/') ? weapon : `/models/quaternius-pirate/${weapon}.glb`,
-        x: item.obj.position.x + 0.5,
+        src: weaponSrc(weapon),
+        x: +drop.x.toFixed(2),
         y: 0,
-        z: item.obj.position.z + 0.3,
+        z: +drop.z.toFixed(2),
         rotY: Math.random() * Math.PI * 2,
         fitHeight: 0.8,
         solid: false,

@@ -13,6 +13,77 @@ import { PlacedItem, instantiate, placed, removeItem } from './level';
 
 export type Blade = { name: string; damage: number; reach: number };
 
+/**
+ * Find the right hand on a rig.
+ *
+ * These packs have no bone called "hand" — the fingers hang straight off the
+ * forearm — so the hand is whatever the finger bones share as a parent, with
+ * the forearm as the fallback.
+ */
+export function findHandBone(root: THREE.Object3D): THREE.Object3D | null {
+  let finger: THREE.Object3D | null = null;
+  let forearm: THREE.Object3D | null = null;
+  root.traverse((o) => {
+    if (!finger && (o.name === 'Middle1R' || o.name === 'Index1R')) finger = o;
+    if (!forearm && /^(LowerArmR|HandR|ForearmR)$/i.test(o.name)) forearm = o;
+  });
+  const f = finger as THREE.Object3D | null;
+  return f?.parent ?? forearm ?? null;
+}
+
+/**
+ * Hang a weapon model in a rig's hand and return it.
+ *
+ * The scale correction matters: a hand bone deep in a rig carries the whole
+ * chain's accumulated scale, so parenting a world-sized model to it produced a
+ * forty-metre axe. Ask the bone what it is scaled by and divide it out, and
+ * the length below is real metres.
+ */
+export async function attachWeaponToHand(
+  root: THREE.Object3D,
+  src: string,
+  length = 0.75
+): Promise<THREE.Object3D | null> {
+  const hand = findHandBone(root);
+  if (!hand) return null;
+  const gltf = await loadWeaponModel(src);
+  if (!gltf) return null;
+  const model = gltf.clone(true);
+  hand.updateWorldMatrix(true, false);
+  const boneScale = new THREE.Vector3();
+  hand.getWorldScale(boneScale);
+  const size = new THREE.Box3().setFromObject(model).getSize(new THREE.Vector3());
+  const inv = 1 / Math.max(boneScale.x, 1e-6);
+  model.scale.setScalar((length / Math.max(size.x, size.y, size.z, 1e-3)) * inv);
+  model.position.set(0, 0.1 * inv, 0);
+  model.rotation.set(Math.PI / 2, 0, 0);
+  model.traverse((o) => {
+    const m = o as THREE.Mesh;
+    if (m.isMesh) m.castShadow = true;
+  });
+  hand.add(model);
+  return model;
+}
+
+const weaponCache = new Map<string, THREE.Group>();
+async function loadWeaponModel(src: string): Promise<THREE.Group | null> {
+  const cached = weaponCache.get(src);
+  if (cached) return cached;
+  try {
+    const { GLTFLoader } = await import('three/examples/jsm/loaders/GLTFLoader.js');
+    const gltf = await new GLTFLoader().loadAsync(src);
+    weaponCache.set(src, gltf.scene);
+    return gltf.scene;
+  } catch {
+    return null;
+  }
+}
+
+/** Full path for a weapon named bare, e.g. "Axe". */
+export function weaponSrc(name: string) {
+  return name.includes('/') ? name : `/models/quaternius-pirate/${name}.glb`;
+}
+
 const BLADES: Record<string, Blade> = {
   Cutlass: { name: 'Cutlass', damage: 26, reach: 2.9 },
   Sword: { name: 'Sword', damage: 24, reach: 2.8 },

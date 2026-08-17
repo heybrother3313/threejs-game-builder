@@ -31,10 +31,13 @@ import { Transform, WorldTransform } from 'vibegame/transforms';
  *
  * A player character needs the full clip set the game drives — Idle, Walk,
  * Run, Jump, Jump_Idle, Jump_Land, Death, Punch, Weapon, HitReact — and a
- * right-hand rig to hang a weapon on. Every model in the Ultimate Monsters
- * pack was loaded and checked; these seven pass. Alien, Fish, Yeti and Cactoro
- * look the part but ship no Punch, no Weapon and no hand bones, so they would
- * stand there empty-handed when you swing.
+ * right-hand rig to hang a weapon on.
+ *
+ * The pack ships SOME creatures twice, and the copies are not equal: the plain
+ * name is a nine-clip export with Bite_Front and no hands, while the
+ * hash-suffixed duplicate is the full fourteen-clip rig. Alien, Fish and Yeti
+ * are only playable as their suffixed versions — which is why they looked
+ * unusable at first glance and are listed with the ugly filenames here.
  */
 export const PLAYER_CHOICES: { label: string; src: string }[] = [
   { label: 'Frog', src: '/models/ultimate-monsters/Frog.glb' },
@@ -44,6 +47,9 @@ export const PLAYER_CHOICES: { label: string; src: string }[] = [
   { label: 'Blue Demon', src: '/models/ultimate-monsters/Blue Demon.glb' },
   { label: 'Bunny', src: '/models/ultimate-monsters/Bunny.glb' },
   { label: 'Mushroom King', src: '/models/ultimate-monsters/Mushroom King.glb' },
+  { label: 'Alien', src: '/models/ultimate-monsters/Alien-RRliSQBP7r.glb' },
+  { label: 'Fish', src: '/models/ultimate-monsters/Fish-ypEYhCImAB.glb' },
+  { label: 'Yeti', src: '/models/ultimate-monsters/Yeti-ceRHrn8HHE.glb' },
 ];
 
 const PLAYER_KEY = 'sandbox-player-model';
