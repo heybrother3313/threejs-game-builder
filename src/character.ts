@@ -4,7 +4,7 @@ import type { State } from 'vibegame';
 import { AnimatedCharacter } from 'vibegame/animation';
 import { Renderer, getScene } from 'vibegame/rendering';
 import { Body, CharacterController } from 'vibegame/physics';
-import { findHandBone } from './weapons';
+import { attachWeaponToHand, fitFor } from './weapons';
 import { Transform, WorldTransform } from 'vibegame/transforms';
 
 /**
@@ -289,15 +289,6 @@ function play(seg: string) {
   current = next;
 }
 
-/**
- * The weapon hand — LEFT. The "Weapon" clip these rigs ship animates the left
- * arm; "Punch" is the right-handed one. Putting the weapon in the right hand
- * left it hanging still while the other arm swung.
- */
-function findHand(): THREE.Object3D | null {
-  return player ? findHandBone(player, 'L') : null;
-}
-
 let heldWeapon: THREE.Object3D | null = null;
 let armed = false;
 
@@ -311,39 +302,24 @@ let armed = false;
  * if something is actually in the hand.
  */
 export async function setHeldWeapon(src: string | null) {
-  // A fit saved on the bench wins over the automatic guess.
   if (heldWeapon) {
     heldWeapon.parent?.remove(heldWeapon);
     heldWeapon = null;
   }
   armed = false;
   if (!src || !player) return;
-  const hand = findHand();
-  if (!hand) return;
-  const gltf = await new Promise<{ scene: THREE.Group }>((resolve, reject) =>
-    new GLTFLoader().load(src, resolve, undefined, reject)
+  // Shared with the enemies' attach, and it consults the fits saved on the
+  // Weapon fit bench. This used to be a second copy of the attach logic that
+  // never looked at them — so a weapon fitted by hand still hung wrong in the
+  // player's grip while enemies held theirs correctly.
+  const model = await attachWeaponToHand(
+    player,
+    src,
+    0.75,
+    'L',
+    fitFor(playerModel(), src)
   );
-  const model = gltf.scene;
-  // Undo the bone's accumulated scale. A hand bone deep in a rig carries the
-  // whole chain's scaling — parenting a world-sized model to it produced a
-  // forty-metre axe. Ask the bone what it is scaled by and divide it out, so
-  // the number below is real metres.
-  hand.updateWorldMatrix(true, false);
-  const boneScale = new THREE.Vector3();
-  hand.getWorldScale(boneScale);
-  const box = new THREE.Box3().setFromObject(model);
-  const size = box.getSize(new THREE.Vector3());
-  const WEAPON_LENGTH = 0.75; // metres, roughly forearm to fist plus a blade
-  const s = WEAPON_LENGTH / Math.max(size.x, size.y, size.z, 1e-3) /
-    Math.max(boneScale.x, 1e-6);
-  model.scale.setScalar(s);
-  model.position.set(0, 0.1 / Math.max(boneScale.x, 1e-6), 0);
-  model.rotation.set(Math.PI / 2, 0, 0);
-  model.traverse((o) => {
-    const m = o as THREE.Mesh;
-    if (m.isMesh) m.castShadow = true;
-  });
-  hand.add(model);
+  if (!model) return;
   heldWeapon = model;
   armed = true;
 }

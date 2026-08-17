@@ -1,8 +1,8 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { PLAYER_CHOICES } from './character';
+import { KEY, allFits, fitFor, localFits, type Fit } from './weapons';
 import { findHandBone } from './weapons';
-import shippedFits from './levels/weapon-fits.json';
 
 /**
  * The weapon-fitting bench.
@@ -19,51 +19,6 @@ import shippedFits from './levels/weapon-fits.json';
  * localStorage and are consumed by the attach code, falling back to the
  * automatic guess for anything unfitted.
  */
-
-export type Fit = {
-  bone: string;
-  pos: [number, number, number];
-  rot: [number, number, number];
-  scale: number;
-};
-
-const KEY = 'sandbox-weapon-fits-v1';
-
-/**
- * Fits come from two places: the file committed with the project, and
- * whatever you have saved locally. Local wins, so you can adjust a shipped fit
- * without editing anything — but a fit that only ever lives in localStorage is
- * one cleared browser away from gone, and invisible to everyone else. Export
- * writes the merged set out so it can be committed and become the default.
- */
-function localFits(): Record<string, Fit> {
-  try {
-    return JSON.parse(localStorage.getItem(KEY) ?? '{}') as Record<string, Fit>;
-  } catch {
-    return {};
-  }
-}
-
-function allFits(): Record<string, Fit> {
-  // JSON widens the tuples to number[]; the shape is guaranteed by the export.
-  return { ...(shippedFits as unknown as Record<string, Fit>), ...localFits() };
-}
-
-/** Fit key: one per character+weapon pair, falling back to character-only. */
-function keyFor(character: string, weapon: string) {
-  return `${character.split('/').pop()}|${weapon.split('/').pop()}`;
-}
-
-export function fitFor(character: string, weapon: string): Fit | null {
-  const fits = allFits();
-  return fits[keyFor(character, weapon)] ?? fits[`${character.split('/').pop()}|*`] ?? null;
-}
-
-function saveFit(character: string, weapon: string, fit: Fit, allWeapons: boolean) {
-  const fits = localFits();
-  fits[allWeapons ? `${character.split('/').pop()}|*` : keyFor(character, weapon)] = fit;
-  localStorage.setItem(KEY, JSON.stringify(fits));
-}
 
 /** Melee only. Guns are a different mechanic and none is implemented. */
 const WEAPONS = [
@@ -440,4 +395,12 @@ function tick() {
   mixer?.update(clock?.getDelta() ?? 0.016);
   renderer.render(scene, camera);
   raf = requestAnimationFrame(tick);
+}
+
+/** Persist a fit locally; the committed file stays the shared default. */
+function saveFit(character: string, weapon: string, fit: Fit, allWeapons: boolean) {
+  const fits = localFits();
+  const c = character.split('/').pop();
+  fits[allWeapons ? `${c}|*` : `${c}|${weapon.split('/').pop()}`] = fit;
+  localStorage.setItem(KEY, JSON.stringify(fits));
 }

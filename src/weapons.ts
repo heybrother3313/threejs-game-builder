@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import type { State } from 'vibegame';
 import { PlacedItem, instantiate, placed, removeItem } from './level';
+import shippedFits from './levels/weapon-fits.json';
 
 /**
  * Weapons.
@@ -10,6 +11,47 @@ import { PlacedItem, instantiate, placed, removeItem } from './level';
  * where they land. Nothing here needs authoring — pick up a cutlass and F
  * hits harder, throw a bomb and it explodes. The level format doesn't change.
  */
+
+export type Fit = {
+  bone: string;
+  pos: [number, number, number];
+  rot: [number, number, number];
+  scale: number;
+};
+
+export const KEY = 'sandbox-weapon-fits-v1';
+
+/**
+ * Fits come from two places: the file committed with the project, and
+ * whatever you have saved locally. Local wins, so you can adjust a shipped fit
+ * without editing anything — but a fit that only ever lives in localStorage is
+ * one cleared browser away from gone, and invisible to everyone else. Export
+ * writes the merged set out so it can be committed and become the default.
+ */
+export function localFits(): Record<string, Fit> {
+  try {
+    return JSON.parse(localStorage.getItem(KEY) ?? '{}') as Record<string, Fit>;
+  } catch {
+    return {};
+  }
+}
+
+export function allFits(): Record<string, Fit> {
+  // JSON widens the tuples to number[]; the shape is guaranteed by the export.
+  return { ...(shippedFits as unknown as Record<string, Fit>), ...localFits() };
+}
+
+/** Fit key: one per character+weapon pair, falling back to character-only. */
+function keyFor(character: string, weapon: string) {
+  return `${character.split('/').pop()}|${weapon.split('/').pop()}`;
+}
+
+export function fitFor(character: string, weapon: string): Fit | null {
+  const fits = allFits();
+  return fits[keyFor(character, weapon)] ?? fits[`${character.split('/').pop()}|*`] ?? null;
+}
+
+
 
 export type Blade = { name: string; damage: number; reach: number };
 
@@ -61,7 +103,7 @@ export async function attachWeaponToHand(
   src: string,
   length = 0.75,
   side: 'L' | 'R' = 'L',
-  fit: import('./rigfit').Fit | null = null
+  fit: Fit | null = null
 ): Promise<THREE.Object3D | null> {
   const hand = fit?.bone
     ? (() => { let b: THREE.Object3D | null = null;

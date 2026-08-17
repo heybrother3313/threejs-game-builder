@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import type { State } from 'vibegame';
 import { grantLoot, setLootTrayVisible, spendLoot } from './loot';
 import {
-  FISTS, attachWeaponToHand, blastFlash, explode, isBomb, weaponSrc,
+  FISTS, attachWeaponToHand, blastFlash, explode, fitFor, isBomb, weaponSrc,
 } from './weapons';
 import {
   findClip, groundHeightAt, instantiate, loadModel, persist, placed, removeItem,
@@ -10,7 +10,6 @@ import {
 } from './level';
 import { getScene } from 'vibegame/rendering';
 import { isTriggered, markTriggered } from './objectives';
-import { fitFor } from './rigfit';
 import { ISLAND } from './ground';
 
 /**
