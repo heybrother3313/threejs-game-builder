@@ -248,6 +248,42 @@ window.addEventListener('keydown', (e) => {
   else if (e.code === 'KeyF') wantsThrow = true;
 });
 
+/**
+ * Mouse as a second pair of hands: left click acts (F), right click
+ * interacts (E).
+ *
+ * Fired on RELEASE, and only if the pointer barely travelled. Dragging turns
+ * the camera, and a press-to-act binding would throw, swing or cast every
+ * time you looked around. Build mode keeps the mouse for select and drag.
+ */
+const CLICK_SLOP = 5;
+let mouseDownAt: { x: number; y: number; button: number } | null = null;
+
+const onGameCanvas = (ev: Event) => (ev.target as HTMLElement | null)?.id === 'game-canvas';
+
+window.addEventListener('mousedown', (e) => {
+  mouseDownAt = onGameCanvas(e) ? { x: e.clientX, y: e.clientY, button: e.button } : null;
+});
+
+window.addEventListener('mouseup', (e) => {
+  const down = mouseDownAt;
+  mouseDownAt = null;
+  if (!down || buildMode || down.button !== e.button) return;
+  if (Math.hypot(e.clientX - down.x, e.clientY - down.y) > CLICK_SLOP) return;
+  const code = e.button === 0 ? 'KeyF' : e.button === 2 ? 'KeyE' : null;
+  if (!code) return;
+  // Conversation gets first refusal, exactly as it does for the keys.
+  if (npcKey(code, lastPlayerPos, -Math.sin(heading), -Math.cos(heading))) return;
+  if (code === 'KeyE') wantsGrab = true;
+  else wantsThrow = true;
+});
+
+// Right-click is a game verb now, so it must not also open the browser menu
+// over the scene.
+window.addEventListener('contextmenu', (e) => {
+  if (!buildMode && onGameCanvas(e)) e.preventDefault();
+});
+
 /** #rrggbb for a packed ui32 colour, so respawns keep the original look. */
 const hexColor = (c: number) => `#${(c >>> 0).toString(16).padStart(6, '0')}`;
 
