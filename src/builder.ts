@@ -1378,7 +1378,20 @@ function onPointerMove(ev: PointerEvent) {
   }
 }
 
+/**
+ * True when a pointer event landed on the game itself rather than on a panel.
+ *
+ * The builder's pointer handlers are bound to the window, so dragging a slider
+ * in a panel also orbited the scene behind it — the camera moved while you
+ * were trying to set a number. A drag has to START on the canvas to count;
+ * once it has, wandering over the UI mid-drag is fine.
+ */
+function onGameCanvas(ev: PointerEvent) {
+  return (ev.target as HTMLElement | null)?.id === 'game-canvas';
+}
+
 function onPointerDown(ev: PointerEvent) {
+  if (!onGameCanvas(ev)) return;
   if (!buildMode || ev.button !== 0) return;
   const target = ev.target as HTMLElement;
   // Any builder chrome swallows the click — otherwise clicking the NPC panel

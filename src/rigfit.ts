@@ -80,6 +80,17 @@ let clock: THREE.Clock | null = null;
 let raf = 0;
 let current = { character: PLAYER_CHOICES[0].src, weapon: WEAPONS[0].src };
 let fit: Fit = { bone: '', pos: [0, 0.1, 0], rot: [Math.PI / 2, 0, 0], scale: 0.75 };
+/** Playback controls: a swing at full speed is too quick to fit against. */
+let playing = true;
+let speed = 0.35;
+
+function applySpeed() {
+  if (mixer) mixer.timeScale = playing ? speed : 0;
+  const v = el?.querySelector('#rf-speedv');
+  if (v) v.textContent = playing ? `${speed.toFixed(2)}x` : 'held';
+  const s = el?.querySelector('#rf-speed') as HTMLInputElement | null;
+  if (s) s.value = String(speed);
+}
 
 export function isRigFitOpen() {
   // getComputedStyle, not the inline value: the stylesheet hides this panel by
@@ -164,11 +175,17 @@ function ensure() {
     <label>Length (m)</label>
     <div class="row"><input type="range" id="rf-s" min="0.2" max="2" step="0.01">
     <span class="v" id="rf-sv"></span></div>
+    <label>Animation</label>
+    <div class="row">
+      <button id="rf-play" style="flex:0 0 74px">Pause</button>
+      <input type="range" id="rf-speed" min="0" max="1" step="0.05">
+      <span class="v" id="rf-speedv"></span>
+    </div>
     <div class="btns">
       <button id="rf-save" class="accent">Save</button>
       <button id="rf-all">Save for all weapons</button>
     </div>
-    <div class="note">Plays the Weapon clip on a loop — judge it moving, not at rest.</div>
+    <div class="note">Scrub the speed to zero to hold a pose, then fit against it.</div>
   `;
   document.body.appendChild(el);
 
@@ -213,6 +230,15 @@ function ensure() {
     fit.scale = parseFloat((e.target as HTMLInputElement).value);
     apply();
   });
+  on('#rf-play', 'click', () => {
+    playing = !playing;
+    (el!.querySelector('#rf-play') as HTMLElement).textContent = playing ? 'Pause' : 'Play';
+    applySpeed();
+  });
+  on('#rf-speed', 'input', (e) => {
+    speed = parseFloat((e.target as HTMLInputElement).value);
+    applySpeed();
+  });
   on('#rf-save', 'click', () => {
     saveFit(current.character, current.weapon, fit, false);
     flash('Saved for this pair');
@@ -250,6 +276,7 @@ async function load() {
     gltf.animations.find((a) => a.name.split('|').includes('Weapon')) ??
     gltf.animations.find((a) => a.name.split('|').includes('Idle'));
   if (clip) mixer.clipAction(clip).play();
+  applySpeed();
 
   // Bone list, hand first so the sensible default is preselected.
   const bones: string[] = [];
