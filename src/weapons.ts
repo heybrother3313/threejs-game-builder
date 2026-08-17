@@ -38,6 +38,16 @@ export function findHandBone(root: THREE.Object3D, side: 'L' | 'R' = 'L'): THREE
   return f?.parent ?? forearm ?? null;
 }
 
+/** A finger base on the given side, which marks where the fist is. */
+function findFingerBone(root: THREE.Object3D, side: 'L' | 'R'): THREE.Object3D | null {
+  let found: THREE.Object3D | null = null;
+  const names = [`Middle1${side}`, `Index1${side}`, `Thumb1${side}`];
+  root.traverse((o) => {
+    if (!found && names.includes(o.name)) found = o;
+  });
+  return found;
+}
+
 /**
  * Hang a weapon model in a rig's hand and return it.
  *
@@ -63,7 +73,22 @@ export async function attachWeaponToHand(
   const size = new THREE.Box3().setFromObject(model).getSize(new THREE.Vector3());
   const inv = 1 / Math.max(boneScale.x, 1e-6);
   model.scale.setScalar((length / Math.max(size.x, size.y, size.z, 1e-3)) * inv);
-  model.position.set(0, 0.1 * inv, 0);
+  // Sit it in the FIST, not at the bone's origin.
+  //
+  // On these rigs the fingers hang straight off the forearm, so the bone we
+  // attach to starts at the elbow — placing the weapon at its origin gripped
+  // the character's wrist. The finger bones are where the hand actually is, so
+  // ask them: take a finger's position in this bone's local space and put the
+  // weapon there, nudged a little further along the same direction to reach
+  // the middle of the grip.
+  let grip = new THREE.Vector3(0, 0.1 * inv, 0);
+  const finger = findFingerBone(root, side);
+  if (finger) {
+    finger.updateWorldMatrix(true, false);
+    const local = hand.worldToLocal(finger.getWorldPosition(new THREE.Vector3()));
+    if (local.length() > 1e-4) grip = local.multiplyScalar(1.35);
+  }
+  model.position.copy(grip);
   model.rotation.set(Math.PI / 2, 0, 0);
   model.traverse((o) => {
     const m = o as THREE.Mesh;
