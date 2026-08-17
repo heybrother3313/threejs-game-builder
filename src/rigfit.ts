@@ -1,7 +1,16 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { PLAYER_CHOICES } from './character';
-import { KEY, WEAPONS, WEAPON_GROUPS, allFits, fitFor, localFits, type Fit } from './weapons';
+import {
+  KEY,
+  WEAPONS,
+  WEAPON_GROUPS,
+  allFits,
+  fitFor,
+  localFits,
+  type Fit,
+  type FitPose,
+} from './weapons';
 import { findHandBone } from './weapons';
 
 /**
@@ -263,7 +272,12 @@ function ensure() {
   });
   on('#rf-clip', 'change', (e) => {
     clipPinned = true;
+    const before = poseBucket();
     playClip((e.target as HTMLSelectElement).value);
+    // Crossing between carrying and casting means a different fit is now
+    // under the sliders; load it rather than editing one while watching the
+    // other. Within a bucket (Idle → Walk) nothing changes.
+    if (poseBucket() !== before) loadFitForPose();
   });
   on('#rf-bone', 'change', (e) => {
     fit.bone = (e.target as HTMLSelectElement).value;
@@ -302,12 +316,16 @@ function ensure() {
     flash('Downloaded — drop it in src/levels/');
   });
   on('#rf-save', 'click', () => {
-    saveFit(current.character, current.weapon, fit, false);
-    flash('Saved for this pair');
+    const pose = poseBucket();
+    saveFit(current.character, current.weapon, fit, false, pose);
+    // Name the pose: the same pair now holds two fits, and saving the carry
+    // one while previewing the swing is the easy mistake.
+    flash(`Saved for this pair — ${pose === 'Weapon' ? 'casting' : 'carrying'}`);
   });
   on('#rf-all', 'click', () => {
-    saveFit(current.character, current.weapon, fit, true);
-    flash('Saved for every weapon');
+    const pose = poseBucket();
+    saveFit(current.character, current.weapon, fit, true, pose);
+    flash(`Saved for every weapon — ${pose === 'Weapon' ? 'casting' : 'carrying'}`);
   });
   el.addEventListener('keydown', (ev) => ev.stopPropagation());
   el.style.display = 'none';
@@ -355,7 +373,9 @@ async function load() {
   const bones: string[] = [];
   rig.traverse((o) => { if ((o as THREE.Bone).isBone) bones.push(o.name); });
   const auto = findHandBone(rig, 'L');
-  const saved = fitFor(current.character, current.weapon);
+  // Load the fit for the pose being previewed, so switching Idle/Weapon shows
+  // that pose's numbers rather than editing one while looking at the other.
+  const saved = fitFor(current.character, current.weapon, poseBucket());
   fit = saved
     ? { ...saved, pos: [...saved.pos], rot: [...saved.rot] }
     : { bone: auto?.name ?? bones[0] ?? '', pos: [0, 0.1, 0], rot: [Math.PI / 2, 0, 0], scale: 0.75 };
@@ -363,6 +383,21 @@ async function load() {
   sel.innerHTML = bones
     .map((b) => `<option value="${b}"${b === fit.bone ? ' selected' : ''}>${b}</option>`)
     .join('');
+  syncInputs();
+  reattach();
+}
+
+/**
+ * Re-read the fit for whichever pose is now previewed.
+ *
+ * A pose with nothing authored yet falls back to the pair's existing fit, so
+ * you start from what the game currently uses and adjust from there rather
+ * than from a default that has never been looked at.
+ */
+function loadFitForPose() {
+  const saved = fitFor(current.character, current.weapon, poseBucket());
+  if (!saved) return;
+  fit = { ...saved, pos: [...saved.pos], rot: [...saved.rot] };
   syncInputs();
   reattach();
 }
@@ -452,9 +487,27 @@ function tick() {
 }
 
 /** Persist a fit locally; the committed file stays the shared default. */
-function saveFit(character: string, weapon: string, fit: Fit, allWeapons: boolean) {
+/**
+ * Which fit the pose you are previewing belongs to.
+ *
+ * Only the cast swing gets its own; idle, walk, run and jump all read as
+ * carrying the thing, so they share one. Fitting against Walk and fitting
+ * against Idle are the same job.
+ */
+function poseBucket(): FitPose {
+  return clipName.split('|').includes('Weapon') ? 'Weapon' : 'Idle';
+}
+
+function saveFit(
+  character: string,
+  weapon: string,
+  fit: Fit,
+  allWeapons: boolean,
+  pose: FitPose
+) {
   const fits = localFits();
   const c = character.split('/').pop();
+  const sfx = `|${pose}`;
   if (allWeapons) {
     // Write every key, not just the `|*` wildcard.
     //
@@ -463,10 +516,10 @@ function saveFit(character: string, weapon: string, fit: Fit, allWeapons: boolea
     // pair. So a wildcard save was silently shadowed by the seeded specifics —
     // the button reported success and changed nothing. Being explicit means
     // "save for all" survives whatever the shipped defaults happen to contain.
-    fits[`${c}|*`] = fit;
-    for (const w of WEAPONS) fits[`${c}|${w.src.split('/').pop()}`] = fit;
+    fits[`${c}|*${sfx}`] = fit;
+    for (const w of WEAPONS) fits[`${c}|${w.src.split('/').pop()}${sfx}`] = fit;
   } else {
-    fits[`${c}|${weapon.split('/').pop()}`] = fit;
+    fits[`${c}|${weapon.split('/').pop()}${sfx}`] = fit;
   }
   localStorage.setItem(KEY, JSON.stringify(fits));
 }

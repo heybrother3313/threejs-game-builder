@@ -4,7 +4,7 @@ import type { State } from 'vibegame';
 import { AnimatedCharacter } from 'vibegame/animation';
 import { Renderer, getScene } from 'vibegame/rendering';
 import { Body, CharacterController } from 'vibegame/physics';
-import { attachWeaponToHand, fitFor } from './weapons';
+import { applyFit, attachWeaponToHand, fitFor, type Fit, type FitPose } from './weapons';
 import { Transform, WorldTransform } from 'vibegame/transforms';
 
 /**
@@ -365,11 +365,41 @@ export async function setHeldWeapon(src: string | null) {
     src,
     0.75,
     'L',
-    fitFor(playerModel(), src)
+    fitFor(playerModel(), src, 'Idle')
   );
   if (!model) return;
   heldWeapon = model;
   armed = true;
+  // Both poses resolved once, here, rather than per frame: the lookup walks a
+  // fallback chain and merges localStorage over the shipped file.
+  heldFits = {
+    Idle: fitFor(playerModel(), src, 'Idle'),
+    Weapon: fitFor(playerModel(), src, 'Weapon'),
+  };
+  heldPose = 'Idle';
+}
+
+let heldFits: Record<FitPose, Fit | null> = { Idle: null, Weapon: null };
+let heldPose: FitPose = 'Idle';
+
+/**
+ * Swap the held thing between its carry fit and its swing fit.
+ *
+ * A rod tuned for the cast hangs through the floor while you stand there, and
+ * one tuned for standing points the wrong way through the cast. Which pose is
+ * live follows the swing, so walking, running and jumping all get the carry
+ * fit — the swing is the only moment that is not "carrying it".
+ */
+function syncHeldFitPose() {
+  const want: FitPose = swinging ? 'Weapon' : 'Idle';
+  if (want === heldPose || !heldWeapon) return;
+  const fit = heldFits[want];
+  const basis = heldWeapon.userData.fitBasis as { inv: number; baseSize: number } | undefined;
+  heldPose = want;
+  // No authored fit for this pose is normal — it means the pair never needed
+  // one, and whatever is already seated is what it always used.
+  if (!fit || !basis) return;
+  applyFit(heldWeapon, fit, basis.inv, basis.baseSize);
 }
 
 /** Throw a punch. Returns the clip length so combat can time its hit window. */
@@ -474,6 +504,7 @@ export function updateCharacterVisual(state: State, playerEntity: number) {
   const dt = Math.min(clock.getDelta(), 0.05);
   swingT = Math.max(0, swingT - dt);
   if (swingT === 0) swinging = false;
+  syncHeldFitPose();
 
   /*
    * Debounce going airborne.

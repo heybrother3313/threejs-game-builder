@@ -41,14 +41,54 @@ export function allFits(): Record<string, Fit> {
   return { ...(shippedFits as unknown as Record<string, Fit>), ...localFits() };
 }
 
-/** Fit key: one per character+weapon pair, falling back to character-only. */
-function keyFor(character: string, weapon: string) {
-  return `${character.split('/').pop()}|${weapon.split('/').pop()}`;
+/**
+ * The two ways a held thing is seen.
+ *
+ * A blade is only ever looked at mid-swing, so one fit covers it. A rod is
+ * carried through idle, walk, run and jump and swung for four tenths of a
+ * second, and no single transform on the hand bone serves both: tuned for the
+ * cast, the rod hangs through the floor while you stand there. So a fit may
+ * be authored per pose, and 'Idle' means everything that is not the cast.
+ */
+export type FitPose = 'Idle' | 'Weapon';
+
+/** Fit key: character+weapon, optionally per pose, falling back to broader. */
+function keyFor(character: string, weapon: string, pose?: FitPose) {
+  const base = `${character.split('/').pop()}|${weapon.split('/').pop()}`;
+  return pose ? `${base}|${pose}` : base;
 }
 
-export function fitFor(character: string, weapon: string): Fit | null {
+/**
+ * The fit to use, most specific first.
+ *
+ * The fallback matters for compatibility: every shipped fit is stored without
+ * a pose, so an un-authored pose keeps getting exactly what it got before.
+ * Authoring an Idle fit is additive — nothing that already looks right moves.
+ */
+export function fitFor(character: string, weapon: string, pose?: FitPose): Fit | null {
   const fits = allFits();
-  return fits[keyFor(character, weapon)] ?? fits[`${character.split('/').pop()}|*`] ?? null;
+  const c = character.split('/').pop();
+  return (
+    (pose ? fits[keyFor(character, weapon, pose)] : undefined) ??
+    (pose ? fits[`${c}|*|${pose}`] : undefined) ??
+    fits[keyFor(character, weapon)] ??
+    fits[`${c}|*`] ??
+    null
+  );
+}
+
+/**
+ * Seat an already-attached model against a fit.
+ *
+ * Shared with the attach below so switching pose mid-game and hanging the
+ * thing in the first place cannot drift apart. `inv` divides out the hand
+ * bone's accumulated scale and `baseSize` is the model's own longest side,
+ * both measured once at attach and carried on the model.
+ */
+export function applyFit(model: THREE.Object3D, fit: Fit, inv: number, baseSize: number) {
+  model.position.set(fit.pos[0] * inv, fit.pos[1] * inv, fit.pos[2] * inv);
+  model.rotation.set(fit.rot[0], fit.rot[1], fit.rot[2]);
+  model.scale.setScalar((fit.scale / Math.max(baseSize, 1e-3)) * inv);
 }
 
 
@@ -190,6 +230,10 @@ export async function attachWeaponToHand(
   // the middle of the grip.
   let grip = new THREE.Vector3(0, 0.1 * inv, 0);
   let rot = new THREE.Euler(Math.PI / 2, 0, 0);
+  // Carried so a pose switch can re-seat the model without re-measuring a
+  // rig it is already parented to — by then the model's own scale is baked in
+  // and measuring again would compound it.
+  model.userData.fitBasis = { inv, baseSize: Math.max(size.x, size.y, size.z, 1e-3) };
   if (fit) {
     // A human looked at this one and said where it goes. Trust that over any
     // amount of reasoning about bone origins.
