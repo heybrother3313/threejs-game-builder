@@ -33,7 +33,11 @@ const CHARGE_SECONDS = 1.2;
 const LINE_POINTS = 14;
 /** How far the slack line droops, as a fraction of how far it spans. */
 const SAG = 0.16;
-const LURE_RADIUS = 0.07;
+/** The plug from the pack, and how long it hangs. */
+const LURE_SRC = '/models/animated-fish-bundle/Lure-JknXyvHxtD.glb';
+const LURE_SIZE = 0.22;
+/** Stand-in until the model arrives, so the first cast is never empty. */
+const LURE_RADIUS = 0.05;
 
 /** Where the lure hangs off the tip when the line is not out. */
 const STOW_DROP = 0.4;
@@ -75,14 +79,12 @@ function nextBiteDelay(): number {
 }
 
 /** How big a caught fish is drawn, longest side in metres. */
-const FISH_SIZE = 0.5;
-/** How long it hangs off the rod flopping before it goes in the bag. */
-const LANDED_SECONDS = 1.3;
+const FISH_SIZE = 0.95;
 /** Every model in the bundle ships this; it is what a landed fish does. */
 const OUT_OF_WATER = 'Out_Of_Water';
 
 type Cast = {
-  state: 'flying' | 'floating' | 'bite' | 'reeling' | 'landed';
+  state: 'flying' | 'floating' | 'bite' | 'reeling';
   /** Seconds of quiet water left before something takes the lure. */
   biteIn: number;
   /** How long the current bite has been going, against BITE_WINDOW. */
@@ -100,7 +102,7 @@ type Cast = {
 };
 
 let cast: Cast | null = null;
-let lure: THREE.Mesh | null = null;
+let lure: THREE.Group | null = null;
 let line: THREE.Line | null = null;
 let host: THREE.Scene | null = null;
 
@@ -141,15 +143,44 @@ function restHeight(x: number, z: number): number {
   return isOverWater(x, z) ? WATER_Y : islandHeight(x, z);
 }
 
+/**
+ * Swap the stand-in sphere for the real plug once it has loaded.
+ *
+ * The lure has to exist the instant a cast goes out, and a model does not, so
+ * a small sphere holds the spot and the plug replaces it on arrival. Done once
+ * per session; after that the load is cached and the swap is immediate.
+ */
+async function dressLure(holder: THREE.Group) {
+  try {
+    const model = (await loadModel(LURE_SRC)).clone(true);
+    const size = new THREE.Box3().setFromObject(model).getSize(new THREE.Vector3());
+    const longest = Math.max(size.x, size.y, size.z);
+    if (!Number.isFinite(longest) || longest <= 1e-3) return;
+    model.scale.setScalar(LURE_SIZE / longest);
+    model.traverse((o) => {
+      const m = o as THREE.Mesh;
+      if (m.isMesh) m.castShadow = true;
+    });
+    holder.clear();
+    holder.add(model);
+  } catch {
+    /* keep the sphere */
+  }
+}
+
 function ensureVisuals(scene: THREE.Scene) {
   host = scene;
   if (!lure) {
-    lure = new THREE.Mesh(
+    const holder = new THREE.Group();
+    const stand = new THREE.Mesh(
       new THREE.SphereGeometry(LURE_RADIUS, 10, 8),
       new THREE.MeshStandardMaterial({ color: 0xd8342c, roughness: 0.5 })
     );
-    lure.castShadow = true;
-    scene.add(lure);
+    stand.castShadow = true;
+    holder.add(stand);
+    lure = holder;
+    scene.add(holder);
+    void dressLure(holder);
   }
   if (!line) {
     const geo = new THREE.BufferGeometry();
@@ -307,9 +338,38 @@ export function tryHook(): string | null {
  * fish turning up to be looked at is a separate, best-effort thing.
  */
 let hookedName: string | null = null;
-let hooked: { obj: THREE.Object3D; mixer: THREE.AnimationMixer } | null = null;
-let landedT = 0;
+/**
+ * `pivot` has the fish's MOUTH at its origin, so putting the pivot on the lure
+ * hangs the fish off the hook rather than through the middle of its body. The
+ * model sits inside it, shifted back by however far its mouth is from its own
+ * origin.
+ */
+let hooked: {
+  pivot: THREE.Group;
+  mixer: THREE.AnimationMixer;
+  /** One loop of the flop, so the landing can be counted in flops. */
+  flopSeconds: number;
+  /** Half its depth, to sit it ON the sand rather than half through it. */
+  halfHeight: number;
+} | null = null;
 let caughtReady: string | null = null;
+
+/**
+ * The fish's own life, which outlives the cast.
+ *
+ * Once the reel is in, the lure goes back to hanging on the rod and the fish
+ * is on its own: it drops to the sand and flops there. Keeping the two apart
+ * means the line is free the moment the fish is off it, instead of the rod
+ * staying tied up until the animation finishes.
+ */
+let fishPhase: 'none' | 'dropping' | 'flopping' = 'none';
+let fishT = 0;
+const fishFrom = new THREE.Vector3();
+const fishTo = new THREE.Vector3();
+/** How long the drop to the sand takes. */
+const DROP_SECONDS = 0.45;
+/** How many times it flops before you pocket it. */
+const FLOPS = 3;
 
 /**
  * Put the fish on the line.
@@ -348,30 +408,83 @@ async function attachFish(name: string) {
     // An unmeasurable model gives ±Infinity, not zero; scaling by that is NaN
     // and the fish disappears while its mixer happily runs.
     model.scale.setScalar(Number.isFinite(longest) && longest > 1e-3 ? FISH_SIZE / longest : 1);
-    host.add(model);
+
+    // Shift the model inside a pivot so its MOUTH sits at the pivot's origin.
+    // These rigs face +Z — the same assumption the NPC pathing makes when it
+    // aims a walker with atan2(dx, dz) — so the mouth is the front of the box.
+    model.updateMatrixWorld(true);
+    const scaled = new THREE.Box3().setFromObject(model);
+    const centre = scaled.getCenter(new THREE.Vector3());
+    if (Number.isFinite(centre.x) && Number.isFinite(scaled.max.z)) {
+      model.position.set(-centre.x, -centre.y, -scaled.max.z);
+    }
+    const pivot = new THREE.Group();
+    pivot.add(model);
+    host.add(pivot);
+
     const mixer = new THREE.AnimationMixer(model);
     const clips = animationsFor(src);
     // Clip names come through namespaced ("Fish_Armature|Out_Of_Water").
     const clip = clips.find((c) => c.name.split('|').pop() === OUT_OF_WATER) ?? clips[0] ?? null;
     if (clip) mixer.clipAction(clip).play();
-    hooked = { obj: model, mixer };
+    hooked = {
+      pivot,
+      mixer,
+      flopSeconds: clip?.duration || 0.8,
+      // The pivot is the mouth, so the body straddles it. Lying flat, that
+      // puts half the fish under the sand unless it is lifted.
+      halfHeight: Number.isFinite(size.y) ? (size.y * model.scale.y) / 2 : 0.1,
+    };
   } catch {
     /* model missing — the catch still counts */
   }
 }
 
 function clearFish() {
-  if (hooked && host) host.remove(hooked.obj);
+  if (hooked && host) host.remove(hooked.pivot);
   hooked = null;
   hookedName = null;
-  landedT = 0;
+  fishPhase = 'none';
+  fishT = 0;
 }
 
-/** Hangs off the lure, nose up, the way something on a hook does. */
+/** On the hook: mouth at the lure, hanging nose-up the way a caught fish does. */
 function seatFish() {
   if (!hooked || !lure) return;
-  hooked.obj.position.set(lure.position.x, lure.position.y - FISH_SIZE * 0.5, lure.position.z);
-  hooked.obj.rotation.z = Math.PI / 2;
+  hooked.pivot.position.copy(lure.position);
+  // Facing +Z rotated -90° about X points the nose at the sky.
+  hooked.pivot.rotation.set(-Math.PI / 2, 0, 0);
+}
+
+/**
+ * Off the hook: it falls to the sand, flops there, then it's yours.
+ *
+ * Runs whether or not a line is out, because by this point the fish has
+ * nothing to do with the rod any more.
+ */
+function updateLandedFish(dt: number) {
+  if (fishPhase === 'none' || !hooked) return;
+  fishT += dt;
+  if (fishPhase === 'dropping') {
+    const t = Math.min(1, fishT / DROP_SECONDS);
+    // Accelerate downward — it is falling, not being lowered.
+    hooked.pivot.position.lerpVectors(fishFrom, fishTo, t * t);
+    // Nose-up on the line rolls flat as it lands.
+    hooked.pivot.rotation.x = -(Math.PI / 2) * (1 - t);
+    if (t >= 1) {
+      fishPhase = 'flopping';
+      fishT = 0;
+      hooked.pivot.position.copy(fishTo);
+      hooked.pivot.rotation.set(0, 0, 0);
+    }
+    return;
+  }
+  // Flopping: three goes at the clip, which is long enough to read as a fish
+  // out of water rather than a frame of one.
+  if (fishT >= hooked.flopSeconds * FLOPS) {
+    caughtReady = hookedName;
+    clearFish();
+  }
 }
 
 /**
@@ -438,6 +551,7 @@ export function lureSpot(): { x: number; z: number; onWater: boolean; restT: num
 export function updateFishing(dt: number, tip: THREE.Vector3 | null, scene: THREE.Scene | null) {
   updateCharge(dt);
   if (hooked) hooked.mixer.update(dt);
+  updateLandedFish(dt);
   // No rod in the hand: there is nothing to hang a line from, so both meshes
   // go away rather than anchoring themselves to the origin.
   if (!tip) {
@@ -466,30 +580,27 @@ export function updateFishing(dt: number, tip: THREE.Vector3 | null, scene: THRE
     lure.position.copy(cast.pos);
     drawLine(tip, cast.pos);
     seatFish();
-    // An empty line is just done. A fish gets held up first — keyed on having
-    // hooked one, not on its mesh having loaded.
+    // The line is in. If something came with it, hand the fish over to its
+    // own sequence and give the rod straight back — the lure returns to
+    // hanging while the fish gets on with landing.
     if (t >= 1) {
-      if (hookedName) {
-        cast.state = 'landed';
-        landedT = 0;
+      const name = hookedName;
+      if (name && hooked) {
+        fishFrom.copy(hooked.pivot.position);
+        // Straight down from the rod tip: that is the sand in front of you.
+        fishTo.set(tip.x, restHeight(tip.x, tip.z) + hooked.halfHeight, tip.z);
+        fishPhase = 'dropping';
+        fishT = 0;
+        cast = null;
+        showBite(false);
+      } else if (name) {
+        // Nothing to look at, so nothing to wait for.
+        caughtReady = name;
+        clearFish();
+        reelIn();
       } else {
         reelIn();
       }
-    }
-    return;
-  }
-
-  // Landed: it hangs off the rod flopping, and only then goes in the bag.
-  if (cast.state === 'landed') {
-    landedT += dt;
-    cast.pos.set(tip.x, tip.y - STOW_DROP, tip.z);
-    lure.position.copy(cast.pos);
-    drawLine(tip, cast.pos);
-    seatFish();
-    if (landedT >= LANDED_SECONDS) {
-      caughtReady = hookedName;
-      clearFish();
-      reelIn();
     }
     return;
   }
