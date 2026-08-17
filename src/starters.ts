@@ -149,7 +149,6 @@ function pirateCove(): LevelEntry[] {
   ];
   return [
     spawnFlag(0, -1),
-    ...paintBlob('sand', 0, 0, 11, rand),
     { src: P('Dock'), x: 1.5, y: -3.4, z: -10, rotY: 10.9956, scale: 1.494, solid: true },
     // The ship is the way off the island — stand by it and press E.
     { src: P('Ship'), x: -7.5, y: -1.2, z: -12.5, rotY: 0.5, fitHeight: 9, solid: true,
@@ -230,8 +229,7 @@ function jungleOutpost(): LevelEntry[] {
     { x: 9.5, z: 6.5, r: 2 }, { x: 10.3, z: 5.8, r: 2 }, { x: 8.8, z: 7.2, r: 2 }];
   return [
     spawnFlag(0, -7),
-    ...paintBlob('jungle', 0, -1, 12, rand),
-    ...paintBlob('grass', 2, 3, 6, rand),
+
     ...paintRect('road', -1, -8, 1, 6),
     // Gateposts pace the road; passing the second one means you left safety.
     { src: P('Post'), x: -1.4, y: 0, z: -7.5, rotY: 0, fitHeight: 2.4, solid: true },
@@ -344,7 +342,6 @@ function fishingVillage(): LevelEntry[] {
   ];
   return [
     spawnFlag(0, -1),
-    ...paintBlob('sand', 0, -2, 10, rand),
     ...paintRect('road', -8, -6, 8, -6),
     { src: P('Dock'), x: 0, y: -3.4, z: -10, rotY: 10.9956, scale: 1.494, solid: true },
     { src: P('Dock Broken'), x: 8, y: -3.4, z: -9.5, rotY: 10.9956, scale: 1.2, solid: true },
@@ -471,8 +468,7 @@ function monsterArena(): LevelEntry[] {
   }
   return [
     spawnFlag(),
-    ...paintBlob('rock', 0, 0, 10, rand),
-    ...paintBlob('sand', 0, 0, 4, rand),
+
     ...ring, ...foes, ...centre, ...ammo,
     { src: P('Red X'), x: 0, y: 0, z: 8, rotY: 0, fitMaxDim: 1.6, solid: false,
       exitTo: 'town-island', exitLabel: 'Step out to Ketch Harbour' },
@@ -647,8 +643,7 @@ function blackreef(): LevelEntry[] {
   return [
     spawnFlag(0, 17),
     ...paintRect('road', -1, -14, 1, 16),
-    ...paintBlob('sand', 0, 18, 9, rand),
-    ...paintBlob('rock', 0, -13, 10, rand),
+
 
     // ---- 1. the beach: a survivor tells you what this island is ----
     { src: P('Small Ship'), x: -8, y: -0.6, z: 20.5, rotY: 0.6, fitMaxDim: 6, solid: true },

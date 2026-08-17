@@ -111,6 +111,15 @@ export type PlacedItem = {
   exitRing?: THREE.Mesh;
   /** Set while the player is carrying this item. */
   carried?: boolean;
+  /**
+   * Killed. Set by npc.ts, read here so path-walking stops.
+   *
+   * The brain loop skips anything without an npc block, so an ANIMAL with a
+   * patrol path — damageable because it has a rig, but never given a role —
+   * died and went right on walking its route. A flag on the item is the fix
+   * rather than asking npc.ts, which already imports this module.
+   */
+  dead?: boolean;
   /** In-flight throw: velocity plus the height it should land at.
    *  `harmless` marks loot pops, which shouldn't damage bystanders. */
   flight?: { vx: number; vy: number; vz: number; restY: number; harmless?: boolean };
@@ -1197,6 +1206,7 @@ export function updateLevel(state: State, dt: number, playerPos?: THREE.Vector3)
       path.length >= 2 &&
       item.homePos &&
       !item.carried &&
+      !item.dead &&
       !item.flight
     ) {
       const pts = [...path, path[0]];
@@ -1484,6 +1494,24 @@ export function migrateSwimmers(entries: LevelEntry[]) {
   }
 }
 
+/**
+ * Ground-cover paint is obsolete: the island's surface is generated, so tiles
+ * of sand and grass sit under it doing nothing — invisible, still selectable,
+ * still an object each. Roads and clearings still read, so those survive;
+ * everything else is dropped on load rather than carried forever.
+ */
+const PAINT_KEEP = new Set(['road', 'water']);
+
+export function dropRedundantPaint(entries: LevelEntry[]) {
+  const before = entries.length;
+  for (let i = entries.length - 1; i >= 0; i--) {
+    const p = entries[i].paint;
+    if (p && !PAINT_KEEP.has(p)) entries.splice(i, 1);
+  }
+  const dropped = before - entries.length;
+  if (dropped) console.info(`[level] dropped ${dropped} redundant ground tiles`);
+}
+
 export async function loadLevel(state: State) {
   let entries: LevelEntry[] = SEED;
   void placingGround;
@@ -1497,6 +1525,7 @@ export async function loadLevel(state: State) {
     }
   }
   migrateSwimmers(entries);
+  dropRedundantPaint(entries);
   // Terrain first: everything else samples its surface at placement time.
   const terrain = entries.filter((e) => e.groundMesh);
   const rest = entries.filter((e) => !e.groundMesh);

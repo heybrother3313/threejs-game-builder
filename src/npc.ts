@@ -555,6 +555,7 @@ export function damageNpc(state: State, item: PlacedItem, amount: number, fromX:
   drawHealthBar(item);
   if (r.hp <= 0) {
     r.state = 'dead';
+    item.dead = true; // stops level.ts walking the corpse along its path
     r.t = 0;
     play(item, 'death', true);
     // Defeated NPCs stop blocking and drop their loot.

@@ -3,6 +3,7 @@ import type { State } from 'vibegame';
 import {
   LevelEntry,
   instantiate,
+  dropRedundantPaint,
   migrateSwimmers,
   persist,
   placed,
@@ -110,6 +111,7 @@ export async function travelTo(state: State, id: string): Promise<THREE.Vector3 
       if (!item.entry.follow) removeItem(state, item);
     }
     migrateSwimmers(target);
+    dropRedundantPaint(target);
     for (const e of target) {
       await instantiate(state, JSON.parse(JSON.stringify(e)) as LevelEntry);
     }

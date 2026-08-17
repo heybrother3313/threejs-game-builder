@@ -87,6 +87,8 @@ const STATE_CLIP: Record<number, string> = {
   2: 'Jump',
   3: 'Jump_Idle',
   4: 'Jump_Land',
+  /** Not an engine state — ours, for sprinting. */
+  5: 'Run',
 };
 
 let mixer: THREE.AnimationMixer | null = null;
@@ -446,6 +448,9 @@ export function updateCharacterVisual(state: State, playerEntity: number) {
   const speed = Math.hypot(Body.velX[playerEntity], Body.velZ[playerEntity]);
   let raw2 = raw;
   if (grounded && (raw === 2 || raw === 3 || raw === 4)) raw2 = speed > 0.6 ? 1 : 0;
+  // The engine only distinguishes idle from moving; pick Run over Walk from
+  // actual ground speed so a sprint looks like one.
+  if (grounded && raw2 === 1 && speed > 6.5) raw2 = 5;
   const airborne = raw2 === 2 || raw2 === 3 || raw2 === 4;
   airborneT = airborne ? airborneT + dt : 0;
   const st = airborne && airborneT < 0.14 ? groundedState : raw2;

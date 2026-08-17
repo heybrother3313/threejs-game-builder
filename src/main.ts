@@ -148,6 +148,15 @@ let heldEntity: number | null = null;
 let heldSpec: HeldSpec | null = null;
 /** A carried kit prop (GLB), as opposed to a primitive crate. */
 let heldItem: PlacedItem | null = null;
+/** Double-tap-to-run. */
+const RUN_KEYS = new Set(['KeyW', 'ArrowUp', 'KeyS', 'ArrowDown']);
+const RUN_TAP_MS = 320;
+let lastRunTap = 0;
+let lastRunKey = '';
+let running = false;
+/** Sprint multiplier on the player's base speed. */
+const RUN_MULTIPLIER = 1.75;
+
 let wantsGrab = false;
 let wantsThrow = false;
 
@@ -157,11 +166,24 @@ let pendingPunch: { t: number; fx: number; fz: number; blade: Blade } | null = n
 /** Last drawn player position, for input handlers that run outside systems. */
 const lastPlayerPos = new THREE.Vector3();
 
+window.addEventListener('keyup', (e) => {
+  if (RUN_KEYS.has(e.code)) running = false;
+});
+
 window.addEventListener('keydown', (e) => {
   if (e.repeat || buildMode) return;
   // Conversation gets first refusal on keys: E talks to a nearby NPC rather
   // than grabbing, and F answers "follow me" instead of throwing.
   if (npcKey(e.code, lastPlayerPos)) return;
+  // Double-tap forward (or back) to run: two presses inside the window below
+  // latch a sprint that lasts until you let go of the key. Held as a latch
+  // rather than a modifier so it survives the second tap being a HOLD.
+  if (RUN_KEYS.has(e.code)) {
+    const now = performance.now();
+    if (now - lastRunTap < RUN_TAP_MS && lastRunKey === e.code) running = true;
+    lastRunTap = now;
+    lastRunKey = e.code;
+  }
   if (e.code === 'KeyE') wantsGrab = true;
   else if (e.code === 'KeyF') wantsThrow = true;
 });
@@ -224,6 +246,22 @@ const PlatformSlipSystem: System = {
 };
 
 /** Convert A/D into steering before the engine can read it as strafe. */
+/**
+ * Sprint. The engine's Player.speed is the single knob for movement, so the
+ * multiplier is applied here each step against a remembered base — reading the
+ * current value would compound it and the player would accelerate forever.
+ */
+let baseSpeed = 0;
+const RunSystem: System = {
+  group: 'fixed',
+  update: (state: State) => {
+    for (const p of playerQuery(state.world)) {
+      if (!baseSpeed) baseSpeed = Player.speed[p];
+      Player.speed[p] = running && !buildMode ? baseSpeed * RUN_MULTIPLIER : baseSpeed;
+    }
+  },
+};
+
 const SteerSystem: System = {
   group: 'fixed',
   first: true,
@@ -783,6 +821,7 @@ const VisualsSystem: System = {
 };
 
 withSystem(PlatformSlipSystem)
+  .withSystem(RunSystem)
   .withSystem(SteerSystem)
   .withSystem(SteerAnimationGuard)
   .withSystem(RaftSystem)
