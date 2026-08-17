@@ -238,9 +238,10 @@ function buildUi() {
       #builder .chargrid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; }
       #builder .charcard { padding:0; overflow:hidden; display:flex;
         flex-direction:column; align-items:stretch; gap:0; }
-      /* `contain`, not `cover`: the rendered thumbnails frame the model in the
+      /* contain, not cover: the rendered thumbnails frame the model in the
          upper half of a square, so cropping to fill left them floating at the
-         top of the tile with dead space beneath. */
+         top of the tile with dead space beneath. (No backticks in here — this
+         whole block is a template literal.) */
       #builder .charcard .art { display:block; height:64px;
         background:#dfe9ef center center/contain no-repeat;
         border-bottom: var(--border-w-hair) solid var(--border-strong); }
