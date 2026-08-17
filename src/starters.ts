@@ -68,29 +68,6 @@ function paintRect(
   return out;
 }
 
-/** Paint a rough disc — islands and clearings aren't rectangles. */
-function paintBlob(
-  paint: string,
-  cx: number,
-  cz: number,
-  radius: number,
-  rand: () => number
-): LevelEntry[] {
-  const out: LevelEntry[] = [];
-  for (let x = -radius - 2; x <= radius + 2; x += 2) {
-    for (let z = -radius - 2; z <= radius + 2; z += 2) {
-      const d = Math.hypot(x, z);
-      if (d > radius + rand() * 1.6 - 0.8) continue;
-      const px = Math.round((cx + x) / 2) * 2;
-      const pz = Math.round((cz + z) / 2) * 2;
-      // Stay on the slab: a tile past the island edge floats over open sea.
-      if (Math.abs(px) > BOUNDS.x + 0.5 || Math.abs(pz) > BOUNDS.z + 0.5) continue;
-      out.push({ src: 'paint', paint, x: px, y: 0, z: pz, rotY: 0 });
-    }
-  }
-  return out;
-}
-
 /**
  * Scatter scenery without stacking it on top of anything already placed or on
  * the player's spawn. A starter whose first impression is two trees growing
@@ -475,9 +452,13 @@ function monsterArena(): LevelEntry[] {
   ];
 }
 
+/**
+ * Bare island, nothing on it. The sand is the generated surface itself, so
+ * this lays no ground paint: painted tiles are flat quads that sink under
+ * rolling terrain, where they stay selectable and drag out into mid-air.
+ */
 function blankSands(): LevelEntry[] {
-  const rand = rng(7);
-  return [spawnFlag(), ...paintBlob('sand', 0, 0, 12, rand)];
+  return [spawnFlag()];
 }
 
 /**

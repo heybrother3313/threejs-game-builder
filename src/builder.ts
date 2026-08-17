@@ -9,6 +9,7 @@ import {
   PAINT_TILE,
   PlacedItem,
   clearPersisted,
+  dropRedundantPaint,
   importLevel,
   instantiate,
   loadModel,
@@ -546,6 +547,11 @@ function buildUi() {
       // stay undoable.
       const isle = starter.size ?? { x: 13, z: 9 };
       const entries = starter.build();
+      // Loading and travelling both prune obsolete ground cover; a starter is
+      // the third way entries reach the world, so it prunes too. Without this
+      // the tiles live until the next reload — invisible under the terrain,
+      // but selectable, and adrift once dragged. Roads and water survive.
+      dropRedundantPaint(entries);
       if (isle.x !== ISLAND.x || isle.z !== ISLAND.z) {
         setStatus(`Building <b>${starter.name}</b>…`);
         importLevel(JSON.stringify(entries));
