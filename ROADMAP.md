@@ -33,6 +33,20 @@ What we're building toward, roughly ordered. Items graduate off the top.
 - [ ] Irregular island coastline (jittered skirt outline instead of rectangles).
 
 ## World structure
+- [ ] **Go inside buildings.** The village pack's houses are solid shells, so
+      this needs either interior models or a door that travels to a small
+      "interior" world — which the travel system already does. The portal
+      route is far cheaper and reuses everything; the cost is a load between
+      outside and inside rather than walking through a doorway.
+- [ ] **Tunnels and mines.** Same question in the other axis. The ground is a
+      height function with a collider grid derived from it, so a hole means
+      either punching a gap in that grid (the function would need to return
+      "no floor here") or treating a mine as its own small world reached by a
+      portal. Worth deciding both together, since a cave and a house interior
+      are the same problem.
+- [ ] **Character select screen** using Erik's rendered portraits — a grid of
+      the six playable characters instead of the dropdown in the settings
+      panel. Needs the images committed under public/ui/characters/.
 - [x] **Main town island** — Ketch Harbour, with a quest board that reads open
       fetch quests off the townsfolk, and berths to all four islands.
       Travel is hub-and-spoke.
