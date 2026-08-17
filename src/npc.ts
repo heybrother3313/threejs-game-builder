@@ -84,6 +84,8 @@ type RtState =
   | 'follow'
   | 'guide'
   | 'flee'
+  /** Walking back to where they were standing before a fight pulled them off it. */
+  | 'return'
   | 'talk';
 
 type Runtime = {
@@ -175,6 +177,8 @@ const NOTICE_HEIGHT = 4;
 
 /** How long a non-hostile stays angry after being hit. Refreshed per hit. */
 const GRUDGE_SECONDS = 6;
+/** Close enough to the spot they started on to call it home. */
+const HOME_SLACK = 1.2;
 
 export const DEFAULTS: Required<Pick<NpcConfig, 'health' | 'damage' | 'speed' | 'aggroRadius' | 'attackRadius'>> = {
   health: 30,
@@ -490,6 +494,20 @@ function play(item: PlacedItem, action: keyof typeof CLIPS, once = false): boole
 /** Water-bound: anything animated by a swimming clip lives IN the sea. */
 function isSwimmer(item: PlacedItem) {
   return !!item.entry.clip?.startsWith('Swimming');
+}
+
+/**
+ * Has a fight left this one standing somewhere it does not belong?
+ *
+ * Only for those with nowhere else to be. A patroller picks its path back up
+ * and a wanderer was never anywhere in particular, so both recover on their
+ * own; it is the shopkeeper who chased you down the beach and then just
+ * stopped there who needs walking home.
+ */
+function homesick(item: PlacedItem, r: Runtime, cfg: NpcConfig): boolean {
+  if (item.entry.path?.length || cfg.behavior === 'wander') return false;
+  const p = item.obj.position;
+  return Math.hypot(p.x - r.home.x, p.z - r.home.z) > HOME_SLACK;
 }
 
 /** True if (x, z) is on the island slab — land, as far as a fish cares. */
@@ -969,9 +987,9 @@ export function updateNpcs(
       if (r.provokedT <= 0) {
         r.provoked = false;
         r.provokedT = 0;
-        // Drop the fight this frame; the branches below put them back on
-        // their patrol, their wander, or their spot.
-        if (r.state === 'chase' || r.state === 'attack') r.state = 'idle';
+        // Leave r.state alone. The chain below reads a still-'chase' state to
+        // decide between walking home and simply stopping; clearing it here
+        // looked equivalent and silently cost them the walk back.
       }
     }
 
@@ -981,7 +999,13 @@ export function updateNpcs(
       r.state = toPlayer <= reach && canReach ? 'attack' : 'chase';
     else if (r.parked) r.state = 'idle';
     else if (cfg.behavior === 'flee' && toPlayer < aggro && canNotice) r.state = 'flee';
-    else if (r.state === 'chase' || r.state === 'attack' || r.state === 'flee') r.state = 'idle';
+    // Only someone who is MEANT to stand somewhere walks back to it. A
+    // patroller resumes its path and a wanderer is already wandering, so both
+    // find their own way home; the shopkeeper left standing in the road after
+    // a chase is the one with nothing to carry him back.
+    else if (r.state === 'chase' || r.state === 'attack' || r.state === 'flee')
+      r.state = homesick(item, r, cfg) ? 'return' : 'idle';
+    else if (r.state === 'return' && homesick(item, r, cfg)) r.state = 'return';
     else if (cfg.behavior === 'wander') r.state = 'wander';
     else if (item.entry.path?.length) r.state = 'patrol';
     else r.state = 'idle';
@@ -989,6 +1013,7 @@ export function updateNpcs(
     if (
       r.state === 'chase' || r.state === 'attack' || r.state === 'flee' ||
       r.state === 'follow' || r.state === 'guide' || r.state === 'wander' ||
+      r.state === 'return' ||
       (r.parked && r.state === 'idle')
     ) {
       item.npcDriving = true;
@@ -1015,6 +1040,14 @@ export function updateNpcs(
         play(item, 'run');
         const away = Math.atan2(p.x - playerPos.x, p.z - playerPos.z);
         faceAndStep(item, p.x + Math.sin(away) * 4, p.z + Math.cos(away) * 4, speed * 1.2, dt);
+        break;
+      }
+
+      case 'return': {
+        // Walk, not run. The fight is over — jogging back reads as still
+        // being in it, and the point is that they have calmed down.
+        play(item, 'walk');
+        faceAndStep(item, r.home.x, r.home.z, speed * 0.9, dt);
         break;
       }
 
