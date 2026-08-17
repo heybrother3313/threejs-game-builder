@@ -23,6 +23,9 @@ const HORIZON = new THREE.Color('#cfe9f4');
 const ZENITH = new THREE.Color('#82c7e6');
 const OCEAN = new THREE.Color('#3f7fb2');
 
+/** Where the sea sits. Anything that floats needs to agree with this. */
+export const WATER_Y = -0.35;
+
 let fog: THREE.Fog | null = null;
 let sceneRef: THREE.Scene | null = null;
 let water: THREE.Mesh | null = null;
@@ -108,7 +111,7 @@ export function initAtmosphere(state: State) {
     geo,
     new THREE.MeshLambertMaterial({ vertexColors: true, flatShading: true })
   );
-  water.position.y = -0.35;
+  water.position.y = WATER_Y;
   scene.add(water);
   waterBase = Float32Array.from(wpos.array as Float32Array);
 

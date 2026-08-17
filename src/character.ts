@@ -314,6 +314,41 @@ export function heldWeaponPosition(out: THREE.Vector3): boolean {
   return true;
 }
 
+const tipBox = new THREE.Box3();
+const tipGrip = new THREE.Vector3();
+const tipCorner = new THREE.Vector3();
+
+/**
+ * The far end of what's in the hand, in world space.
+ *
+ * A fishing line hangs off the rod TIP, and the grip is the one point we
+ * already know — the model's origin sits in the fist. The rod is a long thin
+ * thing, so the corner of its world box furthest from the grip is its tip;
+ * that holds however the fit rotated it, which a fixed local axis would not.
+ */
+export function heldWeaponTip(out: THREE.Vector3): boolean {
+  if (!heldWeapon) return false;
+  tipBox.setFromObject(heldWeapon);
+  // An empty Box3 is ±Infinity, not zero — differencing it gives NaN and the
+  // line disappears while everything else keeps drawing.
+  if (tipBox.isEmpty() || !Number.isFinite(tipBox.min.x)) return false;
+  heldWeapon.getWorldPosition(tipGrip);
+  let best = -1;
+  for (let i = 0; i < 8; i++) {
+    tipCorner.set(
+      i & 1 ? tipBox.max.x : tipBox.min.x,
+      i & 2 ? tipBox.max.y : tipBox.min.y,
+      i & 4 ? tipBox.max.z : tipBox.min.z
+    );
+    const d = tipCorner.distanceToSquared(tipGrip);
+    if (d > best) {
+      best = d;
+      out.copy(tipCorner);
+    }
+  }
+  return best >= 0;
+}
+
 export async function setHeldWeapon(src: string | null) {
   if (heldWeapon) {
     heldWeapon.parent?.remove(heldWeapon);

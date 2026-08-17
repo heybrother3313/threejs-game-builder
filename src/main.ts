@@ -37,6 +37,7 @@ import {
   cutSwing,
   playerAnimDebug,
   heldWeaponPosition,
+  heldWeaponTip,
   setHeldWeapon,
   setPlayerDead,
   updateCharacterVisual,
@@ -59,11 +60,12 @@ import {
   isTriggered, markTriggered, resetObjectives, setUnlockHook, updateObjectives,
 } from './objectives';
 import { grantLoot, lootCounts, showHeld, updateLootPickup } from './loot';
-import { FISTS, bladeFor, isHandThrowable, type Blade } from './weapons';
+import { FISTS, bladeFor, isFishingRod, isHandThrowable, type Blade } from './weapons';
 
 /** Bare model name, for the hand label. */
 const nameOfSrc = (src: string) => src.split('/').pop()!.replace('.glb', '');
 import { initAtmosphere, updateWater } from './atmosphere';
+import { beginCast, isCastOut, reelIn, updateFishing } from './fishing';
 import { clearIslandGround, initIslandGround, setIslandSize } from './ground';
 import { sizeFor } from './starters';
 import { currentWorldId } from './worlds';
@@ -208,6 +210,16 @@ const THROW_FOLLOW_THROUGH = 0.12;
  * __game.setThrowRelease(f), since this is a feel value and feel values move.
  */
 let throwReleaseFrac = 0.38;
+/**
+ * A cast borrows the same pose at the same moment — it is the same clip, and
+ * the arm is up and forward there whether the hand is letting go of a bomb or
+ * flicking a rod. Kept as its own value because a cast may well want to leave
+ * later than a throw once there is a line to watch. __game.setCastRelease(f).
+ */
+let castReleaseFrac = 0.38;
+let pendingCast: { t: number } | null = null;
+/** Rod tip at the moment of release, and again every frame for the line. */
+const castTipScratch = new THREE.Vector3();
 
 /** Last drawn player position, for input handlers that run outside systems. */
 const lastPlayerPos = new THREE.Vector3();
@@ -605,6 +617,27 @@ const CarrySystem: System = {
       }
     }
 
+    // The cast releases the same way, and cuts the same back half — but the
+    // hand keeps the rod. What leaves is the lure, from the rod tip rather
+    // than the fist, so the line starts where you can see it start.
+    if (pendingCast) {
+      pendingCast.t -= Math.min(state.time.deltaTime, 0.05);
+      if (pendingCast.t <= 0) {
+        const scene = getScene(state);
+        const from = heldWeaponTip(castTipScratch)
+          ? castTipScratch
+          : castTipScratch.set(
+              Transform.posX[player],
+              Transform.posY[player] + 1,
+              Transform.posZ[player]
+            );
+        if (scene) beginCast(scene, from, -Math.sin(heading), -Math.cos(heading));
+        cutSwing(THROW_FOLLOW_THROUGH);
+        attackHold = Math.min(attackHold, THROW_FOLLOW_THROUGH);
+        pendingCast = null;
+      }
+    }
+
     // Holding a blade, F is a SWING, not a throw — you don't lob your sword
     // at people. Everything else (barrels, bombs) still gets thrown.
     if (wantsThrow && heldItem && bladeFor(heldItem) !== FISTS) {
@@ -617,6 +650,21 @@ const CarrySystem: System = {
       attackHold = Math.min(playerSwing(), ATTACK_HOLD_MAX);
       attackFacing = swing;
       pendingPunch = { t: SWING_CONTACT, fx: afx, fz: afz, blade: b };
+      wantsGrab = wantsThrow = false;
+      return;
+    }
+    // A rod is not thrown. F casts it, and F again reels the lure back in —
+    // the rod stays in the hand throughout, which is the whole difference
+    // between this and the branch below.
+    if (wantsThrow && heldItem && isFishingRod(heldItem.entry.src) && !pendingCast) {
+      if (isCastOut()) {
+        reelIn();
+      } else {
+        const dur = playerSwing();
+        attackHold = Math.min(dur, ATTACK_HOLD_MAX);
+        attackFacing = heading;
+        pendingCast = { t: dur > 0 ? dur * castReleaseFrac : SWING_CONTACT };
+      }
       wantsGrab = wantsThrow = false;
       return;
     }
@@ -717,9 +765,10 @@ const CarrySystem: System = {
         showHeld(b === FISTS ? nameOfSrc(prop.entry.src) : `${b.name} — ${b.damage} dmg`);
         // A blade goes in the hand and the floating copy is hidden. So does a
         // throwable — a bomb is a one-handed object, and holding it out front
-        // meant the hand fits made for it were never consulted. Anything
-        // genuinely two-armed (barrels, crates) keeps the carry pose.
-        if (b !== FISTS || isHandThrowable(prop.entry.src)) {
+        // meant the hand fits made for it were never consulted. A rod is the
+        // same shape of thing, and you cannot cast one you are hugging.
+        // Anything genuinely two-armed (barrels, crates) keeps the carry pose.
+        if (b !== FISTS || isHandThrowable(prop.entry.src) || isFishingRod(prop.entry.src)) {
           prop.obj.visible = false;
           void setHeldWeapon(prop.entry.src);
         }
@@ -865,6 +914,12 @@ const VisualsSystem: System = {
   group: 'draw',
   update: (state: State) => {
     updateWater();
+    // The line is redrawn every frame because both ends move: the lure rides
+    // the swell, and the rod tip goes wherever the hand does.
+    updateFishing(
+      state.time.deltaTime,
+      heldWeaponTip(castTipScratch) ? castTipScratch : null
+    );
     const p0 = playerQuery(state.world)[0];
     const playerPos =
       p0 !== undefined
@@ -1013,6 +1068,11 @@ withSystem(PlatformSlipSystem)
         setThrowRelease: (f: number) => {
           throwReleaseFrac = Math.min(0.9, Math.max(0.02, f));
           return throwReleaseFrac;
+        },
+        /** Where in the swing the lure leaves the rod, 0..1. */
+        setCastRelease: (f: number) => {
+          castReleaseFrac = Math.min(0.9, Math.max(0.02, f));
+          return castReleaseFrac;
         },
         setHeading: (h: number) => {
           heading = h;

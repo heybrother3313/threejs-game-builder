@@ -95,8 +95,21 @@ export const WEAPONS = WEAPON_GROUPS.flatMap((g) => g.items);
  * fit was never consulted, because they never reached the attach path.
  */
 export function isHandThrowable(src: string): boolean {
+  return inGroup('Thrown', src);
+}
+
+/**
+ * A rod is one-handed for the same reason a bomb is, and it has thirty tuned
+ * fits waiting on it — five tiers across every character. It reaches neither
+ * test above on its own: it carries no blade stats, and it is not thrown.
+ */
+export function isFishingRod(src: string): boolean {
+  return inGroup('Fishing', src);
+}
+
+function inGroup(group: string, src: string): boolean {
   const name = src.split('/').pop() ?? '';
-  return (WEAPON_GROUPS.find((g) => g.group === 'Thrown')?.items ?? [])
+  return (WEAPON_GROUPS.find((g) => g.group === group)?.items ?? [])
     .some((i) => i.src.split('/').pop() === name);
 }
 
