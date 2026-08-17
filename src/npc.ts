@@ -7,6 +7,7 @@ import {
   syncMarker, type PlacedItem,
 } from './level';
 import { getScene } from 'vibegame/rendering';
+import { isTriggered, markTriggered } from './objectives';
 import { ISLAND } from './ground';
 
 /**
@@ -739,6 +740,14 @@ export function updateNpcs(
   // npc block, so their prompt has to be raised here.
   const boardNear = nearbyBoard(playerPos);
   if (boardNear) prompt = `<b>E</b>&nbsp; read the quest board`;
+  for (const item of placed) {
+    const o = item.entry.objective;
+    if (!o || o.kind !== 'activate' || isTriggered(item)) continue;
+    const d = Math.hypot(item.obj.position.x - playerPos.x, item.obj.position.z - playerPos.z);
+    if (d < 3.2 && Math.abs(item.obj.position.y - playerPos.y) < REACH_HEIGHT) {
+      prompt = `<b>E</b>&nbsp; ${o.text}`;
+    }
+  }
 
   for (const item of placed) {
     const cfg = item.entry.npc;
@@ -1024,6 +1033,23 @@ export function npcKey(code: string, playerPos: THREE.Vector3 | undefined): bool
   }
 
   if (code === 'KeyE') {
+    // Something you can switch on, ring, or pull. Nearest wins, like talking.
+    let act: PlacedItem | null = null;
+    let actD = 3.2;
+    for (const item of placed) {
+      const o = item.entry.objective;
+      if (!o || o.kind !== 'activate' || isTriggered(item)) continue;
+      const d = Math.hypot(item.obj.position.x - playerPos.x, item.obj.position.z - playerPos.z);
+      if (d < actD && Math.abs(item.obj.position.y - playerPos.y) < REACH_HEIGHT) {
+        act = item; actD = d;
+      }
+    }
+    if (act) {
+      markTriggered(act);
+      showBanner(act.entry.objective!.done ?? 'Done', null as unknown as string);
+      setTimeout(() => showBanner(null), 1800);
+      return true;
+    }
     const board = nearbyBoard(playerPos);
     // Nearest talkable NPC wins over picking things up.
     let best: PlacedItem | null = null;
@@ -1056,6 +1082,7 @@ export function npcKey(code: string, playerPos: THREE.Vector3 | undefined): bool
     if (best) {
       const r = npcRuntime(best);
       r.spokeTo = true;
+      if (best.entry.objective?.kind === 'talk') markTriggered(best);
       const cfg = best.entry.npc ?? {};
       // Fetch quest: if they want something and you're holding it, delivery
       // IS the conversation — hand it over, take the reward, hear the thanks.

@@ -86,6 +86,8 @@ export type LevelEntry = {
   exitLabel?: string;
   /** A quest board: E reads every open fetch quest in the level off it. */
   questBoard?: boolean;
+  /** A tracked step of the island's objective chain — see objectives.ts. */
+  objective?: import('./objectives').Objective;
 };
 
 export type PlacedItem = {

@@ -32,8 +32,8 @@ import { DEFAULTS, resetNpc, resolveLoot, type NpcConfig } from './npc';
 import { COLLECTIBLE_NAMES } from './loot';
 import { canRedo, canUndo, initHistory, mark, redo, redoLabel, replaceAll, undo, undoLabel } from './history';
 import { STARTERS } from './starters';
-import { clearIslandGround, initIslandGround, setIslandSize } from './ground';
-import { resizeShoreline } from './atmosphere';
+import { ISLAND } from './ground';
+import { resetObjectives } from './objectives';
 import { currentWorldId, destinations, setCurrentWorldId, worldName } from './worlds';
 import { setAtmosphereFog } from './atmosphere';
 
@@ -469,11 +469,20 @@ function buildUi() {
       clearSelection();
       setStatus(`Building <b>${starter.name}</b>…`);
       setCurrentWorldId(starter.id);
-      // The island itself is part of the starter: resize before building, or
-      // a big town gets laid out on a small island and half of it is sea.
+      resetObjectives();
+      // The island's SIZE is part of the starter, and the engine will not
+      // survive having its physics entities torn down mid-session — it copies
+      // rigid bodies to transforms that have already gone. So a starter whose
+      // island differs from the current one is applied through a reload, the
+      // same route Load… already uses. Same-size starters swap in place and
+      // stay undoable.
       const isle = starter.size ?? { x: 13, z: 9 };
-      resizeIsland(isle.x, isle.z);
       const entries = starter.build();
+      if (isle.x !== ISLAND.x || isle.z !== ISLAND.z) {
+        setStatus(`Building <b>${starter.name}</b>…`);
+        importLevel(JSON.stringify(entries));
+        return;
+      }
       await replaceAll(entries, `Load ${starter.name}`);
       setStatus(`<b>${starter.name}</b> — ${entries.length} pieces. ⌘Z to undo.`);
     });
@@ -1532,14 +1541,6 @@ function onWheel(ev: WheelEvent) {
 }
 
 /* ----------------------------------------------------------- selection --- */
-
-/** Rebuild the island at a new size (starters declare their own). */
-function resizeIsland(x: number, z: number) {
-  clearIslandGround(state);
-  setIslandSize(x, z);
-  initIslandGround(state);
-  resizeShoreline(state);
-}
 
 /** Pieces meant to be walked ON rather than around. */
 function isGroundPiece(src: string) {

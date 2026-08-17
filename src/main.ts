@@ -51,6 +51,7 @@ import {
   updateNpcs,
 } from './npc';
 import { travelTo, worldName } from './worlds';
+import { isTriggered, markTriggered, resetObjectives, updateObjectives } from './objectives';
 import { grantLoot, lootCounts, showHeld, updateLootPickup } from './loot';
 import { FISTS, bladeFor, type Blade } from './weapons';
 
@@ -733,6 +734,7 @@ const VisualsSystem: System = {
       }
     }
     updateNpcs(state, dt, playerPos, !buildMode);
+    updateObjectives(state, dt, playerPos?.x ?? 0, playerPos?.z ?? 0, !buildMode && !!playerPos);
     const players = playerQuery(state.world);
     if (players.length > 0) updateCharacterVisual(state, players[0]);
 
@@ -870,6 +872,7 @@ withSystem(PlatformSlipSystem)
         worlds: { travelTo: (id: string) => travelTo(state, id) },
         ai: { run: (req: string) => runAssistant(state, aiConfig(), req) },
         anim: { debug: playerAnimDebug },
+        objectives: { isTriggered, markTriggered, reset: resetObjectives },
         loot: { grantLoot, lootCounts, updateLootPickup: (x: number, y: number, z: number) => updateLootPickup(state, x, y, z) },
         history: { mark, undo, redo, canUndo, canRedo },
         selectionInfo,

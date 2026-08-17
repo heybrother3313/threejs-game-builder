@@ -11,9 +11,9 @@ import {
   spawnPoint,
 } from './level';
 import { STARTERS, sizeFor } from './starters';
-import { clearIslandGround, initIslandGround, setIslandSize } from './ground';
-import { resizeShoreline } from './atmosphere';
+import { ISLAND } from './ground';
 import { clearHistory } from './history';
+import { resetObjectives } from './objectives';
 
 /**
  * Worlds: the island-hopping layer.
@@ -93,12 +93,19 @@ export async function travelTo(state: State, id: string): Promise<THREE.Vector3 
     // Undo history is per-world; an undo recorded on one island must never
     // write that island's entries into another island's save.
     clearHistory();
+    resetObjectives();
 
-    // The destination's island may be a different size than the one you left.
-    clearIslandGround(state);
-    setIslandSize(sizeFor(id).x, sizeFor(id).z);
-    initIslandGround(state);
-    resizeShoreline(state);
+    // A destination of a different size needs the ground rebuilt, and the
+    // engine cannot have its physics entities destroyed mid-session. Persist
+    // and reload: the world id is already stored, so it comes back up there.
+    const dest = sizeFor(id);
+    if (dest.x !== ISLAND.x || dest.z !== ISLAND.z) {
+      worlds[id] = target;
+      localStorage.setItem(WORLDS_KEY, JSON.stringify(worlds));
+      localStorage.setItem('sandbox-level-v4', JSON.stringify(target));
+      location.reload();
+      return null;
+    }
     for (const item of [...placed]) {
       if (!item.entry.follow) removeItem(state, item);
     }

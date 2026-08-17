@@ -111,7 +111,16 @@ let owned: number[] = [];
 /** Tear down the ground so it can be rebuilt at a different island size. */
 export function clearIslandGround(state: State) {
   const scene = getScene(state);
-  for (const e of owned) if (state.exists(e)) state.destroyEntity(e);
+  // Strip physics before destroying. Dropping the entity outright left the
+  // engine copying a rigid body whose Transform had already gone —
+  // "[copyRigidbodyToTransforms] Entity N does not have the required
+  // components" — because the body and its transform died in the wrong order.
+  for (const e of owned) {
+    if (!state.exists(e)) continue;
+    if (state.hasComponent(e, Collider)) state.removeComponent(e, Collider);
+    if (state.hasComponent(e, Body)) state.removeComponent(e, Body);
+    state.destroyEntity(e);
+  }
   owned = [];
   if (mesh && scene) scene.remove(mesh);
   if (baseMesh && scene) scene.remove(baseMesh);

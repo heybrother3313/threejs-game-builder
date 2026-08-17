@@ -616,6 +616,129 @@ function townIsland(): LevelEntry[] {
   ];
 }
 
+/**
+ * Blackreef — the first island built as a GAME rather than a place.
+ *
+ * One arc, south to north, with the objective chain carrying it: land on the
+ * beach, hear what happened, fight up the road, take the warden's key from the
+ * orc holding the pass, climb the reef, kill what sits on top, ring the bell,
+ * and the ship comes for you. Every step is a tracked objective, so the island
+ * knows when you have finished it.
+ *
+ * Laid out on a 60x40 island: about fourteen seconds of walking end to end,
+ * which is enough for the stages to feel separated rather than stacked.
+ */
+function blackreef(): LevelEntry[] {
+  const rand = rng(90909);
+  useBounds(30, 20);
+  const taken = [
+    { x: 0, z: 17, r: 6 },            // landing beach
+    ...Array.from({ length: 14 }, (_, i) => ({ x: 0, z: 16 - i * 2.6, r: 3.4 })), // the road
+    { x: 0, z: 2, r: 6 },             // the pass
+    { x: 0, z: -12, r: 9 },           // the summit
+    { x: -12, z: 8, r: 5 }, { x: 13, z: 6, r: 5 },
+  ];
+  const orc = (x: number, z: number, hp: number, loot?: string): LevelEntry => ({
+    src: M('Orc'), x, y: 0, z, rotY: Math.PI, fitHeight: 1.85, clip: 'Idle',
+    npc: { faction: 'hostile', behavior: 'guard', health: hp, damage: 8,
+      speed: 2, aggroRadius: 7, loot },
+  });
+
+  return [
+    spawnFlag(0, 17),
+    ...paintRect('road', -1, -14, 1, 16),
+    ...paintBlob('sand', 0, 18, 9, rand),
+    ...paintBlob('rock', 0, -13, 10, rand),
+
+    // ---- 1. the beach: a survivor tells you what this island is ----
+    { src: P('Small Ship'), x: -8, y: -0.6, z: 20.5, rotY: 0.6, fitMaxDim: 6, solid: true },
+    { src: P('Dock Broken'), x: 6, y: -3.4, z: 19, rotY: 10.9956, scale: 1.2, solid: true },
+    {
+      src: W('Woman Casual'), x: 1.8, y: 0, z: 15.5, rotY: 3.3, fitHeight: 1.7, clip: 'Idle',
+      objective: { step: 0, kind: 'talk', text: 'Find out what happened here',
+        done: 'The bell is at the top of the reef' },
+      npc: { faction: 'friendly', behavior: 'idle',
+        lines: ['You came. Nobody comes to Blackreef.',
+          'Orcs took the pass and the warden with it. He had the key.',
+          'Ring the bell on the summit and the mainland will send a ship. Nothing else will.'] },
+    },
+    { src: V('Cart'), x: -3.5, y: 0, z: 14.5, rotY: 1.4, fitMaxDim: 2.6, solid: true },
+    { src: P('Barrel'), x: 3.4, y: 0, z: 13.5, rotY: 0.4, fitHeight: 0.9, pickable: true },
+    { src: P('Bomb'), x: 2.6, y: 0, z: 12.8, rotY: 0, fitHeight: 0.5, pickable: true },
+    { src: P('Cutlass'), x: -2.4, y: 0, z: 12.6, rotY: 1.2, fitHeight: 0.8, pickable: true },
+
+    // ---- 2. the burned village: three orcs among the ruins ----
+    { src: V('Fantasy House'), x: -9, y: 0, z: 8, rotY: 0.5, fitHeight: 4.6, solid: true },
+    { src: V('Fantasy House-BH2XHWUNmF'), x: 9.5, y: 0, z: 9.5, rotY: -0.7, fitHeight: 4.2, solid: true },
+    { src: V('Fantasy Stable'), x: -13, y: 0, z: 4, rotY: 1.1, fitHeight: 4, solid: true },
+    { src: V('Bonfire'), x: 5, y: 0, z: 6.5, rotY: 0, fitMaxDim: 1.6 },
+    { src: V('Crate'), x: -5.5, y: 0, z: 7, rotY: 0.8, fitMaxDim: 0.9, solid: true },
+    { src: P('Bomb'), x: -6.4, y: 0, z: 6.2, rotY: 0, fitHeight: 0.5, pickable: true },
+    { ...orc(-6, 9, 40, 'Coins'), objective: { step: 1, kind: 'defeat', text: 'Clear the burned village' } },
+    { ...orc(7, 7.5, 40, 'Coins'), objective: { step: 1, kind: 'defeat', text: 'Clear the burned village' } },
+    { ...orc(0.5, 5, 45, 'Gold ore'), objective: { step: 1, kind: 'defeat', text: 'Clear the burned village' } },
+
+    // ---- 3. the pass: the warden's key, on the orc that took it ----
+    { src: P('Post'), x: -2.2, y: 0, z: 2, rotY: 0, fitHeight: 2.6, solid: true },
+    { src: P('Post'), x: 2.2, y: 0, z: 2, rotY: 0, fitHeight: 2.6, solid: true },
+    { src: V('Fence'), x: -4.4, y: 0, z: 2, rotY: 0, fitMaxDim: 3, solid: true },
+    { src: V('Fence'), x: 4.4, y: 0, z: 2, rotY: 0, fitMaxDim: 3, solid: true },
+    {
+      ...orc(0, 0.5, 90, 'Chest Gold'),
+      npc: { faction: 'hostile', behavior: 'guard', health: 90, damage: 11,
+        speed: 2.1, aggroRadius: 8, attackRadius: 1.9, loot: 'Chest Gold' },
+    },
+    {
+      src: P('Red X'), x: 0, y: 0, z: 0.5, rotY: 0, fitMaxDim: 1.4, solid: false,
+      objective: { step: 2, kind: 'collect', item: 'Chest Gold', count: 1,
+        text: "Take the warden's strongbox from the pass",
+        done: 'The pass is yours' },
+    },
+
+    // ---- 4. the climb: rocks up the reef ----
+    { src: P('Rock'), x: -2, y: 0, z: -3, rotY: 0.4, fitHeight: 1.4, solid: true, trimTop: 0.15 },
+    { src: P('Rock-4vHWF8XUBn'), x: 1.5, y: 0, z: -5.5, rotY: 2.1, fitHeight: 2.1, solid: true, trimTop: 0.15 },
+    { src: P('Rocks-38eDa0gjwZ'), x: -1.5, y: 0, z: -8, rotY: 5, fitHeight: 2.8, solid: true, trimTop: 0.15 },
+    { src: P('Rocks'), x: 2, y: 0, z: -10.5, rotY: 0.9, fitHeight: 3.4, solid: true, trimTop: 0.2 },
+    { src: P('Gem Pink'), x: -1.5, y: 2.25, z: -8, rotY: 1, fitHeight: 0.4, pickable: true },
+
+    // ---- 5. the summit: what has been sitting on the bell ----
+    { src: V('Bell Tower'), x: 0, y: 0, z: -15, rotY: 0, fitHeight: 8, solid: true },
+    {
+      src: M('Dragon Evolved'), x: 0, y: 0, z: -12, rotY: 0, fitHeight: 2.8, clip: 'Idle',
+      objective: { step: 3, kind: 'defeat', text: 'Kill whatever guards the bell',
+        done: 'The summit is clear' },
+      npc: { faction: 'hostile', behavior: 'guard', health: 150, damage: 16,
+        speed: 2.4, aggroRadius: 9, attackRadius: 2, loot: 'Gold Bag' },
+    },
+    { src: P('Skull'), x: 2.5, y: 0, z: -13, rotY: 0.8, fitHeight: 0.45, solid: false },
+    { src: P('Large Bone'), x: -2.4, y: 0, z: -13.5, rotY: 2.4, fitHeight: 0.4, solid: false },
+    { src: P('Bomb'), x: 3.5, y: 0, z: -9, rotY: 0, fitHeight: 0.5, pickable: true },
+
+    // ---- 6. ring it ----
+    {
+      src: V('Bell'), x: 0, y: 0, z: -16.5, rotY: 0, fitMaxDim: 1.6, solid: false,
+      objective: { step: 4, kind: 'activate', text: 'Ring the bell',
+        done: 'The bell carries. A ship is coming.' },
+    },
+
+    // ---- 7. the way home, on the beach you landed at ----
+    { src: P('Ship'), x: 9, y: -1.2, z: 21, rotY: 0.4, fitHeight: 9, solid: true,
+      exitTo: 'town-island', exitLabel: 'Sail home to Ketch Harbour' },
+
+    ...scatter(
+      [
+        { src: N('Dead Tree'), height: [2.5, 3.6], solid: true },
+        { src: N('Pine'), height: [3, 4.5], solid: true },
+        { src: N('Rock Medium'), height: [0.6, 1.3] },
+        { src: N('Grass Wispy'), height: [0.3, 0.55] },
+        { src: N('Pebble Round'), height: [0.15, 0.3] },
+      ],
+      70, rand, taken
+    ),
+  ];
+}
+
 export type Starter = {
   id: string;
   name: string;
@@ -632,6 +755,13 @@ export function sizeFor(id: string) {
 }
 
 export const STARTERS: Starter[] = [
+  {
+    id: 'blackreef',
+    name: 'Blackreef (adventure)',
+    blurb: 'Land, fight up the road, take the pass, climb the reef, ring the bell.',
+    size: { x: 30, z: 20 },
+    build: blackreef,
+  },
   {
     id: 'town-island',
     name: 'Ketch Harbour (town)',
