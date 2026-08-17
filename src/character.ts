@@ -44,14 +44,17 @@ export const PLAYER_CHOICES: { label: string; src: string }[] = [
   { label: 'Frog', src: '/models/ultimate-monsters/Frog.glb' },
   { label: 'Dino', src: '/models/ultimate-monsters/Dino.glb' },
   { label: 'Monkroose', src: '/models/ultimate-monsters/Monkroose.glb' },
-  { label: 'Orc', src: '/models/ultimate-monsters/Orc.glb' },
-  { label: 'Blue Demon', src: '/models/ultimate-monsters/Blue Demon.glb' },
-  { label: 'Bunny', src: '/models/ultimate-monsters/Bunny.glb' },
-  { label: 'Mushroom King', src: '/models/ultimate-monsters/Mushroom King.glb' },
   { label: 'Alien', src: '/models/ultimate-monsters/Alien-RRliSQBP7r.glb' },
   { label: 'Fish', src: '/models/ultimate-monsters/Fish-ypEYhCImAB.glb' },
   { label: 'Yeti', src: '/models/ultimate-monsters/Yeti-ceRHrn8HHE.glb' },
 ];
+
+/**
+ * Orc, Blue Demon, Mushroom King and Bunny pass the clip test but are not
+ * offered as players: they ship holding a weapon as part of the mesh, so
+ * whatever you picked up would be a second one they could never put down.
+ * They stay as enemies, where being permanently armed is the point.
+ */
 
 const PLAYER_KEY = 'sandbox-player-model';
 export function playerModel() {
@@ -375,8 +378,12 @@ export function setPlayerDead(v: boolean) {
 
 /** Call from a draw-group system: glue the player model on and advance clips. */
 export function updateCharacterVisual(state: State, playerEntity: number) {
-  if (!player || !mixer) return;
+  // Shrink the engine's stand-in FIRST, before the early return below.
+  // Loading the character GLB takes a moment, and until it resolved this
+  // function bailed out — so the procedural blocky figure was drawn for those
+  // frames and flashed on every reload.
   hideBlockyCharacter(state);
+  if (!player || !mixer) return;
 
   // Ease the drawn height. The collision grid is a staircase, so walking a
   // slope arrives as a series of small vertical pops; easing them out reads as
