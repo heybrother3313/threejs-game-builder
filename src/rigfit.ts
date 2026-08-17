@@ -67,6 +67,14 @@ let camera: THREE.PerspectiveCamera | null = null;
 let mixer: THREE.AnimationMixer | null = null;
 let rig: THREE.Group | null = null;
 let weapon: THREE.Object3D | null = null;
+/**
+ * The weapon's size BEFORE it was parented to a bone.
+ *
+ * Measuring it afterwards returns a world size that already includes the
+ * bone's (large) scale, and dividing that out again shrank the weapon to
+ * nothing — which is why the bench showed a character holding thin air.
+ */
+let weaponIntrinsic = 1;
 let hand: THREE.Object3D | null = null;
 let clock: THREE.Clock | null = null;
 let raf = 0;
@@ -74,14 +82,19 @@ let current = { character: PLAYER_CHOICES[0].src, weapon: WEAPONS[0].src };
 let fit: Fit = { bone: '', pos: [0, 0.1, 0], rot: [Math.PI / 2, 0, 0], scale: 0.75 };
 
 export function isRigFitOpen() {
-  return !!el && el.style.display !== 'none';
+  // getComputedStyle, not the inline value: the stylesheet hides this panel by
+  // default, so an empty inline display still means hidden.
+  return !!el && getComputedStyle(el).display !== 'none';
 }
 
 export function toggleRigFit(open?: boolean) {
   ensure();
   if (!el) return;
-  const show = open ?? el.style.display === 'none';
-  el.style.display = show ? '' : 'none';
+  const show = open ?? !isRigFitOpen();
+  // 'block', never '' — clearing the inline style hands control back to the
+  // stylesheet, which says display:none, so the panel stayed invisible while
+  // every DOM check said it was open.
+  el.style.display = show ? 'block' : 'none';
   if (show) {
     void load();
     tick();
@@ -95,7 +108,10 @@ function ensure() {
   if (el) return;
   const style = document.createElement('style');
   style.textContent = `
+    /* Capped and scrollable: at 803px of sliders it ran off the bottom of a
+       750px window, which put Save out of reach. */
     #rigfit { position:fixed; right:16px; top:74px; width:300px; z-index:26;
+      max-height: calc(100vh - 100px); overflow-y:auto; overscroll-behavior:contain;
       pointer-events:auto; display:none; padding:10px;
       font-family: var(--font-body, Inter, sans-serif);
       background: var(--surface-face,#faf6ef); color: var(--text-primary,#111);
@@ -273,6 +289,8 @@ async function reattach() {
   if (!hand) return;
   const gltf = await new GLTFLoader().loadAsync(current.weapon);
   weapon = gltf.scene;
+  const raw = new THREE.Box3().setFromObject(weapon).getSize(new THREE.Vector3());
+  weaponIntrinsic = Math.max(raw.x, raw.y, raw.z, 1e-3);
   hand.add(weapon);
   apply();
 }
@@ -284,16 +302,14 @@ function apply() {
   const bs = new THREE.Vector3();
   hand.getWorldScale(bs);
   const inv = 1 / Math.max(bs.x, 1e-6);
-  const size = new THREE.Box3().setFromObject(weapon).getSize(new THREE.Vector3());
-  const longest = Math.max(size.x / weapon.scale.x, size.y / weapon.scale.y, size.z / weapon.scale.z, 1e-3);
-  weapon.scale.setScalar((fit.scale / longest) * inv);
+  weapon.scale.setScalar((fit.scale / weaponIntrinsic) * inv);
   weapon.position.set(fit.pos[0] * inv, fit.pos[1] * inv, fit.pos[2] * inv);
   weapon.rotation.set(fit.rot[0], fit.rot[1], fit.rot[2]);
   syncInputs();
 }
 
 function tick() {
-  if (!renderer || !scene || !camera || !el || el.style.display === 'none') return;
+  if (!renderer || !scene || !camera || !el || !isRigFitOpen()) return;
   const c = renderer.domElement;
   if (c.width !== c.clientWidth || c.height !== c.clientHeight) {
     renderer.setSize(c.clientWidth, c.clientHeight, false);

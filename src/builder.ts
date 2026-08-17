@@ -607,8 +607,7 @@ function commitMarquee() {
   const hi = { x: Math.max(box.x0, box.x1), y: Math.max(box.y0, box.y1) };
   const v = new THREE.Vector3();
   let added = 0;
-  for (const item of placed) {
-    if (item.entry.follow) continue;
+  for (const item of editableItems()) {
     v.copy(item.border.position).project(cam);
     if (v.z > 1) continue; // behind the camera
     const sx = r.left + ((v.x + 1) / 2) * r.width;
@@ -1237,11 +1236,23 @@ function hitGizmo(): boolean {
   return raycaster.intersectObjects(gizmo.children, true).length > 0;
 }
 
+/**
+ * What the builder is allowed to touch.
+ *
+ * Hidden pieces are excluded. Terrain replaces painted ground, so a level
+ * carries invisible paint tiles — and they were still being picked, still
+ * marquee-selected and still drawing borders, so dragging a group of props
+ * hauled a grid of invisible squares along with it.
+ */
+function editableItems() {
+  return placed.filter((i) => !i.entry.follow && i.obj.visible);
+}
+
 function pickPlaced(): PlacedItem | null {
   const cam = cameraObject();
   if (!cam) return null;
   raycaster.setFromCamera(ndc, cam);
-  const editable = placed.filter((i) => !i.entry.follow);
+  const editable = editableItems();
   const hits = raycaster.intersectObjects(
     editable.map((i) => i.obj),
     true
@@ -1596,6 +1607,9 @@ function nameOf(src: string) {
  * `.visible` on a border.
  */
 function setBorderVisible(item: PlacedItem, visible: boolean, selected = false) {
+  // A hidden piece has no business drawing a wireframe: terrain replaces paint,
+  // so a level carries invisible tiles that were drawing a grid over the ground.
+  if (!item.obj.visible) visible = false;
   const colour = selected ? 0xffd747 : item.entry.solid ? 0x33ff88 : 0x8899aa;
   item.border.visible = visible;
   (item.border.material as THREE.LineBasicMaterial).color.set(colour);
