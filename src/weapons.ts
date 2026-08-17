@@ -134,9 +134,7 @@ export function weaponSrc(name: string) {
 const BLADES: Record<string, Blade> = {
   Cutlass: { name: 'Cutlass', damage: 26, reach: 2.9 },
   Sword: { name: 'Sword', damage: 24, reach: 2.8 },
-  Swords: { name: 'Swords', damage: 28, reach: 2.9 },
   Axe: { name: 'Axe', damage: 30, reach: 2.6 },
-  'Axe Rifle': { name: 'Axe Rifle', damage: 30, reach: 2.7 },
   Dagger: { name: 'Dagger', damage: 16, reach: 2.2 },
   'Tool Axe': { name: 'Axe', damage: 22, reach: 2.5 },
   Pickaxe: { name: 'Pickaxe', damage: 20, reach: 2.5 },

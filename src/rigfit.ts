@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { PLAYER_CHOICES } from './character';
 import { findHandBone } from './weapons';
+import shippedFits from './levels/weapon-fits.json';
 
 /**
  * The weapon-fitting bench.
@@ -28,12 +29,24 @@ export type Fit = {
 
 const KEY = 'sandbox-weapon-fits-v1';
 
-function allFits(): Record<string, Fit> {
+/**
+ * Fits come from two places: the file committed with the project, and
+ * whatever you have saved locally. Local wins, so you can adjust a shipped fit
+ * without editing anything — but a fit that only ever lives in localStorage is
+ * one cleared browser away from gone, and invisible to everyone else. Export
+ * writes the merged set out so it can be committed and become the default.
+ */
+function localFits(): Record<string, Fit> {
   try {
     return JSON.parse(localStorage.getItem(KEY) ?? '{}') as Record<string, Fit>;
   } catch {
     return {};
   }
+}
+
+function allFits(): Record<string, Fit> {
+  // JSON widens the tuples to number[]; the shape is guaranteed by the export.
+  return { ...(shippedFits as unknown as Record<string, Fit>), ...localFits() };
 }
 
 /** Fit key: one per character+weapon pair, falling back to character-only. */
@@ -47,15 +60,14 @@ export function fitFor(character: string, weapon: string): Fit | null {
 }
 
 function saveFit(character: string, weapon: string, fit: Fit, allWeapons: boolean) {
-  const fits = allFits();
+  const fits = localFits();
   fits[allWeapons ? `${character.split('/').pop()}|*` : keyFor(character, weapon)] = fit;
   localStorage.setItem(KEY, JSON.stringify(fits));
 }
 
-/** Weapons worth fitting — the ones that change how a swing hits. */
+/** Melee only. Guns are a different mechanic and none is implemented. */
 const WEAPONS = [
-  'Cutlass', 'Sword', 'Swords', 'Axe', 'Axe Rifle', 'Dagger', 'Large Bone',
-  'Pistol', 'Rifle', 'Shotgun',
+  'Cutlass', 'Sword', 'Axe', 'Dagger', 'Large Bone',
 ].map((n) => ({ label: n, src: `/models/quaternius-pirate/${n}.glb` }));
 
 /* ----------------------------------------------------------------- bench --- */
@@ -105,7 +117,7 @@ export function toggleRigFit(open?: boolean) {
   // 'block', never '' — clearing the inline style hands control back to the
   // stylesheet, which says display:none, so the panel stayed invisible while
   // every DOM check said it was open.
-  el.style.display = show ? 'block' : 'none';
+  el.style.display = show ? 'flex' : 'none';
   if (show) {
     void load();
     tick();
@@ -119,18 +131,24 @@ function ensure() {
   if (el) return;
   const style = document.createElement('style');
   style.textContent = `
-    /* Capped and scrollable: at 803px of sliders it ran off the bottom of a
-       750px window, which put Save out of reach. */
-    #rigfit { position:fixed; right:16px; top:74px; width:300px; z-index:26;
-      max-height: calc(100vh - 100px); overflow-y:auto; overscroll-behavior:contain;
-      pointer-events:auto; display:none; padding:10px;
+    /* Two columns: a big preview that stays put, and a scrolling control
+       strip beside it. One narrow column meant the model was tiny AND the
+       playback controls sat below the fold, so you could never watch the
+       swing and press pause at the same time. */
+    #rigfit { position:fixed; left:50%; top:74px; transform:translateX(-50%);
+      width:min(760px, calc(100vw - 32px)); height:min(560px, calc(100vh - 110px));
+      z-index:26; display:none; padding:12px; gap:12px;
+      pointer-events:auto;
       font-family: var(--font-body, Inter, sans-serif);
       background: var(--surface-face,#faf6ef); color: var(--text-primary,#111);
       border:2px solid var(--border-strong,#111); border-radius:14px;
       box-shadow:0 5px 0 var(--border-strong,#111); }
+    #rigfit .stage { flex:1 1 auto; display:flex; flex-direction:column; min-width:0; }
+    #rigfit .controls { flex:0 0 268px; overflow-y:auto; overscroll-behavior:contain;
+      padding-right:4px; }
     #rigfit h3 { margin:0 0 6px; font-family: var(--font-display,sans-serif); font-size:14px; }
-    #rigfit canvas { width:100%; height:200px; border:2px solid var(--border-strong,#111);
-      border-radius:10px; background:#dfe9ef; display:block; margin-bottom:8px; }
+    #rigfit canvas { width:100%; flex:1 1 auto; border:2px solid var(--border-strong,#111);
+      border-radius:10px; background:#dfe9ef; display:block; }
     #rigfit label { display:block; font-size:10px; letter-spacing:.1em;
       text-transform:uppercase; color: var(--text-secondary,#666); margin:6px 0 2px; }
     #rigfit select, #rigfit input[type=text] { width:100%; font-size:12px; padding:4px 6px;
@@ -152,8 +170,11 @@ function ensure() {
   el = document.createElement('div');
   el.id = 'rigfit';
   el.innerHTML = `
-    <h3>Weapon fit</h3>
-    <canvas></canvas>
+    <div class="stage">
+      <h3>Weapon fit</h3>
+      <canvas></canvas>
+    </div>
+    <div class="controls">
     <label>Character</label>
     <select id="rf-char">${PLAYER_CHOICES.map(
       (c) => `<option value="${c.src}">${c.label}</option>`
@@ -185,7 +206,11 @@ function ensure() {
       <button id="rf-save" class="accent">Save</button>
       <button id="rf-all">Save for all weapons</button>
     </div>
+    <div class="btns">
+      <button id="rf-export">Export fits for the repo</button>
+    </div>
     <div class="note">Scrub the speed to zero to hold a pose, then fit against it.</div>
+    </div>
   `;
   document.body.appendChild(el);
 
@@ -193,14 +218,44 @@ function ensure() {
   renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
   renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
   scene = new THREE.Scene();
-  camera = new THREE.PerspectiveCamera(35, 1.4, 0.1, 50);
-  camera.position.set(1.5, 1.5, 2.4);
-  camera.lookAt(0, 0.9, 0);
+  camera = new THREE.PerspectiveCamera(32, 1.4, 0.1, 50);
+  frameCharacter();
   scene.add(new THREE.HemisphereLight(0xffffff, 0x9a8a70, 2.4));
   const dir = new THREE.DirectionalLight(0xffffff, 1.6);
   dir.position.set(2, 4, 3);
   scene.add(dir);
   clock = new THREE.Clock();
+
+  // The preview is its own little viewport: drag to turn the model, wheel to
+  // zoom. Bound to the canvas so it never reaches the builder behind it.
+  let dragging = false;
+  let last = { x: 0, y: 0 };
+  canvas.addEventListener('pointerdown', (e) => {
+    dragging = true;
+    last = { x: e.clientX, y: e.clientY };
+    canvas.setPointerCapture(e.pointerId);
+    e.stopPropagation();
+  });
+  canvas.addEventListener('pointermove', (e) => {
+    if (!dragging) return;
+    view.yaw -= (e.clientX - last.x) * 0.01;
+    view.pitch = Math.max(-0.9, Math.min(1.2, view.pitch + (e.clientY - last.y) * 0.006));
+    last = { x: e.clientX, y: e.clientY };
+    frameCharacter();
+    e.stopPropagation();
+  });
+  const endDrag = (e: PointerEvent) => {
+    dragging = false;
+    if (canvas.hasPointerCapture(e.pointerId)) canvas.releasePointerCapture(e.pointerId);
+  };
+  canvas.addEventListener('pointerup', endDrag);
+  canvas.addEventListener('pointercancel', endDrag);
+  canvas.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    view.zoom = Math.max(0.35, Math.min(3, view.zoom * (1 + Math.sign(e.deltaY) * 0.12)));
+    frameCharacter();
+  }, { passive: false });
 
   const on = (id: string, ev: string, fn: (e: Event) => void) =>
     el!.querySelector(id)!.addEventListener(ev, fn);
@@ -238,6 +293,15 @@ function ensure() {
   on('#rf-speed', 'input', (e) => {
     speed = parseFloat((e.target as HTMLInputElement).value);
     applySpeed();
+  });
+  on('#rf-export', 'click', () => {
+    const blob = new Blob([JSON.stringify(allFits(), null, 1)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'weapon-fits.json';
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+    flash('Downloaded — drop it in src/levels/');
   });
   on('#rf-save', 'click', () => {
     saveFit(current.character, current.weapon, fit, false);
@@ -335,6 +399,35 @@ function apply() {
   syncInputs();
 }
 
+/**
+ * Pull the camera back far enough to hold the whole character.
+ *
+ * A fixed camera position framed the model fine in a short wide box and then
+ * filled the frame with its head once the stage became tall and narrow. The
+ * distance is derived from the field of view and the current aspect instead,
+ * so it re-frames whenever the panel is resized.
+ */
+/** Orbit state for the preview: yaw, pitch and a zoom multiplier. */
+const view = { yaw: 0.42, pitch: 0.12, zoom: 1 };
+
+function frameCharacter() {
+  if (!camera) return;
+  const H = 2.0; // character plus headroom, metres
+  const W = 1.4; // arms out
+  const vfov = (camera.fov * Math.PI) / 180;
+  const forHeight = H / 2 / Math.tan(vfov / 2);
+  const forWidth = W / 2 / Math.tan(vfov / 2) / Math.max(camera.aspect, 1e-3);
+  const dist = Math.max(forHeight, forWidth) * 1.12 * view.zoom;
+  // Spherical around the character's middle, so drag orbits and wheel dollies.
+  const cy = 0.8 + Math.sin(view.pitch) * dist * 0.35;
+  camera.position.set(
+    Math.sin(view.yaw) * Math.cos(view.pitch) * dist,
+    Math.max(0.15, 1.0 + Math.sin(view.pitch) * dist * 0.5),
+    Math.cos(view.yaw) * Math.cos(view.pitch) * dist
+  );
+  camera.lookAt(0, Math.min(1.3, Math.max(0.4, cy)), 0);
+}
+
 function tick() {
   if (!renderer || !scene || !camera || !el || !isRigFitOpen()) return;
   const c = renderer.domElement;
@@ -342,6 +435,7 @@ function tick() {
     renderer.setSize(c.clientWidth, c.clientHeight, false);
     camera.aspect = c.clientWidth / Math.max(c.clientHeight, 1);
     camera.updateProjectionMatrix();
+    frameCharacter();
   }
   mixer?.update(clock?.getDelta() ?? 0.016);
   renderer.render(scene, camera);

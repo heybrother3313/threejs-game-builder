@@ -1,0 +1,842 @@
+{
+ "Frog.glb|Cutlass.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   -0.025,
+   0.165,
+   -0.115
+  ],
+  "rot": [
+   -2.15,
+   0.35,
+   -0.83
+  ],
+  "scale": 0.71
+ },
+ "Frog.glb|*": {
+  "bone": "Middle1L",
+  "pos": [
+   -0.01,
+   0.17,
+   -0.08
+  ],
+  "rot": [
+   -2.65,
+   -0.09,
+   -0.83
+  ],
+  "scale": 0.71
+ },
+ "Frog.glb|Axe.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   0.025,
+   0.105,
+   -0.1
+  ],
+  "rot": [
+   2.53,
+   0.29,
+   -1.49
+  ],
+  "scale": 0.91
+ },
+ "Frog.glb|Sword.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   0.08,
+   0.18,
+   -0.075
+  ],
+  "rot": [
+   -0.53,
+   -0.01,
+   -1.83
+  ],
+  "scale": 0.71
+ },
+ "Frog.glb|Dagger.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   0.045,
+   0.165,
+   -0.075
+  ],
+  "rot": [
+   -0.99,
+   -0.11,
+   -1.59
+  ],
+  "scale": 0.71
+ },
+ "Frog.glb|Large Bone.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   0.11,
+   0.3,
+   -0.08
+  ],
+  "rot": [
+   -2.71,
+   -0.09,
+   -0.83
+  ],
+  "scale": 0.71
+ },
+ "Dino.glb|Cutlass.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   -0.025,
+   0.165,
+   -0.115
+  ],
+  "rot": [
+   -2.15,
+   0.35,
+   -0.83
+  ],
+  "scale": 0.71
+ },
+ "Monkroose.glb|Cutlass.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   -0.025,
+   0.165,
+   -0.115
+  ],
+  "rot": [
+   -2.15,
+   0.35,
+   -0.83
+  ],
+  "scale": 0.71
+ },
+ "Orc.glb|Cutlass.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   -0.025,
+   0.165,
+   -0.115
+  ],
+  "rot": [
+   -2.15,
+   0.35,
+   -0.83
+  ],
+  "scale": 0.71
+ },
+ "Blue Demon.glb|Cutlass.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   -0.025,
+   0.165,
+   -0.115
+  ],
+  "rot": [
+   -2.15,
+   0.35,
+   -0.83
+  ],
+  "scale": 0.71
+ },
+ "Bunny.glb|Cutlass.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   -0.025,
+   0.165,
+   -0.115
+  ],
+  "rot": [
+   -2.15,
+   0.35,
+   -0.83
+  ],
+  "scale": 0.71
+ },
+ "Mushroom King.glb|Cutlass.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   -0.025,
+   0.165,
+   -0.115
+  ],
+  "rot": [
+   -2.15,
+   0.35,
+   -0.83
+  ],
+  "scale": 0.71
+ },
+ "Alien-RRliSQBP7r.glb|Cutlass.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   -0.025,
+   0.165,
+   -0.115
+  ],
+  "rot": [
+   -2.15,
+   0.35,
+   -0.83
+  ],
+  "scale": 0.71
+ },
+ "Fish-ypEYhCImAB.glb|Cutlass.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   -0.025,
+   0.165,
+   -0.115
+  ],
+  "rot": [
+   -2.15,
+   0.35,
+   -0.83
+  ],
+  "scale": 0.71
+ },
+ "Yeti-ceRHrn8HHE.glb|Cutlass.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   -0.025,
+   0.165,
+   -0.115
+  ],
+  "rot": [
+   -2.15,
+   0.35,
+   -0.83
+  ],
+  "scale": 0.71
+ },
+ "Dino.glb|*": {
+  "bone": "Middle1L",
+  "pos": [
+   -0.01,
+   0.17,
+   -0.08
+  ],
+  "rot": [
+   -2.65,
+   -0.09,
+   -0.83
+  ],
+  "scale": 0.71
+ },
+ "Monkroose.glb|*": {
+  "bone": "Middle1L",
+  "pos": [
+   -0.01,
+   0.17,
+   -0.08
+  ],
+  "rot": [
+   -2.65,
+   -0.09,
+   -0.83
+  ],
+  "scale": 0.71
+ },
+ "Orc.glb|*": {
+  "bone": "Middle1L",
+  "pos": [
+   -0.01,
+   0.17,
+   -0.08
+  ],
+  "rot": [
+   -2.65,
+   -0.09,
+   -0.83
+  ],
+  "scale": 0.71
+ },
+ "Blue Demon.glb|*": {
+  "bone": "Middle1L",
+  "pos": [
+   -0.01,
+   0.17,
+   -0.08
+  ],
+  "rot": [
+   -2.65,
+   -0.09,
+   -0.83
+  ],
+  "scale": 0.71
+ },
+ "Bunny.glb|*": {
+  "bone": "Middle1L",
+  "pos": [
+   -0.01,
+   0.17,
+   -0.08
+  ],
+  "rot": [
+   -2.65,
+   -0.09,
+   -0.83
+  ],
+  "scale": 0.71
+ },
+ "Mushroom King.glb|*": {
+  "bone": "Middle1L",
+  "pos": [
+   -0.01,
+   0.17,
+   -0.08
+  ],
+  "rot": [
+   -2.65,
+   -0.09,
+   -0.83
+  ],
+  "scale": 0.71
+ },
+ "Alien-RRliSQBP7r.glb|*": {
+  "bone": "Middle1L",
+  "pos": [
+   -0.01,
+   0.17,
+   -0.08
+  ],
+  "rot": [
+   -2.65,
+   -0.09,
+   -0.83
+  ],
+  "scale": 0.71
+ },
+ "Fish-ypEYhCImAB.glb|*": {
+  "bone": "Middle1L",
+  "pos": [
+   -0.01,
+   0.17,
+   -0.08
+  ],
+  "rot": [
+   -2.65,
+   -0.09,
+   -0.83
+  ],
+  "scale": 0.71
+ },
+ "Yeti-ceRHrn8HHE.glb|*": {
+  "bone": "Middle1L",
+  "pos": [
+   -0.01,
+   0.17,
+   -0.08
+  ],
+  "rot": [
+   -2.65,
+   -0.09,
+   -0.83
+  ],
+  "scale": 0.71
+ },
+ "Dino.glb|Axe.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   0.025,
+   0.105,
+   -0.1
+  ],
+  "rot": [
+   2.53,
+   0.29,
+   -1.49
+  ],
+  "scale": 0.91
+ },
+ "Monkroose.glb|Axe.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   0.025,
+   0.105,
+   -0.1
+  ],
+  "rot": [
+   2.53,
+   0.29,
+   -1.49
+  ],
+  "scale": 0.91
+ },
+ "Orc.glb|Axe.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   0.025,
+   0.105,
+   -0.1
+  ],
+  "rot": [
+   2.53,
+   0.29,
+   -1.49
+  ],
+  "scale": 0.91
+ },
+ "Blue Demon.glb|Axe.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   0.025,
+   0.105,
+   -0.1
+  ],
+  "rot": [
+   2.53,
+   0.29,
+   -1.49
+  ],
+  "scale": 0.91
+ },
+ "Bunny.glb|Axe.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   0.025,
+   0.105,
+   -0.1
+  ],
+  "rot": [
+   2.53,
+   0.29,
+   -1.49
+  ],
+  "scale": 0.91
+ },
+ "Mushroom King.glb|Axe.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   0.025,
+   0.105,
+   -0.1
+  ],
+  "rot": [
+   2.53,
+   0.29,
+   -1.49
+  ],
+  "scale": 0.91
+ },
+ "Alien-RRliSQBP7r.glb|Axe.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   0.025,
+   0.105,
+   -0.1
+  ],
+  "rot": [
+   2.53,
+   0.29,
+   -1.49
+  ],
+  "scale": 0.91
+ },
+ "Fish-ypEYhCImAB.glb|Axe.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   0.025,
+   0.105,
+   -0.1
+  ],
+  "rot": [
+   2.53,
+   0.29,
+   -1.49
+  ],
+  "scale": 0.91
+ },
+ "Yeti-ceRHrn8HHE.glb|Axe.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   0.025,
+   0.105,
+   -0.1
+  ],
+  "rot": [
+   2.53,
+   0.29,
+   -1.49
+  ],
+  "scale": 0.91
+ },
+ "Dino.glb|Sword.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   0.08,
+   0.18,
+   -0.075
+  ],
+  "rot": [
+   -0.53,
+   -0.01,
+   -1.83
+  ],
+  "scale": 0.71
+ },
+ "Monkroose.glb|Sword.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   0.08,
+   0.18,
+   -0.075
+  ],
+  "rot": [
+   -0.53,
+   -0.01,
+   -1.83
+  ],
+  "scale": 0.71
+ },
+ "Orc.glb|Sword.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   0.08,
+   0.18,
+   -0.075
+  ],
+  "rot": [
+   -0.53,
+   -0.01,
+   -1.83
+  ],
+  "scale": 0.71
+ },
+ "Blue Demon.glb|Sword.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   0.08,
+   0.18,
+   -0.075
+  ],
+  "rot": [
+   -0.53,
+   -0.01,
+   -1.83
+  ],
+  "scale": 0.71
+ },
+ "Bunny.glb|Sword.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   0.08,
+   0.18,
+   -0.075
+  ],
+  "rot": [
+   -0.53,
+   -0.01,
+   -1.83
+  ],
+  "scale": 0.71
+ },
+ "Mushroom King.glb|Sword.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   0.08,
+   0.18,
+   -0.075
+  ],
+  "rot": [
+   -0.53,
+   -0.01,
+   -1.83
+  ],
+  "scale": 0.71
+ },
+ "Alien-RRliSQBP7r.glb|Sword.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   0.08,
+   0.18,
+   -0.075
+  ],
+  "rot": [
+   -0.53,
+   -0.01,
+   -1.83
+  ],
+  "scale": 0.71
+ },
+ "Fish-ypEYhCImAB.glb|Sword.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   0.08,
+   0.18,
+   -0.075
+  ],
+  "rot": [
+   -0.53,
+   -0.01,
+   -1.83
+  ],
+  "scale": 0.71
+ },
+ "Yeti-ceRHrn8HHE.glb|Sword.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   0.08,
+   0.18,
+   -0.075
+  ],
+  "rot": [
+   -0.53,
+   -0.01,
+   -1.83
+  ],
+  "scale": 0.71
+ },
+ "Dino.glb|Dagger.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   0.045,
+   0.165,
+   -0.075
+  ],
+  "rot": [
+   -0.99,
+   -0.11,
+   -1.59
+  ],
+  "scale": 0.71
+ },
+ "Monkroose.glb|Dagger.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   0.045,
+   0.165,
+   -0.075
+  ],
+  "rot": [
+   -0.99,
+   -0.11,
+   -1.59
+  ],
+  "scale": 0.71
+ },
+ "Orc.glb|Dagger.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   0.045,
+   0.165,
+   -0.075
+  ],
+  "rot": [
+   -0.99,
+   -0.11,
+   -1.59
+  ],
+  "scale": 0.71
+ },
+ "Blue Demon.glb|Dagger.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   0.045,
+   0.165,
+   -0.075
+  ],
+  "rot": [
+   -0.99,
+   -0.11,
+   -1.59
+  ],
+  "scale": 0.71
+ },
+ "Bunny.glb|Dagger.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   0.045,
+   0.165,
+   -0.075
+  ],
+  "rot": [
+   -0.99,
+   -0.11,
+   -1.59
+  ],
+  "scale": 0.71
+ },
+ "Mushroom King.glb|Dagger.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   0.045,
+   0.165,
+   -0.075
+  ],
+  "rot": [
+   -0.99,
+   -0.11,
+   -1.59
+  ],
+  "scale": 0.71
+ },
+ "Alien-RRliSQBP7r.glb|Dagger.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   0.045,
+   0.165,
+   -0.075
+  ],
+  "rot": [
+   -0.99,
+   -0.11,
+   -1.59
+  ],
+  "scale": 0.71
+ },
+ "Fish-ypEYhCImAB.glb|Dagger.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   0.045,
+   0.165,
+   -0.075
+  ],
+  "rot": [
+   -0.99,
+   -0.11,
+   -1.59
+  ],
+  "scale": 0.71
+ },
+ "Yeti-ceRHrn8HHE.glb|Dagger.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   0.045,
+   0.165,
+   -0.075
+  ],
+  "rot": [
+   -0.99,
+   -0.11,
+   -1.59
+  ],
+  "scale": 0.71
+ },
+ "Dino.glb|Large Bone.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   0.11,
+   0.3,
+   -0.08
+  ],
+  "rot": [
+   -2.71,
+   -0.09,
+   -0.83
+  ],
+  "scale": 0.71
+ },
+ "Monkroose.glb|Large Bone.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   0.11,
+   0.3,
+   -0.08
+  ],
+  "rot": [
+   -2.71,
+   -0.09,
+   -0.83
+  ],
+  "scale": 0.71
+ },
+ "Orc.glb|Large Bone.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   0.11,
+   0.3,
+   -0.08
+  ],
+  "rot": [
+   -2.71,
+   -0.09,
+   -0.83
+  ],
+  "scale": 0.71
+ },
+ "Blue Demon.glb|Large Bone.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   0.11,
+   0.3,
+   -0.08
+  ],
+  "rot": [
+   -2.71,
+   -0.09,
+   -0.83
+  ],
+  "scale": 0.71
+ },
+ "Bunny.glb|Large Bone.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   0.11,
+   0.3,
+   -0.08
+  ],
+  "rot": [
+   -2.71,
+   -0.09,
+   -0.83
+  ],
+  "scale": 0.71
+ },
+ "Mushroom King.glb|Large Bone.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   0.11,
+   0.3,
+   -0.08
+  ],
+  "rot": [
+   -2.71,
+   -0.09,
+   -0.83
+  ],
+  "scale": 0.71
+ },
+ "Alien-RRliSQBP7r.glb|Large Bone.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   0.11,
+   0.3,
+   -0.08
+  ],
+  "rot": [
+   -2.71,
+   -0.09,
+   -0.83
+  ],
+  "scale": 0.71
+ },
+ "Fish-ypEYhCImAB.glb|Large Bone.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   0.11,
+   0.3,
+   -0.08
+  ],
+  "rot": [
+   -2.71,
+   -0.09,
+   -0.83
+  ],
+  "scale": 0.71
+ },
+ "Yeti-ceRHrn8HHE.glb|Large Bone.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   0.11,
+   0.3,
+   -0.08
+  ],
+  "rot": [
+   -2.71,
+   -0.09,
+   -0.83
+  ],
+  "scale": 0.71
+ }
+}
