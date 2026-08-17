@@ -218,6 +218,14 @@ let throwReleaseFrac = 0.38;
  * later than a throw once there is a line to watch. __game.setCastRelease(f).
  */
 let castReleaseFrac = 0.38;
+/**
+ * How long the line takes to come back in.
+ *
+ * Not the cast's own duration run backwards, which is what it was and read as
+ * a yank — a cast is a flick and a reel is winding. Tunable live via
+ * __game.setReelSeconds(s), same as the release point.
+ */
+let reelSeconds = 1.1;
 let pendingCast: { t: number } | null = null;
 /** Rod tip at the moment of release, and again every frame for the line. */
 const castTipScratch = new THREE.Vector3();
@@ -709,10 +717,10 @@ const CarrySystem: System = {
         // Reel: the swing played backwards from where the cast cut it, with
         // the lure winding in over exactly that motion.
         if (!isReeling()) {
-          const back = playerReverseSwing(castReleaseFrac);
+          const back = playerReverseSwing(castReleaseFrac, reelSeconds);
           attackHold = Math.min(back, ATTACK_HOLD_MAX);
           attackFacing = heading;
-          startReel(back > 0 ? back : 0.3);
+          startReel(back > 0 ? back : reelSeconds);
         }
       } else {
         const dur = playerSwing();
@@ -1129,6 +1137,11 @@ withSystem(PlatformSlipSystem)
         setCastRelease: (f: number) => {
           castReleaseFrac = Math.min(0.9, Math.max(0.02, f));
           return castReleaseFrac;
+        },
+        /** How many seconds the line takes to wind back in. */
+        setReelSeconds: (s: number) => {
+          reelSeconds = Math.min(4, Math.max(0.2, s));
+          return reelSeconds;
         },
         setHeading: (h: number) => {
           heading = h;

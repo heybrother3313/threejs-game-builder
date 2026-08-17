@@ -117,6 +117,18 @@ type Runtime = {
    * session that earned it.
    */
   provoked: boolean;
+  /**
+   * Seconds of grudge left, for someone who was not hostile to begin with.
+   *
+   * Most hits on a townsperson are accidental — a swing aimed at something
+   * behind them, a bomb that went where bombs go. Turning that into a fight
+   * they pursue forever punishes a misclick, and the only way out was to kill
+   * a friendly. So a non-hostile remembers for a few seconds and refreshes
+   * that on every fresh hit: keep swinging and they keep fighting, walk away
+   * and they go back to what they were doing. Anyone hostile by faction is
+   * unaffected — they never needed provoking.
+   */
+  provokedT: number;
   /** The weapon model hanging in this one's hand, so death can take it away. */
   heldWeapon?: THREE.Object3D;
   /** Fetch quest delivered; wantsItem stops matching. */
@@ -160,6 +172,9 @@ export const SWING_CONTACT = 0.32;
  */
 const REACH_HEIGHT = 1.5;
 const NOTICE_HEIGHT = 4;
+
+/** How long a non-hostile stays angry after being hit. Refreshed per hit. */
+const GRUDGE_SECONDS = 6;
 
 export const DEFAULTS: Required<Pick<NpcConfig, 'health' | 'damage' | 'speed' | 'aggroRadius' | 'attackRadius'>> = {
   health: 30,
@@ -420,6 +435,7 @@ export function npcRuntime(item: PlacedItem): Runtime {
       parked: false,
       spokeTo: false,
       provoked: false,
+      provokedT: 0,
       rewarded: false,
     };
     rt.set(item, r);
@@ -651,6 +667,8 @@ export function damageNpc(state: State, item: PlacedItem, amount: number, fromX:
     return;
   }
   r.provoked = true;
+  // Refreshed on every hit, so a real fight stays a fight.
+  r.provokedT = GRUDGE_SECONDS;
 }
 
 function hurtPlayer(amount: number, fromX: number, fromZ: number, px: number, pz: number) {
@@ -942,6 +960,19 @@ export function updateNpcs(
       (!boardNear || toPlayer <= boardNear.d)
     ) {
       prompt = `<b>E</b>&nbsp; talk to ${nameOf(item)}`;
+    }
+
+    // Let a grudge cool. Only non-hostiles carry one, so this never calms
+    // something that was out to get you in the first place.
+    if (r.provoked && cfg.faction !== 'hostile') {
+      r.provokedT -= dt;
+      if (r.provokedT <= 0) {
+        r.provoked = false;
+        r.provokedT = 0;
+        // Drop the fight this frame; the branches below put them back on
+        // their patrol, their wander, or their spot.
+        if (r.state === 'chase' || r.state === 'attack') r.state = 'idle';
+      }
     }
 
     if (r.following) r.state = 'follow';

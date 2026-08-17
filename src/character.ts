@@ -425,17 +425,21 @@ export function playerSwing(): number {
  * fraction, so winding back from that same point returns the arm along the
  * path it took, and the two motions are symmetric.
  */
-export function playerReverseSwing(fromFrac: number): number {
+export function playerReverseSwing(fromFrac: number, seconds = 0): number {
   const a = (armed && actions['Weapon']) || actions['Punch'];
   if (!a || dead) return 0;
   const dur = a.getClip().duration;
   const from = Math.max(0, Math.min(dur, dur * fromFrac));
+  // Winding a line in is slower than the flick that sent it out, so the clip
+  // is stretched to whatever the reel is given rather than run at 1x — the
+  // arm and the lure then arrive together instead of the arm finishing first.
+  const span = seconds > 0 ? seconds : from;
   a.reset().fadeIn(0.06).play();
   a.time = from;
-  a.timeScale = -1;
+  a.timeScale = -(from / Math.max(span, 1e-3));
   current?.fadeOut(0.06);
   current = a;
-  swingT = from; // at -1x it reaches the start in exactly this long
+  swingT = span;
   swinging = true;
   currentState = -1;
   return swingT;
