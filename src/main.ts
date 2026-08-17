@@ -180,8 +180,16 @@ let attackHold = 0;
 let attackFacing: number | null = null;
 /** You plant to hit. Not zero: a dead stop reads as a hitch, not a commitment. */
 const ATTACK_SPEED = 0.3;
-/** A throw has no swing clip to measure, so it gets a fixed follow-through. */
-const THROW_HOLD = 0.3;
+/**
+ * A throw in flight: the object has left your control but not your hand yet.
+ *
+ * Throwing used to fire the instant you pressed the key, with no animation at
+ * all — the character stood still and the bomb shot out sideways from wherever
+ * the hand happened to be. A throw is a motion, so it plays the same swing
+ * clip a blade does and the object leaves at the contact point, partway
+ * through, when the arm is actually up.
+ */
+let pendingThrow: { t: number; speed: number; lift: number } | null = null;
 /**
  * Cap on the plant. Some Weapon clips run well over a second, and damping the
  * throttle for that long turns every swing into a stumble — the fix for
@@ -570,6 +578,17 @@ const CarrySystem: System = {
       heldItem = null;
     };
 
+    // Let go at the top of the motion. This runs here rather than beside
+    // pendingPunch because releaseItem needs this frame's facing and hand
+    // point — a throw released from last frame's numbers drifts sideways.
+    if (pendingThrow) {
+      pendingThrow.t -= Math.min(state.time.deltaTime, 0.05);
+      if (pendingThrow.t <= 0) {
+        releaseItem(pendingThrow.speed, pendingThrow.lift);
+        pendingThrow = null;
+      }
+    }
+
     // Holding a blade, F is a SWING, not a throw — you don't lob your sword
     // at people. Everything else (barrels, bombs) still gets thrown.
     if (wantsThrow && heldItem && bladeFor(heldItem) !== FISTS) {
@@ -585,10 +604,10 @@ const CarrySystem: System = {
       wantsGrab = wantsThrow = false;
       return;
     }
-    if (wantsThrow && heldItem) {
-      attackHold = THROW_HOLD;
+    if (wantsThrow && heldItem && !pendingThrow) {
+      attackHold = Math.min(playerSwing(), ATTACK_HOLD_MAX);
       attackFacing = heading;
-      releaseItem(CARRY.throwSpeed, CARRY.throwLift);
+      pendingThrow = { t: SWING_CONTACT, speed: CARRY.throwSpeed, lift: CARRY.throwLift };
       wantsGrab = wantsThrow = false;
       return;
     }
