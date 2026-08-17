@@ -692,14 +692,27 @@ function applyEntryTransform(item: PlacedItem) {
   obj.position.set(0, 0, 0);
   obj.updateMatrixWorld(true);
   const box = new THREE.Box3().setFromObject(obj);
-  const size = box.getSize(new THREE.Vector3());
   const lift =
     entry.groundMesh || placingGround || entry.follow ? 0 : groundHeightAt(entry.x, entry.z);
+  // An unmeasurable model puts the piece at NaN, not merely in the wrong place.
+  //
+  // Box3.setFromObject returns an EMPTY box when it finds no geometry to
+  // expand by — min +Infinity, max -Infinity. The centring below is
+  // (min + max) / 2, and Infinity + -Infinity is NaN, so every coordinate
+  // becomes NaN and the model vanishes while its health bar, border and
+  // marker carry on drawing at the origin. That is the "props missing on
+  // first load" symptom, and it is also what poisoned melee aim: one NaN
+  // entity wins every distance comparison.
+  //
+  // Centre only on a real measurement; otherwise place at the entry outright.
+  const measured = !box.isEmpty() && Number.isFinite(box.min.x + box.max.x + box.min.y);
+  if (!measured) console.warn('[level] unmeasurable bounds, placing raw:', entry.src);
+  const size = measured ? box.getSize(new THREE.Vector3()) : new THREE.Vector3();
   const baseY = (entry.alignTop ? entry.y - size.y : entry.y) + lift;
   obj.position.set(
-    entry.x - (box.min.x + box.max.x) / 2,
-    baseY - box.min.y,
-    entry.z - (box.min.z + box.max.z) / 2
+    measured ? entry.x - (box.min.x + box.max.x) / 2 : entry.x,
+    measured ? baseY - box.min.y : baseY,
+    measured ? entry.z - (box.min.z + box.max.z) / 2 : entry.z
   );
   obj.updateMatrixWorld(true);
 }
