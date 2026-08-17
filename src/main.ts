@@ -35,6 +35,7 @@ import {
   playerHitReact,
   playerSwing,
   playerAnimDebug,
+  setHeldWeapon,
   setPlayerDead,
   updateCharacterVisual,
 } from './character';
@@ -477,6 +478,8 @@ const CarrySystem: System = {
     const releaseItem = (speed: number, lift: number) => {
       if (!heldItem) return;
       showHeld(null);
+      heldItem.obj.visible = true;
+      void setHeldWeapon(null);
       endCarry(
         state,
         heldItem,
@@ -584,6 +587,12 @@ const CarrySystem: System = {
         heldItem = prop;
         const b = bladeFor(prop);
         showHeld(b === FISTS ? nameOfSrc(prop.entry.src) : `${b.name} — ${b.damage} dmg`);
+        // A blade goes in the hand and the floating copy is hidden; anything
+        // else keeps the two-handed carry pose.
+        if (b !== FISTS) {
+          prop.obj.visible = false;
+          void setHeldWeapon(prop.entry.src);
+        }
         wantsGrab = wantsThrow = false;
         return;
       }

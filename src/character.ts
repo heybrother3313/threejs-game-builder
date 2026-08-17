@@ -26,15 +26,24 @@ import { Transform, WorldTransform } from 'vibegame/transforms';
  * are literally named Idle / Walk / Run / Jump / Jump_Idle / Jump_Land, the
  * same states the engine drives, so nothing has to be approximated.
  */
+/**
+ * Playable characters, chosen by MEASUREMENT rather than by eye.
+ *
+ * A player character needs the full clip set the game drives — Idle, Walk,
+ * Run, Jump, Jump_Idle, Jump_Land, Death, Punch, Weapon, HitReact — and a
+ * right-hand rig to hang a weapon on. Every model in the Ultimate Monsters
+ * pack was loaded and checked; these seven pass. Alien, Fish, Yeti and Cactoro
+ * look the part but ship no Punch, no Weapon and no hand bones, so they would
+ * stand there empty-handed when you swing.
+ */
 export const PLAYER_CHOICES: { label: string; src: string }[] = [
-  { label: 'Frog (monster)', src: '/models/ultimate-monsters/Frog.glb' },
-  { label: 'Cactoro (monster)', src: '/models/ultimate-monsters/Cactoro.glb' },
-  { label: 'Dino (monster)', src: '/models/ultimate-monsters/Dino.glb' },
-  { label: 'Alien (monster)', src: '/models/ultimate-monsters/Alien.glb' },
-  { label: 'Bunny (monster)', src: '/models/ultimate-monsters/Bunny.glb' },
-  { label: 'Ghost (monster)', src: '/models/ultimate-monsters/Ghost.glb' },
-  { label: 'Woman Casual', src: '/models/animated-women-pack/Woman Casual.glb' },
-  { label: 'Man', src: '/models/animated-men-pack/Man.glb' },
+  { label: 'Frog', src: '/models/ultimate-monsters/Frog.glb' },
+  { label: 'Dino', src: '/models/ultimate-monsters/Dino.glb' },
+  { label: 'Monkroose', src: '/models/ultimate-monsters/Monkroose.glb' },
+  { label: 'Orc', src: '/models/ultimate-monsters/Orc.glb' },
+  { label: 'Blue Demon', src: '/models/ultimate-monsters/Blue Demon.glb' },
+  { label: 'Bunny', src: '/models/ultimate-monsters/Bunny.glb' },
+  { label: 'Mushroom King', src: '/models/ultimate-monsters/Mushroom King.glb' },
 ];
 
 const PLAYER_KEY = 'sandbox-player-model';
@@ -149,17 +158,19 @@ export async function initCharacterVisual(state: State, playerEntity: number) {
     Jump_Land: ['Jump_Land', 'Female_Jump', 'Male_Jump', 'Land'],
     Death: ['Death', 'Female_Death', 'Male_Death'],
     Punch: ['Punch', 'Punch_Left', 'Female_Punch', 'Male_Punch', 'Attack', 'Sword_Slash'],
+    Weapon: ['Weapon', 'Sword_Slash', 'Attack', 'Punch'],
     HitReact: ['HitReact', 'HitRecieve', 'Hit', 'Duck'],
   };
   for (const seg of [
-    'Idle', 'Walk', 'Run', 'Jump', 'Jump_Idle', 'Jump_Land', 'Death', 'Punch', 'HitReact',
+    'Idle', 'Walk', 'Run', 'Jump', 'Jump_Idle', 'Jump_Land', 'Death', 'Punch', 'Weapon',
+    'HitReact',
   ]) {
     const clip = CANDIDATES[seg].map((c) => findClip(gltf.animations, c)).find(Boolean) ?? null;
     if (clip) {
       const a = mixer.clipAction(clip);
       if (
         seg === 'Jump' || seg === 'Jump_Land' || seg === 'Death' ||
-        seg === 'Punch' || seg === 'HitReact'
+        seg === 'Punch' || seg === 'Weapon' || seg === 'HitReact'
       ) {
         a.setLoop(THREE.LoopOnce, 1);
         a.clampWhenFinished = true;
@@ -245,9 +256,75 @@ function play(seg: string) {
   current = next;
 }
 
+/**
+ * The right hand. There is no bone called "hand" in these rigs — the fingers
+ * hang directly off the forearm — so the hand is whatever the finger bones
+ * share as a parent, and the forearm is the fallback.
+ */
+function findHand(): THREE.Object3D | null {
+  if (!player) return null;
+  let finger: THREE.Object3D | null = null;
+  let forearm: THREE.Object3D | null = null;
+  player.traverse((o) => {
+    if (o.name === 'Middle1R' || o.name === 'Index1R') finger = finger ?? o;
+    if (/^(LowerArmR|HandR|ForearmR)$/i.test(o.name)) forearm = forearm ?? o;
+  });
+  const f = finger as THREE.Object3D | null;
+  return f?.parent ?? forearm ?? null;
+}
+
+let heldWeapon: THREE.Object3D | null = null;
+let armed = false;
+
+/**
+ * Put a weapon in the character's hand, or take it away.
+ *
+ * Carrying a blade used to float it in front of the face on the same rig the
+ * barrels use, and the swing played the bare-handed Punch clip — so an axe
+ * and a fist looked identical though one hits for twice as much. The monster
+ * rigs ship a "Weapon" clip precisely for this, and it only reads correctly
+ * if something is actually in the hand.
+ */
+export async function setHeldWeapon(src: string | null) {
+  if (heldWeapon) {
+    heldWeapon.parent?.remove(heldWeapon);
+    heldWeapon = null;
+  }
+  armed = false;
+  if (!src || !player) return;
+  const hand = findHand();
+  if (!hand) return;
+  const gltf = await new Promise<{ scene: THREE.Group }>((resolve, reject) =>
+    new GLTFLoader().load(src, resolve, undefined, reject)
+  );
+  const model = gltf.scene;
+  // Undo the bone's accumulated scale. A hand bone deep in a rig carries the
+  // whole chain's scaling — parenting a world-sized model to it produced a
+  // forty-metre axe. Ask the bone what it is scaled by and divide it out, so
+  // the number below is real metres.
+  hand.updateWorldMatrix(true, false);
+  const boneScale = new THREE.Vector3();
+  hand.getWorldScale(boneScale);
+  const box = new THREE.Box3().setFromObject(model);
+  const size = box.getSize(new THREE.Vector3());
+  const WEAPON_LENGTH = 0.75; // metres, roughly forearm to fist plus a blade
+  const s = WEAPON_LENGTH / Math.max(size.x, size.y, size.z, 1e-3) /
+    Math.max(boneScale.x, 1e-6);
+  model.scale.setScalar(s);
+  model.position.set(0, 0.1 / Math.max(boneScale.x, 1e-6), 0);
+  model.rotation.set(Math.PI / 2, 0, 0);
+  model.traverse((o) => {
+    const m = o as THREE.Mesh;
+    if (m.isMesh) m.castShadow = true;
+  });
+  hand.add(model);
+  heldWeapon = model;
+  armed = true;
+}
+
 /** Throw a punch. Returns the clip length so combat can time its hit window. */
 export function playerSwing(): number {
-  const a = actions['Punch'];
+  const a = (armed && actions['Weapon']) || actions['Punch'];
   if (!a || dead) return 0;
   a.reset().fadeIn(0.06).play();
   current?.fadeOut(0.06);
