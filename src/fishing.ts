@@ -161,8 +161,20 @@ async function dressLure(holder: THREE.Group) {
       const m = o as THREE.Mesh;
       if (m.isMesh) m.castShadow = true;
     });
+    // Tie the line to the NOSE, not the middle. The plug lies along X with its
+    // red head toward -X and the hooks trailing +X, so -X is the tie eye: park
+    // that on the holder's origin, which is where the line ends.
+    model.updateMatrixWorld(true);
+    const b = new THREE.Box3().setFromObject(model);
+    const c = b.getCenter(new THREE.Vector3());
+    if (Number.isFinite(b.min.x) && Number.isFinite(c.y)) {
+      model.position.set(-b.min.x, -c.y, -c.z);
+    }
     holder.clear();
     holder.add(model);
+    // And hang it nose-up: +X (nose to tail) rotated -90° about Z points down,
+    // so the body and hooks trail below the line the way a plug hangs.
+    holder.rotation.z = -Math.PI / 2;
   } catch {
     /* keep the sphere */
   }
@@ -349,9 +361,28 @@ let hooked: {
   mixer: THREE.AnimationMixer;
   /** One loop of the flop, so the landing can be counted in flops. */
   flopSeconds: number;
-  /** Half its depth, to sit it ON the sand rather than half through it. */
+  /** How far its belly sits below the mouth when it lies flat. */
   halfHeight: number;
+  /** How far the body reaches below the mouth when it hangs nose-up. */
+  bodyLength: number;
 } | null = null;
+
+/**
+ * How much of the fish's half-depth counts as "belly".
+ *
+ * This has to be a dialled number rather than a measured one. Box3 on a
+ * skinned mesh reports the BIND pose, so measuring says the fish rests exactly
+ * on the sand while the Out_Of_Water pose is visibly holding it above — the
+ * measurement cannot see the animation that causes the problem. So: one knob,
+ * used for both where it settles and how far it may sink, tunable live via
+ * __game.setFishRest(f). Lower sits it deeper.
+ */
+let fishRest = 0.7;
+
+export function setFishRest(f: number): number {
+  fishRest = Math.min(1.5, Math.max(0.05, f));
+  return fishRest;
+}
 let caughtReady: string | null = null;
 
 /**
@@ -433,7 +464,10 @@ async function attachFish(name: string) {
       flopSeconds: clip?.duration || 0.8,
       // The pivot is the mouth, so the body straddles it. Lying flat, that
       // puts half the fish under the sand unless it is lifted.
-      halfHeight: Number.isFinite(size.y) ? (size.y * model.scale.y) / 2 : 0.1,
+      halfHeight: Number.isFinite(size.y) ? ((size.y * model.scale.y) / 2) * fishRest : 0.1,
+      // Nose-up, the whole body hangs BELOW the mouth — which is why it used
+      // to sink through the sand on the way down, while still pitched.
+      bodyLength: Number.isFinite(scaled.max.z - scaled.min.z) ? scaled.max.z - scaled.min.z : 0.5,
     };
   } catch {
     /* model missing — the catch still counts */
@@ -457,6 +491,23 @@ function seatFish() {
 }
 
 /**
+ * Never let the fish through the sand, at any angle it happens to be at.
+ *
+ * The pivot is the MOUTH, so what hangs below it depends entirely on pitch:
+ * a whole body length when it is nose-up on the line, only its belly once it
+ * is flat. Clamping against a single number was what let it vanish through
+ * the ground partway down.
+ */
+function keepAboveGround() {
+  if (!hooked) return;
+  const p = hooked.pivot;
+  const pitch = Math.abs(p.rotation.x);
+  const below = hooked.bodyLength * Math.sin(pitch) + hooked.halfHeight * Math.cos(pitch);
+  const floor = restHeight(p.position.x, p.position.z) + below;
+  if (p.position.y < floor) p.position.y = floor;
+}
+
+/**
  * Off the hook: it falls to the sand, flops there, then it's yours.
  *
  * Runs whether or not a line is out, because by this point the fish has
@@ -469,16 +520,20 @@ function updateLandedFish(dt: number) {
     const t = Math.min(1, fishT / DROP_SECONDS);
     // Accelerate downward — it is falling, not being lowered.
     hooked.pivot.position.lerpVectors(fishFrom, fishTo, t * t);
-    // Nose-up on the line rolls flat as it lands.
-    hooked.pivot.rotation.x = -(Math.PI / 2) * (1 - t);
+    // Nose-up on the line rolls flat as it lands. Ahead of the descent, so it
+    // is level before it gets near the sand rather than pivoting into it.
+    hooked.pivot.rotation.x = -(Math.PI / 2) * (1 - Math.min(1, t * 1.6));
+    keepAboveGround();
     if (t >= 1) {
       fishPhase = 'flopping';
       fishT = 0;
       hooked.pivot.position.copy(fishTo);
       hooked.pivot.rotation.set(0, 0, 0);
+      keepAboveGround();
     }
     return;
   }
+  keepAboveGround();
   // Flopping: three goes at the clip, which is long enough to read as a fish
   // out of water rather than a frame of one.
   if (fishT >= hooked.flopSeconds * FLOPS) {

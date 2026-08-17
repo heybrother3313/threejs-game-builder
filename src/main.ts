@@ -74,6 +74,7 @@ import {
   isCharging,
   isReeling,
   reelIn,
+  setFishRest,
   startReel,
   takeCatch,
   tryHook,
@@ -1191,6 +1192,8 @@ withSystem(PlatformSlipSystem)
           reelSeconds = Math.min(4, Math.max(0.2, s));
           return reelSeconds;
         },
+        /** How high a landed fish sits, as a fraction of its half-depth. */
+        setFishRest,
         setHeading: (h: number) => {
           heading = h;
         },
