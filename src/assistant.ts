@@ -258,6 +258,8 @@ function systemPrompt(cat: Map<string, string[]>): string {
     '  canFollow  true offers "follow me". guideTo [x,z] + arriveLine = escort.',
     '  loot       drop on defeat: Coins | Gold Bag | Gold ore | Gem Blue | Gem Green |',
     '             Gem Pink | Chest Gold (loot auto-collects into the player inventory)',
+    '  weapon     the blade it fights with (Axe, Cutlass, Sword, Dagger). Dropped as a',
+    '             pickable on defeat, so beating one arms the player for the next fight.',
     '  wantsItem + thanksLine + reward = fetch quest. Collectibles: Coins, Gold Bag,',
     '    Gold ore, Gem Blue/Green/Pink, Chest Gold, Skull, Prop Bottle. The NPC',
     '    automatically ASKS for wantsItem in conversation — no need to script it.',

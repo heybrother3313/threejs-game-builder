@@ -638,10 +638,10 @@ function blackreef(): LevelEntry[] {
     { x: 0, z: -12, r: 9 },           // the summit
     { x: -12, z: 8, r: 5 }, { x: 13, z: 6, r: 5 },
   ];
-  const orc = (x: number, z: number, hp: number, loot?: string): LevelEntry => ({
+  const orc = (x: number, z: number, hp: number, loot?: string, weapon = 'Axe'): LevelEntry => ({
     src: M('Orc'), x, y: 0, z, rotY: Math.PI, fitHeight: 1.85, clip: 'Idle',
     npc: { faction: 'hostile', behavior: 'guard', health: hp, damage: 8,
-      speed: 2, aggroRadius: 7, loot },
+      speed: 2, aggroRadius: 7, loot, weapon },
   });
 
   return [
@@ -665,7 +665,7 @@ function blackreef(): LevelEntry[] {
     { src: V('Cart'), x: -3.5, y: 0, z: 14.5, rotY: 1.4, fitMaxDim: 2.6, solid: true },
     { src: P('Barrel'), x: 3.4, y: 0, z: 13.5, rotY: 0.4, fitHeight: 0.9, pickable: true },
     { src: P('Bomb'), x: 2.6, y: 0, z: 12.8, rotY: 0, fitHeight: 0.5, pickable: true },
-    { src: P('Cutlass'), x: -2.4, y: 0, z: 12.6, rotY: 1.2, fitHeight: 0.8, pickable: true },
+    { src: P('Dagger'), x: -2.4, y: 0, z: 12.6, rotY: 1.2, fitHeight: 0.7, pickable: true },
 
     // ---- 2. the burned village: three orcs among the ruins ----
     { src: V('Fantasy House'), x: -9, y: 0, z: 8, rotY: 0.5, fitHeight: 4.6, solid: true },
@@ -686,7 +686,8 @@ function blackreef(): LevelEntry[] {
     {
       ...orc(0, 0.5, 90, 'Chest Gold'),
       npc: { faction: 'hostile', behavior: 'guard', health: 90, damage: 11,
-        speed: 2.1, aggroRadius: 8, attackRadius: 1.9, loot: 'Chest Gold' },
+        speed: 2.1, aggroRadius: 8, attackRadius: 1.9, loot: 'Chest Gold',
+        weapon: 'Cutlass' },
     },
     {
       src: P('Red X'), x: 0, y: 0, z: 0.5, rotY: 0, fitMaxDim: 1.4, solid: false,

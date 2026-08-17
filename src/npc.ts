@@ -52,6 +52,14 @@ export type NpcConfig = {
   arriveLine?: string;
   /** Asset dropped when defeated, e.g. "/models/quaternius-pirate/Coins.glb". */
   loot?: string;
+  /**
+   * The weapon this one fights with. Dropped on defeat as a pickable, so
+   * beating something bare-handed arms you for the next fight — the only
+   * source of blades today is wherever a level author happened to put one.
+   * Unlike loot it does NOT auto-collect: a weapon is a thing you choose to
+   * pick up, and you can only carry one.
+   */
+  weapon?: string;
   /** Fetch quest: loot kind this NPC wants (e.g. "Chest Gold"). Talking with
    *  it in your inventory hands it over — once. */
   wantsItem?: string;
@@ -517,6 +525,21 @@ export function damageNpc(state: State, item: PlacedItem, amount: number, fromX:
       if (state.exists(e)) state.destroyEntity(e);
     }
     item.solidEs = [];
+    // Its weapon falls where it stood — not popped like loot, because you
+    // want to see whose it was.
+    const weapon = item.entry.npc?.weapon;
+    if (weapon) {
+      void instantiate(state, {
+        src: weapon.includes('/') ? weapon : `/models/quaternius-pirate/${weapon}.glb`,
+        x: item.obj.position.x + 0.5,
+        y: 0,
+        z: item.obj.position.z + 0.3,
+        rotY: Math.random() * Math.PI * 2,
+        fitHeight: 0.8,
+        solid: false,
+        pickable: true,
+      });
+    }
     const loot = resolveLoot(item.entry.npc?.loot, item.entry.npc?.faction);
     if (loot) {
       // Pop it out of the body rather than dropping it underneath. A flat item

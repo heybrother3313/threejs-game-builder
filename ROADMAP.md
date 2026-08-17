@@ -47,6 +47,28 @@ What we're building toward, roughly ordered. Items graduate off the top.
 - [ ] More destination islands; portals already support any world id.
 
 ## Gameplay systems
+- [x] **Objectives** — tracked steps (defeat / collect / reach / activate /
+      talk) living on the thing they concern, with a HUD and a completion
+      chain. Blackreef is the first island built around them.
+- [x] **Enemies drop the weapon they fight with** (`npc.weapon`). Unlike loot
+      it stays on the ground: a weapon is something you choose to pick up.
+- [ ] **Show the weapon in the enemy's hand.** It currently drops from a
+      monster that was visibly unarmed, which reads as loot rather than as
+      *its* axe. Needs a hand-bone attach, which varies per rig.
+- [ ] **An equipped-weapon slot separate from the carried item.** You can hold
+      one thing, so taking a bomb means dropping your sword. That tension is
+      interesting once, annoying thereafter.
+- [ ] **Turn-based combat as a v2 MODE (Final Fantasy style).** Worth being
+      clear-eyed: this is a fork, not a simplification. Its real appeal is
+      that it decouples combat from animation timing, which has been the
+      single richest source of bugs here — the aborted punch, the swing
+      window, the flinch stealing the rig, walking read as falling. Turn-based
+      makes all of those disappear because nothing depends on frames.
+      Against it: the real-time feel is now built and working, and switching
+      discards the camera, controller and combat tuning. Best shape is
+      probably a per-encounter mode (boss battles resolve turn-based) rather
+      than a global replacement — the island can declare which it uses, the
+      same way it declares its size.
 - [x] **Weapons** — blades change damage/reach when carried (F swings instead
       of throwing); bombs explode where they land with falloff damage, prop
       knockback and self-damage.
