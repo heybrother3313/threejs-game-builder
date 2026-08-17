@@ -40,14 +40,35 @@ import { Transform, WorldTransform } from 'vibegame/transforms';
  * are only playable as their suffixed versions — which is why they looked
  * unusable at first glance and are listed with the ugly filenames here.
  */
-export const PLAYER_CHOICES: { label: string; src: string }[] = [
-  { label: 'Frog', src: '/models/ultimate-monsters/Frog.glb' },
-  { label: 'Dino', src: '/models/ultimate-monsters/Dino.glb' },
-  { label: 'Monkroose', src: '/models/ultimate-monsters/Monkroose.glb' },
-  { label: 'Alien', src: '/models/ultimate-monsters/Alien-RRliSQBP7r.glb' },
-  { label: 'Fish', src: '/models/ultimate-monsters/Fish-ypEYhCImAB.glb' },
-  { label: 'Yeti', src: '/models/ultimate-monsters/Yeti-ceRHrn8HHE.glb' },
+export const PLAYER_CHOICES: { label: string; src: string; art: string }[] = [
+  { label: 'Frog', src: '/models/ultimate-monsters/Frog.glb', art: 'frog' },
+  { label: 'Dino', src: '/models/ultimate-monsters/Dino.glb', art: 'dino' },
+  { label: 'Monkroose', src: '/models/ultimate-monsters/Monkroose.glb', art: 'monkroose' },
+  { label: 'Alien', src: '/models/ultimate-monsters/Alien-RRliSQBP7r.glb', art: 'alien' },
+  { label: 'Fish', src: '/models/ultimate-monsters/Fish-ypEYhCImAB.glb', art: 'fish' },
+  { label: 'Yeti', src: '/models/ultimate-monsters/Yeti-ceRHrn8HHE.glb', art: 'yeti' },
 ];
+
+/**
+ * Portrait for a character, or null if none has been dropped in yet.
+ *
+ * Tries png then jpg and resolves to null when neither loads, so the picker
+ * degrades to a rendered thumbnail of the model rather than a broken image —
+ * a partial set of art is fine.
+ */
+export async function portraitFor(art: string): Promise<string | null> {
+  for (const ext of ['png', 'jpg']) {
+    const url = `/ui/characters/${art}.${ext}`;
+    const ok = await new Promise<boolean>((resolve) => {
+      const img = new Image();
+      img.onload = () => resolve(true);
+      img.onerror = () => resolve(false);
+      img.src = url;
+    });
+    if (ok) return url;
+  }
+  return null;
+}
 
 /**
  * Orc, Blue Demon, Mushroom King and Bunny pass the clip test but are not

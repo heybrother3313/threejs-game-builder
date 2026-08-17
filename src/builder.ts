@@ -27,7 +27,7 @@ import {
 import { cachedThumb, thumbFor } from './thumbs';
 import paletteTree from './levels/palette-tree.json';
 import { QUICK_PROMPTS, aiConfig, listModels, runAssistant, saveAiConfig } from './assistant';
-import { PLAYER_CHOICES, playerModel, setPlayerModel } from './character';
+import { PLAYER_CHOICES, playerModel, portraitFor, setPlayerModel } from './character';
 import { DEFAULTS, resetNpc, resolveLoot, type NpcConfig } from './npc';
 import { COLLECTIBLE_NAMES } from './loot';
 import { canRedo, canUndo, initHistory, mark, redo, redoLabel, replaceAll, undo, undoLabel } from './history';
@@ -233,6 +233,20 @@ function buildUi() {
       #builder .modal .row { display:flex; justify-content:flex-end;
         margin-top: var(--space-sm); }
 
+      /* Character select: portraits beat a dropdown, and each card falls back
+         to a rendered thumbnail of the model when no art has been dropped in. */
+      #builder .chargrid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; }
+      #builder .charcard { padding:0; overflow:hidden; display:flex;
+        flex-direction:column; align-items:stretch; gap:0; }
+      /* `contain`, not `cover`: the rendered thumbnails frame the model in the
+         upper half of a square, so cropping to fill left them floating at the
+         top of the tile with dead space beneath. */
+      #builder .charcard .art { display:block; height:64px;
+        background:#dfe9ef center center/contain no-repeat;
+        border-bottom: var(--border-w-hair) solid var(--border-strong); }
+      #builder .charcard .who { padding:3px 0; font-size:10px; }
+      #builder .charcard.on { background: var(--accent); }
+
       #builder .palette { position:absolute; left:16px; top:74px; bottom:16px; width:250px;
         display:flex; flex-direction:column; padding: var(--space-sm); pointer-events:auto; }
       #builder .palette .scroll { overflow-y:auto; overscroll-behavior: contain; flex:1; }
@@ -366,9 +380,13 @@ function buildUi() {
       <h3>Settings</h3>
       <div class="scroll">
       <label>Player character</label>
-      <select id="player-model">
-        ${PLAYER_CHOICES.map((c) => `<option value="${c.src}">${c.label}</option>`).join('')}
-      </select>
+      <div class="chargrid" id="player-grid">
+        ${PLAYER_CHOICES.map(
+          (c) => `<button class="charcard" data-src="${c.src}" data-art="${c.art}">
+            <span class="art"></span><span class="who">${c.label}</span>
+          </button>`
+        ).join('')}
+      </div>
       <hr style="border:none;border-top:2px solid var(--border-quiet);margin:10px 0" />
       <label>Ollama URL (proxied)</label>
       <input id="ai-url" type="text" />
@@ -520,14 +538,23 @@ function wireAiPanel() {
     layoutRightPanels();
   });
 
-  const modelSel = panel.querySelector('#player-model') as HTMLSelectElement;
-  modelSel.value = playerModel();
-  // A reload is the honest way to swap: the rig, its clips and the animation
-  // state are all bound at startup.
-  modelSel.addEventListener('change', () => {
-    setPlayerModel(modelSel.value);
-    location.reload();
-  });
+  const grid = panel.querySelector('#player-grid') as HTMLDivElement;
+  for (const card of grid.querySelectorAll<HTMLButtonElement>('.charcard')) {
+    const src = card.dataset.src!;
+    card.classList.toggle('on', src === playerModel());
+    // Rendered art if it's been dropped in, otherwise a thumbnail of the
+    // model itself — so the picker is never a row of blank squares.
+    const art = card.querySelector('.art') as HTMLElement;
+    void portraitFor(card.dataset.art!).then(async (url) => {
+      art.style.backgroundImage = `url(${url ?? (await thumbFor(src)) ?? ''})`;
+    });
+    // A reload is the honest way to swap: the rig, its clips and the
+    // animation state are all bound at startup.
+    card.addEventListener('click', () => {
+      setPlayerModel(src);
+      location.reload();
+    });
+  }
 
   const quick = panel.querySelector('#ai-quick') as HTMLDivElement;
   for (const q of QUICK_PROMPTS) {
