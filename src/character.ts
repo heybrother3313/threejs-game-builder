@@ -285,6 +285,7 @@ let armed = false;
  * if something is actually in the hand.
  */
 export async function setHeldWeapon(src: string | null) {
+  // A fit saved on the bench wins over the automatic guess.
   if (heldWeapon) {
     heldWeapon.parent?.remove(heldWeapon);
     heldWeapon = null;

@@ -10,6 +10,7 @@ import {
 } from './level';
 import { getScene } from 'vibegame/rendering';
 import { isTriggered, markTriggered } from './objectives';
+import { fitFor } from './rigfit';
 import { ISLAND } from './ground';
 
 /**
@@ -428,7 +429,10 @@ export function npcRuntime(item: PlacedItem): Runtime {
     // mesh; attaching a second gives them two.
     const held = r;
     if (cfg.weapon && (item.clips?.length ?? 0) > 0 && !comesArmed(item.entry.src)) {
-      void attachWeaponToHand(item.obj, weaponSrc(cfg.weapon), 0.7).then((m) => {
+      void attachWeaponToHand(
+        item.obj, weaponSrc(cfg.weapon), 0.7, 'L',
+        fitFor(item.entry.src, weaponSrc(cfg.weapon))
+      ).then((m) => {
         if (m) held.heldWeapon = m;
       });
     }

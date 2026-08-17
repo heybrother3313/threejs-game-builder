@@ -524,15 +524,15 @@ function townIsland(): LevelEntry[] {
     { src: P('Paper'), x: 0.42, y: 1.5, z: -1.5, rotY: 0, fitHeight: 0.5, solid: false },
 
     // A town made of buildings people live in, not beached pirate hulls.
-    { src: V('Fantasy Inn'), x: -9, y: 0, z: -5, rotY: 0.3, fitHeight: 6, solid: true },
-    { src: V('Fantasy House'), x: 8.5, y: 0, z: -5, rotY: -0.35, fitHeight: 5, solid: true },
-    { src: V('Fantasy House-BH2XHWUNmF'), x: -14, y: 0, z: 1, rotY: 1.3, fitHeight: 4.6, solid: true },
-    { src: V('Fantasy House-dcPho4SUA3'), x: 14, y: 0, z: 1.5, rotY: -1.3, fitHeight: 4.6, solid: true },
-    { src: V('Blacksmith'), x: 13, y: 0, z: -6.5, rotY: -0.8, fitHeight: 5, solid: true },
-    { src: V('Fantasy Stable'), x: -14.5, y: 0, z: -6, rotY: 0.9, fitHeight: 4.4, solid: true },
-    { src: V('Mill'), x: 0, y: 0, z: 9.5, rotY: 3.14, fitHeight: 8, solid: true },
-    { src: V('Bell Tower'), x: 0, y: 0, z: -9, rotY: 0, fitHeight: 7, solid: true },
-    { src: V('Well'), x: -3.5, y: 0, z: 2.5, rotY: 0.4, fitMaxDim: 1.8, solid: true },
+    { src: V('Fantasy Inn'), x: -9, y: 0, z: -5, rotY: 0.3, fitHeight: 8.5, solid: true },
+    { src: V('Fantasy House-BH2XHWUNmF'), x: 8.5, y: 0, z: -5, rotY: -0.35, fitHeight: 6.5, solid: true },
+    { src: V('Fantasy House-dcPho4SUA3'), x: -14, y: 0, z: 1, rotY: 1.3, fitHeight: 6.5, solid: true },
+    { src: V('Fantasy Barracks'), x: 14, y: 0, z: 1.5, rotY: -1.3, fitHeight: 7, solid: true },
+    { src: V('Blacksmith'), x: 13, y: 0, z: -6.5, rotY: -0.8, fitHeight: 6, solid: true },
+    { src: V('Fantasy Stable'), x: -14.5, y: 0, z: -6, rotY: 0.9, fitHeight: 5.5, solid: true },
+    { src: V('Mill'), x: 0, y: 0, z: 9.5, rotY: 3.14, fitHeight: 12, solid: true },
+    { src: V('Bell Tower'), x: 0, y: 0, z: -9, rotY: 0, fitHeight: 12, solid: true },
+    { src: V('Well'), x: -3.5, y: 0, z: 2.5, rotY: 0.4, fitHeight: 2.2, solid: true },
     { src: V('Bonfire'), x: 3.5, y: 0, z: 2.5, rotY: 0, fitMaxDim: 1.6 },
     { src: V('Cart'), x: -6.5, y: 0, z: 4.5, rotY: 1.1, fitMaxDim: 2.6, solid: true },
     { src: V('Hay'), x: -11.5, y: 0, z: -2, rotY: 0.5, fitMaxDim: 1.8, solid: true },
@@ -668,9 +668,9 @@ function blackreef(): LevelEntry[] {
     { src: P('Dagger'), x: -2.4, y: 0, z: 12.6, rotY: 1.2, fitHeight: 0.7, pickable: true },
 
     // ---- 2. the burned village: three orcs among the ruins ----
-    { src: V('Fantasy House'), x: -9, y: 0, z: 8, rotY: 0.5, fitHeight: 4.6, solid: true },
-    { src: V('Fantasy House-BH2XHWUNmF'), x: 9.5, y: 0, z: 9.5, rotY: -0.7, fitHeight: 4.2, solid: true },
-    { src: V('Fantasy Stable'), x: -13, y: 0, z: 4, rotY: 1.1, fitHeight: 4, solid: true },
+    { src: V('Fantasy House-BH2XHWUNmF'), x: -9, y: 0, z: 8, rotY: 0.5, fitHeight: 6.5, solid: true },
+    { src: V('Fantasy House-dcPho4SUA3'), x: 9.5, y: 0, z: 9.5, rotY: -0.7, fitHeight: 6.5, solid: true },
+    { src: V('Fantasy Stable'), x: -13, y: 0, z: 4, rotY: 1.1, fitHeight: 5.5, solid: true },
     { src: V('Bonfire'), x: 5, y: 0, z: 6.5, rotY: 0, fitMaxDim: 1.6 },
     { src: V('Crate'), x: -5.5, y: 0, z: 7, rotY: 0.8, fitMaxDim: 0.9, solid: true },
     { src: P('Bomb'), x: -6.4, y: 0, z: 6.2, rotY: 0, fitHeight: 0.5, pickable: true },
@@ -709,7 +709,7 @@ function blackreef(): LevelEntry[] {
     { src: P('Gem Pink'), x: -1.5, y: 2.25, z: -8, rotY: 1, fitHeight: 0.4, pickable: true },
 
     // ---- 5. the summit: what has been sitting on the bell ----
-    { src: V('Bell Tower'), x: 0, y: 0, z: -15, rotY: 0, fitHeight: 8, solid: true },
+    { src: V('Bell Tower'), x: 0, y: 0, z: -15, rotY: 0, fitHeight: 12, solid: true },
     {
       src: M('Dragon Evolved'), x: 0, y: 0, z: -12, rotY: 0, fitHeight: 2.8, clip: 'Idle',
       objective: { step: 3, kind: 'defeat', text: 'Kill whatever guards the bell',

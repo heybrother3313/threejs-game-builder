@@ -60,9 +60,14 @@ export async function attachWeaponToHand(
   root: THREE.Object3D,
   src: string,
   length = 0.75,
-  side: 'L' | 'R' = 'L'
+  side: 'L' | 'R' = 'L',
+  fit: import('./rigfit').Fit | null = null
 ): Promise<THREE.Object3D | null> {
-  const hand = findHandBone(root, side);
+  const hand = fit?.bone
+    ? (() => { let b: THREE.Object3D | null = null;
+        root.traverse((o) => { if (!b && o.name === fit.bone) b = o; }); return b; })()
+      ?? findHandBone(root, side)
+    : findHandBone(root, side);
   if (!hand) return null;
   const gltf = await loadWeaponModel(src);
   if (!gltf) return null;
@@ -82,14 +87,23 @@ export async function attachWeaponToHand(
   // weapon there, nudged a little further along the same direction to reach
   // the middle of the grip.
   let grip = new THREE.Vector3(0, 0.1 * inv, 0);
-  const finger = findFingerBone(root, side);
-  if (finger) {
-    finger.updateWorldMatrix(true, false);
-    const local = hand.worldToLocal(finger.getWorldPosition(new THREE.Vector3()));
-    if (local.length() > 1e-4) grip = local.multiplyScalar(1.35);
+  let rot = new THREE.Euler(Math.PI / 2, 0, 0);
+  if (fit) {
+    // A human looked at this one and said where it goes. Trust that over any
+    // amount of reasoning about bone origins.
+    grip.set(fit.pos[0] * inv, fit.pos[1] * inv, fit.pos[2] * inv);
+    rot = new THREE.Euler(fit.rot[0], fit.rot[1], fit.rot[2]);
+    model.scale.setScalar((fit.scale / Math.max(size.x, size.y, size.z, 1e-3)) * inv);
+  } else {
+    const finger = findFingerBone(root, side);
+    if (finger) {
+      finger.updateWorldMatrix(true, false);
+      const local = hand.worldToLocal(finger.getWorldPosition(new THREE.Vector3()));
+      if (local.length() > 1e-4) grip = local.multiplyScalar(1.35);
+    }
   }
   model.position.copy(grip);
-  model.rotation.set(Math.PI / 2, 0, 0);
+  model.rotation.copy(rot);
   model.traverse((o) => {
     const m = o as THREE.Mesh;
     if (m.isMesh) m.castShadow = true;

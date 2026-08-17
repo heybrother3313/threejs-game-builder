@@ -34,6 +34,7 @@ import { canRedo, canUndo, initHistory, mark, redo, redoLabel, replaceAll, undo,
 import { STARTERS } from './starters';
 import { ISLAND } from './ground';
 import { resetObjectives } from './objectives';
+import { toggleRigFit } from './rigfit';
 import { currentWorldId, destinations, setCurrentWorldId, worldName } from './worlds';
 import { setAtmosphereFog } from './atmosphere';
 
@@ -353,6 +354,7 @@ function buildUi() {
       <button id="b-borders">Borders (B)</button>
       <button id="b-reset">Reset</button>
       <button id="b-anim" title="Preview animations while building">Anims: off</button>
+      <button id="b-rigfit" title="Fit weapons to hands">Weapon fit</button>
       <button id="b-settings" title="AI settings">⚙︎ AI</button>
       <input id="b-file" type="file" accept="application/json,.json" hidden />
     </div>
@@ -455,6 +457,7 @@ function buildUi() {
   const showStarters = (on: boolean) => {
     startersEl.hidden = !on;
   };
+  ui.querySelector('#b-rigfit')!.addEventListener('click', () => toggleRigFit());
   ui.querySelector('#b-new')!.addEventListener('click', () => showStarters(true));
   ui.querySelector('#b-starters-cancel')!.addEventListener('click', () => showStarters(false));
   // Click-off closes: the sheet is a choice, not a trap.
@@ -1047,6 +1050,7 @@ export function toggleBuildMode() {
   ui.classList.toggle('on', buildMode);
   setPathsVisible(buildMode);
   setAtmosphereFog(!buildMode);
+  if (!buildMode) toggleRigFit(false);
   // Older saves predate spawn flags; conjure one so it's there to drag.
   if (buildMode && !placed.some((i) => i.entry.src === 'spawn')) {
     void instantiate(state, { src: 'spawn', x: 0, y: 0, z: 0, rotY: 0 }).then(() => {
