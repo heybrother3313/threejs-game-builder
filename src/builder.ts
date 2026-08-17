@@ -23,6 +23,7 @@ import {
   setClip,
   setPathsVisible,
   syncMarker,
+  fitScale,
 } from './level';
 import { cachedThumb, thumbFor } from './thumbs';
 import paletteTree from './levels/palette-tree.json';
@@ -150,7 +151,12 @@ export function initBuilder(gameState: State, cameraEntityFn: () => number | und
   window.addEventListener('pointerup', () => {
     if (marquee) commitMarquee();
     paintedThisStroke = false;
-    if (pendingCollapse && !dragging) {
+    // Collapsing a multi-selection on a plain click is what editors usually
+    // do, but it broke the main reason to have one: paste six pieces, click
+    // one to grab them, and the click itself threw the other five away — so
+    // the drag that followed moved a single piece. A group survives a click
+    // now. Clear it with empty space, or shift-click to drop one member.
+    if (pendingCollapse && !dragging && selection.length <= 1) {
       select(pendingCollapse, false);
       setStatus(describe(pendingCollapse));
     }
@@ -1163,6 +1169,17 @@ function disarm() {
   killGhost();
 }
 
+/**
+ * How an armed piece will be sized once placed.
+ *
+ * The ghost and the placement both read this. They used to disagree — the
+ * ghost was always 1.5 units tall while a ground piece places at fitMaxDim 26
+ * — so terrain previewed enormous and snapped small the moment you clicked.
+ */
+function placementFit(src: string): { fitHeight?: number; fitMaxDim?: number } {
+  return isGroundPiece(src) ? { fitMaxDim: 26 } : { fitHeight: 1.5 };
+}
+
 async function ensureGhost(src: string) {
   if (ghostSrc === src && ghost) return;
   killGhost();
@@ -1180,7 +1197,8 @@ async function ensureGhost(src: string) {
   });
   const box = new THREE.Box3().setFromObject(ghost);
   const size = box.getSize(new THREE.Vector3());
-  ghost.scale.setScalar(1.5 / Math.max(size.y, 1e-3));
+  const fit = placementFit(src);
+  ghost.scale.setScalar(fitScale(size, fit.fitHeight, fit.fitMaxDim));
   ghostSrc = src;
   sceneRef()?.add(ghost);
 }
@@ -1495,12 +1513,12 @@ function onPointerDown(ev: PointerEvent) {
       y: 0,
       z: +hit.z.toFixed(2),
       rotY: 0,
-      fitHeight: 1.5,
+      ...placementFit(armed.src),
       solid: defaultSolidFor(armed.src),
       // Ground pieces are floors, not props: sampled collision + a squash
       // that keeps their slopes inside the engine's step height.
       ...(isGroundPiece(armed.src)
-        ? { groundMesh: true, solid: true, flatten: 0.3, fitMaxDim: 26, fitHeight: undefined, y: -0.4 }
+        ? { groundMesh: true, solid: true, flatten: 0.3, y: -0.4 }
         : {}),
       ...(armed.clip ? { clip: armed.clip } : {}),
     };

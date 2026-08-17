@@ -785,6 +785,35 @@ function makeBorder(scene: THREE.Scene) {
   return border;
 }
 
+/**
+ * The one rule for turning a model's measured size into a uniform scale.
+ *
+ * Exported because the builder's placement ghost has to agree with it. It used
+ * its own `1.5 / height`, which for a flat wide slab — where height is nearly
+ * zero — produced an enormous preview that shrank the moment you clicked.
+ * Two copies of a sizing rule will always drift; there is one now.
+ */
+export function fitScale(
+  size: THREE.Vector3,
+  fitHeight?: number,
+  fitMaxDim?: number
+): number {
+  if (fitHeight) {
+    let s = fitHeight / Math.max(size.y, 1e-3);
+    // Fitting by height explodes anything modelled lying down — an anchor on
+    // its side is barely tall, so matching its height scaled it to nine units
+    // across. Cap the longest axis relative to the requested height. Only
+    // catch pathological cases (an anchor is ~10:1); genuinely wide pieces
+    // like docks should use fitMaxDim instead of being squashed.
+    const longest = Math.max(size.x, size.y, size.z) * s;
+    const cap = fitHeight * 4;
+    if (longest > cap) s *= cap / longest;
+    return s;
+  }
+  if (fitMaxDim) return fitMaxDim / Math.max(size.x, size.y, size.z, 1e-3);
+  return 1;
+}
+
 export async function instantiate(state: State, entry: LevelEntry): Promise<PlacedItem | null> {
   const scene = getScene(state);
   if (!scene) return null;
@@ -824,22 +853,7 @@ export async function instantiate(state: State, entry: LevelEntry): Promise<Plac
     if (!usable) {
       console.warn('[level] unmeasurable model, using scale 1:', entry.src);
     }
-    let s = 1;
-    if (usable) {
-      if (entry.fitHeight) {
-        s = entry.fitHeight / size.y;
-        // Fitting by height explodes anything modelled lying down — an anchor
-        // on its side is barely tall, so matching its height scaled it to nine
-        // units across. Cap the longest axis relative to the requested height.
-        // Only catch pathological cases (an anchor is ~10:1); genuinely wide
-        // pieces like docks should use fitMaxDim instead of being squashed.
-        const longest = Math.max(size.x, size.y, size.z) * s;
-        const cap = entry.fitHeight * 4;
-        if (longest > cap) s *= cap / longest;
-      } else if (entry.fitMaxDim) {
-        s = entry.fitMaxDim / Math.max(size.x, size.y, size.z, 1e-3);
-      }
-    }
+    const s = usable ? fitScale(size, entry.fitHeight, entry.fitMaxDim) : 1;
     entry.scale = s;
     delete entry.fitHeight;
     delete entry.fitMaxDim;
