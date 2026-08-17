@@ -53,6 +53,53 @@ export function fitFor(character: string, weapon: string): Fit | null {
 
 
 
+/**
+ * Everything that can be fitted to a hand.
+ *
+ * Grouped because the bench now does three different jobs. A blade is fitted
+ * against the swing; a thrown thing is fitted against the wind-up, where what
+ * matters is that it sits in the palm rather than lining up with an arc; a rod
+ * is held through a whole idle and never leaves the hand at all. They reduce to
+ * the same six numbers against a bone, but a flat list of fifteen entries hides
+ * which job you are doing.
+ *
+ * Guns stay out — a different mechanic, and none is implemented.
+ */
+const pirate = (n: string) => ({ label: n, src: `/models/quaternius-pirate/${n}.glb` });
+
+export const WEAPON_GROUPS: { group: string; items: { label: string; src: string }[] }[] = [
+  { group: 'Melee', items: ['Cutlass', 'Sword', 'Axe', 'Dagger', 'Large Bone'].map(pirate) },
+  // Thrown: the bomb is the one that already has behaviour behind it; the rest
+  // are here because anything you can pick up is something you can throw, and
+  // it has to look held while you wind up.
+  { group: 'Thrown', items: ['Bomb', 'Rock', 'Prop Bottle', 'Skull', 'Chicken Leg'].map(pirate) },
+  // The rod ships as five tiers (Lvl1..Lvl5) behind hashed filenames — these
+  // are genuinely different models, not the usual duplicate-export trap.
+  { group: 'Fishing', items: [
+    { label: 'Fishing Rod I', src: '/models/animated-fish-bundle/Fishing Rod.glb' },
+    { label: 'Fishing Rod II', src: '/models/animated-fish-bundle/Fishing Rod-0YAR0Lg58p.glb' },
+    { label: 'Fishing Rod III', src: '/models/animated-fish-bundle/Fishing Rod-lDlWQjn9Zg.glb' },
+    { label: 'Fishing Rod IV', src: '/models/animated-fish-bundle/Fishing Rod-9AOHhRPHE7.glb' },
+    { label: 'Fishing Rod V', src: '/models/animated-fish-bundle/Fishing Rod-aOabqWh68m.glb' },
+  ] },
+];
+
+export const WEAPONS = WEAPON_GROUPS.flatMap((g) => g.items);
+
+/**
+ * Does this belong in the hand rather than out in front?
+ *
+ * The carry pose exists for barrels and crates — things you need both arms
+ * for. A bomb is not one of those, and carrying it floating at chest height
+ * is why the throwables looked wrong however carefully they were fitted: the
+ * fit was never consulted, because they never reached the attach path.
+ */
+export function isHandThrowable(src: string): boolean {
+  const name = src.split('/').pop() ?? '';
+  return (WEAPON_GROUPS.find((g) => g.group === 'Thrown')?.items ?? [])
+    .some((i) => i.src.split('/').pop() === name);
+}
+
 export type Blade = { name: string; damage: number; reach: number };
 
 /**

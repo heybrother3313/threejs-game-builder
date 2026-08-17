@@ -301,6 +301,19 @@ let armed = false;
  * rigs ship a "Weapon" clip precisely for this, and it only reads correctly
  * if something is actually in the hand.
  */
+/**
+ * Where the held model actually is in the world.
+ *
+ * A thrown thing has to leave from the hand. The carried body rides a point
+ * out in front of the chest, so releasing from there while the visual sat in
+ * the fist made the object jump forward before it flew.
+ */
+export function heldWeaponPosition(out: THREE.Vector3): boolean {
+  if (!heldWeapon) return false;
+  heldWeapon.getWorldPosition(out);
+  return true;
+}
+
 export async function setHeldWeapon(src: string | null) {
   if (heldWeapon) {
     heldWeapon.parent?.remove(heldWeapon);

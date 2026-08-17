@@ -35,6 +35,7 @@ import {
   playerHitReact,
   playerSwing,
   playerAnimDebug,
+  heldWeaponPosition,
   setHeldWeapon,
   setPlayerDead,
   updateCharacterVisual,
@@ -57,7 +58,7 @@ import {
   isTriggered, markTriggered, resetObjectives, setUnlockHook, updateObjectives,
 } from './objectives';
 import { grantLoot, lootCounts, showHeld, updateLootPickup } from './loot';
-import { FISTS, bladeFor, type Blade } from './weapons';
+import { FISTS, bladeFor, isHandThrowable, type Blade } from './weapons';
 
 /** Bare model name, for the hand label. */
 const nameOfSrc = (src: string) => src.split('/').pop()!.replace('.glb', '');
@@ -547,6 +548,15 @@ const CarrySystem: System = {
     const releaseItem = (speed: number, lift: number) => {
       if (!heldItem) return;
       showHeld(null);
+      // Hand it off from where the hand IS. endCarry spawns the body at the
+      // item's current entry position, which the carry follow parks out in
+      // front of the chest — so a bomb held in the fist would teleport forward
+      // the instant you threw it. Read the attached model's world position
+      // first, while it still exists.
+      const grip = new THREE.Vector3();
+      if (heldWeaponPosition(grip)) {
+        carryTo(heldItem, grip.x, grip.y, grip.z, charYaw);
+      }
       heldItem.obj.visible = true;
       void setHeldWeapon(null);
       endCarry(
@@ -660,9 +670,11 @@ const CarrySystem: System = {
         heldItem = prop;
         const b = bladeFor(prop);
         showHeld(b === FISTS ? nameOfSrc(prop.entry.src) : `${b.name} — ${b.damage} dmg`);
-        // A blade goes in the hand and the floating copy is hidden; anything
-        // else keeps the two-handed carry pose.
-        if (b !== FISTS) {
+        // A blade goes in the hand and the floating copy is hidden. So does a
+        // throwable — a bomb is a one-handed object, and holding it out front
+        // meant the hand fits made for it were never consulted. Anything
+        // genuinely two-armed (barrels, crates) keeps the carry pose.
+        if (b !== FISTS || isHandThrowable(prop.entry.src)) {
           prop.obj.visible = false;
           void setHeldWeapon(prop.entry.src);
         }

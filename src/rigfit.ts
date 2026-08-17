@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { PLAYER_CHOICES } from './character';
-import { KEY, allFits, fitFor, localFits, type Fit } from './weapons';
+import { KEY, WEAPONS, WEAPON_GROUPS, allFits, fitFor, localFits, type Fit } from './weapons';
 import { findHandBone } from './weapons';
 
 /**
@@ -19,39 +19,6 @@ import { findHandBone } from './weapons';
  * localStorage and are consumed by the attach code, falling back to the
  * automatic guess for anything unfitted.
  */
-
-/**
- * Everything that can be fitted to a hand.
- *
- * Grouped because the bench now does three different jobs. A blade is fitted
- * against the swing; a thrown thing is fitted against the wind-up, where what
- * matters is that it sits in the palm rather than lining up with an arc; a rod
- * is held through a whole idle and never leaves the hand at all. They reduce to
- * the same six numbers against a bone, but a flat list of fifteen entries hides
- * which job you are doing.
- *
- * Guns stay out — a different mechanic, and none is implemented.
- */
-const pirate = (n: string) => ({ label: n, src: `/models/quaternius-pirate/${n}.glb` });
-
-const WEAPON_GROUPS: { group: string; items: { label: string; src: string }[] }[] = [
-  { group: 'Melee', items: ['Cutlass', 'Sword', 'Axe', 'Dagger', 'Large Bone'].map(pirate) },
-  // Thrown: the bomb is the one that already has behaviour behind it; the rest
-  // are here because anything you can pick up is something you can throw, and
-  // it has to look held while you wind up.
-  { group: 'Thrown', items: ['Bomb', 'Rock', 'Prop Bottle', 'Skull', 'Chicken Leg'].map(pirate) },
-  // The rod ships as five tiers (Lvl1..Lvl5) behind hashed filenames — these
-  // are genuinely different models, not the usual duplicate-export trap.
-  { group: 'Fishing', items: [
-    { label: 'Fishing Rod I', src: '/models/animated-fish-bundle/Fishing Rod.glb' },
-    { label: 'Fishing Rod II', src: '/models/animated-fish-bundle/Fishing Rod-0YAR0Lg58p.glb' },
-    { label: 'Fishing Rod III', src: '/models/animated-fish-bundle/Fishing Rod-lDlWQjn9Zg.glb' },
-    { label: 'Fishing Rod IV', src: '/models/animated-fish-bundle/Fishing Rod-9AOHhRPHE7.glb' },
-    { label: 'Fishing Rod V', src: '/models/animated-fish-bundle/Fishing Rod-aOabqWh68m.glb' },
-  ] },
-];
-
-const WEAPONS = WEAPON_GROUPS.flatMap((g) => g.items);
 
 /* ----------------------------------------------------------------- bench --- */
 
