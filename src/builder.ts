@@ -1379,14 +1379,17 @@ function onPointerMove(ev: PointerEvent) {
 }
 
 /**
- * True when a pointer event landed on the game itself rather than on a panel.
+ * True when an input event landed on the game itself rather than on any panel.
  *
- * The builder's pointer handlers are bound to the window, so dragging a slider
- * in a panel also orbited the scene behind it — the camera moved while you
- * were trying to set a number. A drag has to START on the canvas to count;
- * once it has, wandering over the UI mid-drag is fine.
+ * Every input handler here is bound to the window, so without this a drag or a
+ * scroll over a panel also moved the camera behind it. This is an ALLOW-ONE
+ * rule rather than a list of panels to exclude: the wheel handler used to name
+ * `.palette, .npc, .settings` explicitly, which is why the asset list scrolled
+ * correctly and every panel added afterwards did not. Asking "is this the
+ * canvas?" means new panels block the scene by default and nobody has to
+ * remember to register them.
  */
-function onGameCanvas(ev: PointerEvent) {
+function onGameCanvas(ev: Event) {
   return (ev.target as HTMLElement | null)?.id === 'game-canvas';
 }
 
@@ -1523,8 +1526,8 @@ function onPointerDown(ev: PointerEvent) {
 
 function onWheel(ev: WheelEvent) {
   if (!buildMode) return;
-  // Scrolling the asset list must scroll the list, not dolly the camera.
-  if ((ev.target as HTMLElement)?.closest?.('#builder .palette, #builder .npc, #builder .settings')) return;
+  // Scrolling a panel scrolls the panel, never dollies the camera.
+  if (!onGameCanvas(ev)) return;
   const cam = getCameraEntity();
   if (cam === undefined) return;
   ev.preventDefault();
