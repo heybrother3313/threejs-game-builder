@@ -242,7 +242,7 @@ function buildUi() {
          upper half of a square, so cropping to fill left them floating at the
          top of the tile with dead space beneath. (No backticks in here — this
          whole block is a template literal.) */
-      #builder .charcard .art { display:block; height:64px;
+      #builder .charcard .art { display:block; height:46px;
         background:#dfe9ef center center/contain no-repeat;
         border-bottom: var(--border-w-hair) solid var(--border-strong); }
       #builder .charcard .who { padding:3px 0; font-size:10px; }
@@ -369,6 +369,7 @@ function buildUi() {
       <button id="b-borders">Borders (B)</button>
       <button id="b-reset">Reset</button>
       <button id="b-anim" title="Preview animations while building">Anims: off</button>
+      <button id="b-char" title="Choose your character">Character</button>
       <button id="b-rigfit" title="Fit weapons to hands">Weapon fit</button>
       <button id="b-settings" title="AI settings">⚙︎ AI</button>
       <input id="b-file" type="file" accept="application/json,.json" hidden />
@@ -377,10 +378,8 @@ function buildUi() {
       <div class="scroll" id="b-palette"></div>
     </div>
     <div class="npc plinth" id="b-npc"></div>
-    <div class="settings plinth" id="b-ai">
-      <h3>Settings</h3>
-      <div class="scroll">
-      <label>Player character</label>
+    <div class="settings plinth" id="b-char-panel" style="display:none">
+      <h3>Character</h3>
       <div class="chargrid" id="player-grid">
         ${PLAYER_CHOICES.map(
           (c) => `<button class="charcard" data-src="${c.src}" data-art="${c.art}">
@@ -388,7 +387,10 @@ function buildUi() {
           </button>`
         ).join('')}
       </div>
-      <hr style="border:none;border-top:2px solid var(--border-quiet);margin:10px 0" />
+    </div>
+    <div class="settings plinth" id="b-ai">
+      <h3>Settings</h3>
+      <div class="scroll">
       <label>Ollama URL (proxied)</label>
       <input id="ai-url" type="text" />
       <label>Model</label>
@@ -476,6 +478,10 @@ function buildUi() {
   const showStarters = (on: boolean) => {
     startersEl.hidden = !on;
   };
+  const charPanel = ui.querySelector('#b-char-panel') as HTMLDivElement;
+  ui.querySelector('#b-char')!.addEventListener('click', () => {
+    charPanel.style.display = charPanel.style.display === 'none' ? 'block' : 'none';
+  });
   ui.querySelector('#b-rigfit')!.addEventListener('click', () => toggleRigFit());
   ui.querySelector('#b-new')!.addEventListener('click', () => showStarters(true));
   ui.querySelector('#b-starters-cancel')!.addEventListener('click', () => showStarters(false));
@@ -539,7 +545,10 @@ function wireAiPanel() {
     layoutRightPanels();
   });
 
-  const grid = panel.querySelector('#player-grid') as HTMLDivElement;
+  // Queried from the whole UI, not the AI panel — the picker has its own
+  // panel now, and looking for it in the old place returned null and took the
+  // entire builder down with it at boot.
+  const grid = ui.querySelector('#player-grid') as HTMLDivElement;
   for (const card of grid.querySelectorAll<HTMLButtonElement>('.charcard')) {
     const src = card.dataset.src!;
     card.classList.toggle('on', src === playerModel());

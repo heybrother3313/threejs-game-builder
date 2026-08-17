@@ -61,6 +61,18 @@ What we're building toward, roughly ordered. Items graduate off the top.
 - [ ] More destination islands; portals already support any world id.
 
 ## Gameplay systems
+- [ ] **Economy.** Coins, gems and gold are collected and counted but buy
+      nothing, so treasure is a score with no sink. Spend it on weapons, house
+      upgrades, farm supplies and power-ups. The pieces exist — an inventory
+      that persists across islands, spendLoot/grantLoot, and NPCs that already
+      take an item and give one back — so a shopkeeper is a fetch quest with a
+      price list rather than a new system.
+- [ ] **Weather and day/night.** The sky, water and fog are all generated from
+      constants in atmosphere.ts, so a time-of-day is those constants on a
+      curve: sun angle and colour, sky gradient, fog density, water tint. Rain
+      and storm are the same idea plus particles and a darker palette. Worth
+      doing after the economy, since weather is atmosphere and the economy is
+      a reason to keep playing.
 - [x] **Objectives** — tracked steps (defeat / collect / reach / activate /
       talk) living on the thing they concern, with a HUD and a completion
       chain. Blackreef is the first island built around them.

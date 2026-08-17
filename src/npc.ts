@@ -446,15 +446,16 @@ export function resetNpc(item: PlacedItem) {
   if (item.entry.npc) npcRuntime(item);
 }
 
-function play(item: PlacedItem, action: keyof typeof CLIPS, once = false) {
+/** Returns false when the rig has no clip for this action. */
+function play(item: PlacedItem, action: keyof typeof CLIPS, once = false): boolean {
   const r = npcRuntime(item);
-  if (!item.mixer || !item.clips) return;
+  if (!item.mixer || !item.clips) return false;
   // One-shots (hit, attack) must replay even if already the current action —
   // otherwise the second punch in a row produces no visible reaction at all.
-  if (r.actionName === action && !once) return;
+  if (r.actionName === action && !once) return true;
   const clip =
     CLIPS[action].map((n) => findClip(item.clips!, n)).find(Boolean) ?? null;
-  if (!clip) return;
+  if (!clip) return false;
   const next = item.mixer.clipAction(clip);
   next.reset();
   if (once) {
@@ -468,6 +469,7 @@ function play(item: PlacedItem, action: keyof typeof CLIPS, once = false) {
   r.action = next;
   r.actionName = action;
   item.currentAction = next;
+  return true;
 }
 
 /** Water-bound: anything animated by a swimming clip lives IN the sea. */
@@ -557,7 +559,11 @@ export function damageNpc(state: State, item: PlacedItem, amount: number, fromX:
     r.state = 'dead';
     item.dead = true; // stops level.ts walking the corpse along its path
     r.t = 0;
-    play(item, 'death', true);
+    // Not every rig has a Death clip. When one doesn't, play() leaves the
+    // PREVIOUS loop running — so a frog with only a hop cycle went on hopping
+    // after it died, drifting and stretching as the loop carried on. Freeze
+    // the mixer instead: a still corpse beats a lively one.
+    if (!play(item, 'death', true) && item.mixer) item.mixer.timeScale = 0;
     // Defeated NPCs stop blocking and drop their loot.
     for (const e of item.solidEs) {
       if (state.exists(e)) state.destroyEntity(e);
