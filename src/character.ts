@@ -4,6 +4,7 @@ import type { State } from 'vibegame';
 import { AnimatedCharacter } from 'vibegame/animation';
 import { Renderer, getScene } from 'vibegame/rendering';
 import { Body, CharacterController } from 'vibegame/physics';
+import { findHandBone } from './weapons';
 import { Transform, WorldTransform } from 'vibegame/transforms';
 
 /**
@@ -263,20 +264,12 @@ function play(seg: string) {
 }
 
 /**
- * The right hand. There is no bone called "hand" in these rigs — the fingers
- * hang directly off the forearm — so the hand is whatever the finger bones
- * share as a parent, and the forearm is the fallback.
+ * The weapon hand — LEFT. The "Weapon" clip these rigs ship animates the left
+ * arm; "Punch" is the right-handed one. Putting the weapon in the right hand
+ * left it hanging still while the other arm swung.
  */
 function findHand(): THREE.Object3D | null {
-  if (!player) return null;
-  let finger: THREE.Object3D | null = null;
-  let forearm: THREE.Object3D | null = null;
-  player.traverse((o) => {
-    if (o.name === 'Middle1R' || o.name === 'Index1R') finger = finger ?? o;
-    if (/^(LowerArmR|HandR|ForearmR)$/i.test(o.name)) forearm = forearm ?? o;
-  });
-  const f = finger as THREE.Object3D | null;
-  return f?.parent ?? forearm ?? null;
+  return player ? findHandBone(player, 'L') : null;
 }
 
 let heldWeapon: THREE.Object3D | null = null;

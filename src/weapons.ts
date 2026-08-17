@@ -14,18 +14,25 @@ import { PlacedItem, instantiate, placed, removeItem } from './level';
 export type Blade = { name: string; damage: number; reach: number };
 
 /**
- * Find the right hand on a rig.
+ * Find a hand on a rig.
  *
  * These packs have no bone called "hand" — the fingers hang straight off the
  * forearm — so the hand is whatever the finger bones share as a parent, with
  * the forearm as the fallback.
+ *
+ * Default side is LEFT, because the clip we play while armed is "Weapon" and
+ * these rigs animate that with the left arm. "Punch" is the right-handed one.
+ * Attaching to the hand that isn't swinging leaves the weapon hanging still
+ * while the other arm does the work.
  */
-export function findHandBone(root: THREE.Object3D): THREE.Object3D | null {
+export function findHandBone(root: THREE.Object3D, side: 'L' | 'R' = 'L'): THREE.Object3D | null {
   let finger: THREE.Object3D | null = null;
   let forearm: THREE.Object3D | null = null;
+  const fingers = [`Middle1${side}`, `Index1${side}`];
+  const arm = new RegExp(`^(LowerArm${side}|Hand${side}|Forearm${side})$`, 'i');
   root.traverse((o) => {
-    if (!finger && (o.name === 'Middle1R' || o.name === 'Index1R')) finger = o;
-    if (!forearm && /^(LowerArmR|HandR|ForearmR)$/i.test(o.name)) forearm = o;
+    if (!finger && fingers.includes(o.name)) finger = o;
+    if (!forearm && arm.test(o.name)) forearm = o;
   });
   const f = finger as THREE.Object3D | null;
   return f?.parent ?? forearm ?? null;
@@ -42,9 +49,10 @@ export function findHandBone(root: THREE.Object3D): THREE.Object3D | null {
 export async function attachWeaponToHand(
   root: THREE.Object3D,
   src: string,
-  length = 0.75
+  length = 0.75,
+  side: 'L' | 'R' = 'L'
 ): Promise<THREE.Object3D | null> {
-  const hand = findHandBone(root);
+  const hand = findHandBone(root, side);
   if (!hand) return null;
   const gltf = await loadWeaponModel(src);
   if (!gltf) return null;
