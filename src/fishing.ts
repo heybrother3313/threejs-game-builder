@@ -542,6 +542,22 @@ function updateLandedFish(dt: number) {
   }
 }
 
+/** What the fish is doing, for when what it is doing is not what it looks like. */
+export function fishingDebug() {
+  return {
+    castState: cast?.state ?? 'none',
+    fishPhase,
+    fishT: +fishT.toFixed(2),
+    hookedName,
+    hasModel: !!hooked,
+    pivotY: hooked ? +hooked.pivot.position.y.toFixed(2) : null,
+    pitch: hooked ? +hooked.pivot.rotation.x.toFixed(2) : null,
+    target: +fishTo.y.toFixed(2),
+    halfHeight: hooked ? +hooked.halfHeight.toFixed(3) : null,
+    bodyLength: hooked ? +hooked.bodyLength.toFixed(3) : null,
+  };
+}
+
 /**
  * The catch, handed over exactly once, when it has finished flopping.
  *
