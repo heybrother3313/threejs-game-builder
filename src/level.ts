@@ -218,6 +218,16 @@ export function clipsFor(src: string) {
   return (modelClips.get(src) ?? []).map((c) => c.name);
 }
 
+/**
+ * The clips themselves, for anything driving its own mixer.
+ *
+ * Only populated once loadModel has been through this src — the cache is
+ * filled by the load, not by asking.
+ */
+export function animationsFor(src: string): THREE.AnimationClip[] {
+  return modelClips.get(src) ?? [];
+}
+
 /** Kit clips are named "CharacterArmature|…|Idle|…" — match a whole segment. */
 export function findClip(clips: THREE.AnimationClip[], want: string) {
   return (

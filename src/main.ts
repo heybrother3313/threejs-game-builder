@@ -75,6 +75,7 @@ import {
   isReeling,
   reelIn,
   startReel,
+  takeCatch,
   tryHook,
   updateFishing,
 } from './fishing';
@@ -752,8 +753,9 @@ const CarrySystem: System = {
       // being late costs you the catch and never the lure.
       if (wantsThrow && isCastOut()) {
         if (!isReeling()) {
-          const hooked = tryHook();
-          if (hooked) grantLoot(hooked, 1);
+          // The catch is not banked here. It rides the line in, flops on the
+          // end of the rod, and only then goes in the bag — see takeCatch.
+          tryHook();
           const back = playerReverseSwing(castReleaseFrac, reelSeconds);
           attackHold = Math.min(back, ATTACK_HOLD_MAX);
           attackFacing = heading;
@@ -1027,6 +1029,9 @@ const VisualsSystem: System = {
       heldWeaponTip(castTipScratch) ? castTipScratch : null,
       getScene(state)
     );
+    // Banked once the fish has finished flopping on the end of the rod.
+    const caught = takeCatch();
+    if (caught) grantLoot(caught, 1);
     const p0 = playerQuery(state.world)[0];
     const playerPos =
       p0 !== undefined

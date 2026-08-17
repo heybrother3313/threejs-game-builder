@@ -17,6 +17,7 @@ import * as THREE from 'three';
 
 import { WATER_Y } from './atmosphere';
 import { ISLAND, islandHeight } from './ground';
+import { animationsFor, loadModel } from './level';
 
 /** A lure is light and lands soon; real g reads as a thrown rock. */
 const GRAVITY = 12;
@@ -72,8 +73,15 @@ function nextBiteDelay(): number {
   return BITE_MIN + Math.random() * (BITE_MAX - BITE_MIN);
 }
 
+/** How big a caught fish is drawn, longest side in metres. */
+const FISH_SIZE = 0.5;
+/** How long it hangs off the rod flopping before it goes in the bag. */
+const LANDED_SECONDS = 1.3;
+/** Every model in the bundle ships this; it is what a landed fish does. */
+const OUT_OF_WATER = 'Out_Of_Water';
+
 type Cast = {
-  state: 'flying' | 'floating' | 'bite' | 'reeling';
+  state: 'flying' | 'floating' | 'bite' | 'reeling' | 'landed';
   /** Seconds of quiet water left before something takes the lure. */
   biteIn: number;
   /** How long the current bite has been going, against BITE_WINDOW. */
@@ -281,7 +289,88 @@ export function tryHook(): string | null {
   if (!cast || cast.state !== 'bite') return null;
   const fish = fishFor(cast.pos.x, cast.pos.z);
   showBite(false);
+  hookedName = fish;
+  void attachFish(fish);
   return fish;
+}
+
+/* -------------------------------------------------------------- fish --- */
+
+/**
+ * What is on the line, known the instant you strike.
+ *
+ * Kept apart from the model on purpose. The model is loaded asynchronously and
+ * may not arrive before the reel finishes — the first of each species has a
+ * file read in front of it — and a catch that depended on the mesh being ready
+ * was silently thrown away when it wasn't. You caught it when you struck; the
+ * fish turning up to be looked at is a separate, best-effort thing.
+ */
+let hookedName: string | null = null;
+let hooked: { obj: THREE.Object3D; mixer: THREE.AnimationMixer } | null = null;
+let landedT = 0;
+let caughtReady: string | null = null;
+
+/**
+ * Put the fish on the line.
+ *
+ * Loaded rather than pooled because which fish it is depends on where the
+ * lure landed, and there are fifteen of them. The load is cached by src, so
+ * only the first of each kind waits; if it arrives mid-reel it simply appears
+ * a little late, which beats holding the whole strike up on a file read.
+ *
+ * A failed load is not a lost catch — the fish still counts, it just does not
+ * get to be seen.
+ */
+async function attachFish(name: string) {
+  const src = `/models/animated-fish-bundle/${name}.glb`;
+  try {
+    const model = (await loadModel(src)).clone(true);
+    // The line may already be back — reeled, cancelled, or a different fish
+    // struck since. Dropping a late arrival beats a fish appearing out of
+    // nowhere over dry land.
+    if (!host || !cast || hookedName !== name) return;
+    const size = new THREE.Box3().setFromObject(model).getSize(new THREE.Vector3());
+    model.scale.setScalar(FISH_SIZE / Math.max(size.x, size.y, size.z, 1e-3));
+    model.traverse((o) => {
+      const m = o as THREE.Mesh;
+      if (m.isMesh) m.castShadow = true;
+    });
+    host.add(model);
+    const mixer = new THREE.AnimationMixer(model);
+    const clips = animationsFor(src);
+    // Clip names come through namespaced ("Fish_Armature|Out_Of_Water").
+    const clip = clips.find((c) => c.name.split('|').pop() === OUT_OF_WATER) ?? clips[0] ?? null;
+    if (clip) mixer.clipAction(clip).play();
+    hooked = { obj: model, mixer };
+  } catch {
+    /* model missing — the catch still counts */
+  }
+}
+
+function clearFish() {
+  if (hooked && host) host.remove(hooked.obj);
+  hooked = null;
+  hookedName = null;
+  landedT = 0;
+}
+
+/** Hangs off the lure, nose up, the way something on a hook does. */
+function seatFish() {
+  if (!hooked || !lure) return;
+  hooked.obj.position.set(lure.position.x, lure.position.y - FISH_SIZE * 0.5, lure.position.z);
+  hooked.obj.rotation.z = Math.PI / 2;
+}
+
+/**
+ * The catch, handed over exactly once, when it has finished flopping.
+ *
+ * Polled rather than pushed so the inventory stays main.ts's business —
+ * fishing knows what it caught, not what an inventory is.
+ */
+export function takeCatch(): string | null {
+  const c = caughtReady;
+  caughtReady = null;
+  return c;
 }
 
 let biteEl: HTMLDivElement | null = null;
@@ -309,6 +398,9 @@ function showBite(on: boolean) {
 export function reelIn() {
   cast = null;
   showBite(false);
+  // Walking away mid-fight loses the fish with the cast — it goes back in the
+  // water rather than into the bag, which is the cost of giving up the line.
+  clearFish();
   if (lure) lure.visible = false;
   if (line) line.visible = false;
 }
@@ -332,6 +424,7 @@ export function lureSpot(): { x: number; z: number; onWater: boolean; restT: num
  */
 export function updateFishing(dt: number, tip: THREE.Vector3 | null, scene: THREE.Scene | null) {
   updateCharge(dt);
+  if (hooked) hooked.mixer.update(dt);
   // No rod in the hand: there is nothing to hang a line from, so both meshes
   // go away rather than anchoring themselves to the origin.
   if (!tip) {
@@ -359,7 +452,32 @@ export function updateFishing(dt: number, tip: THREE.Vector3 | null, scene: THRE
     cast.pos.lerpVectors(cast.reelFrom, tip, e);
     lure.position.copy(cast.pos);
     drawLine(tip, cast.pos);
-    if (t >= 1) reelIn();
+    seatFish();
+    // An empty line is just done. A fish gets held up first — keyed on having
+    // hooked one, not on its mesh having loaded.
+    if (t >= 1) {
+      if (hookedName) {
+        cast.state = 'landed';
+        landedT = 0;
+      } else {
+        reelIn();
+      }
+    }
+    return;
+  }
+
+  // Landed: it hangs off the rod flopping, and only then goes in the bag.
+  if (cast.state === 'landed') {
+    landedT += dt;
+    cast.pos.set(tip.x, tip.y - STOW_DROP, tip.z);
+    lure.position.copy(cast.pos);
+    drawLine(tip, cast.pos);
+    seatFish();
+    if (landedT >= LANDED_SECONDS) {
+      caughtReady = hookedName;
+      clearFish();
+      reelIn();
+    }
     return;
   }
 
