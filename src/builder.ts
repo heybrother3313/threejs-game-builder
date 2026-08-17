@@ -132,6 +132,17 @@ let scatterLast: THREE.Vector3 | null = null;
 let scatterRotate = true;
 /** How far the cursor must travel before the next drop, in world units. */
 const SCATTER_GAP = 0.85;
+/**
+ * Size multiplier for the armed piece, before it is ever dropped.
+ *
+ * Sizing after the fact means placing forty tufts of grass and then
+ * rescaling forty tufts of grass. [ and ] adjust this while a piece is
+ * armed; the ghost shows the result, and both a single click and a scatter
+ * stroke honour it.
+ */
+let armedScale = 1;
+/** Ghost scale at armedScale === 1, so the multiplier stays non-cumulative. */
+let ghostBase = 1;
 const orbitPrev = new THREE.Vector2();
 let savedDistance = 0;
 let savedPitch = 0;
@@ -1161,6 +1172,9 @@ export function toggleBuildMode() {
 async function armPalette(item: PaletteItem, row: HTMLElement) {
   paletteEl.querySelectorAll('.armed').forEach((el) => el.classList.remove('armed'));
   row.classList.add('armed');
+  // A brush size is sticky across strokes of the SAME piece — you rarely want
+  // one tuft of big grass — but a different asset starts at its natural size.
+  if (armed?.src !== item.src) armedScale = 1;
   armed = item;
   paintColour = null;
   clearSelection();
@@ -1207,8 +1221,20 @@ function dropArmed(at: THREE.Vector3, spin: boolean): Promise<PlacedItem | null>
   return instantiate(state, entry);
 }
 
+/** Re-apply the multiplier to the live ghost and say what it is. */
+function applyArmedScale() {
+  if (ghost) ghost.scale.setScalar(ghostBase * armedScale);
+  if (armed) {
+    setStatus(
+      `<b class="piece">${nameOf(armed.src)} ${armedScale.toFixed(2)}x</b><i class="sep"></i>` +
+        cap(['[', ']'], 'size') + cap(['\u2318drag'], 'scatter') + cap(['Esc'], 'stop')
+    );
+  }
+}
+
 function disarm() {
   armed = null;
+  armedScale = 1;
   paintColour = null;
   paletteEl?.querySelectorAll('.armed').forEach((el) => el.classList.remove('armed'));
   killGhost();
@@ -1222,7 +1248,10 @@ function disarm() {
  * — so terrain previewed enormous and snapped small the moment you clicked.
  */
 function placementFit(src: string): { fitHeight?: number; fitMaxDim?: number } {
-  return isGroundPiece(src) ? { fitMaxDim: 26 } : { fitHeight: 1.5 };
+  // These are target dimensions, so the armed multiplier folds straight in.
+  return isGroundPiece(src)
+    ? { fitMaxDim: 26 * armedScale }
+    : { fitHeight: 1.5 * armedScale };
 }
 
 async function ensureGhost(src: string) {
@@ -1243,7 +1272,8 @@ async function ensureGhost(src: string) {
   const box = new THREE.Box3().setFromObject(ghost);
   const size = box.getSize(new THREE.Vector3());
   const fit = placementFit(src);
-  ghost.scale.setScalar(fitScale(size, fit.fitHeight, fit.fitMaxDim));
+  ghostBase = fitScale(size, fit.fitHeight, fit.fitMaxDim);
+  ghost.scale.setScalar(ghostBase * armedScale);
   ghostSrc = src;
   sceneRef()?.add(ghost);
 }
@@ -1862,6 +1892,16 @@ function onKeyDown(ev: KeyboardEvent) {
     for (const e of clipboard) delete e.follow;
     pasteBump = 0;
     void pasteClipboard();
+    return;
+  }
+
+  // An armed piece takes the size keys before any selection does: you are
+  // holding something you have not put down yet, so that is what you mean.
+  if (armed && (ev.code === 'BracketLeft' || ev.code === 'BracketRight')) {
+    ev.preventDefault();
+    const f = ev.shiftKey ? 1.5 : 1.12;
+    armedScale = +Math.min(12, Math.max(0.08, armedScale * (ev.code === 'BracketRight' ? f : 1 / f))).toFixed(3);
+    applyArmedScale();
     return;
   }
 
