@@ -20,10 +20,38 @@ import { findHandBone } from './weapons';
  * automatic guess for anything unfitted.
  */
 
-/** Melee only. Guns are a different mechanic and none is implemented. */
-const WEAPONS = [
-  'Cutlass', 'Sword', 'Axe', 'Dagger', 'Large Bone',
-].map((n) => ({ label: n, src: `/models/quaternius-pirate/${n}.glb` }));
+/**
+ * Everything that can be fitted to a hand.
+ *
+ * Grouped because the bench now does three different jobs. A blade is fitted
+ * against the swing; a thrown thing is fitted against the wind-up, where what
+ * matters is that it sits in the palm rather than lining up with an arc; a rod
+ * is held through a whole idle and never leaves the hand at all. They reduce to
+ * the same six numbers against a bone, but a flat list of fifteen entries hides
+ * which job you are doing.
+ *
+ * Guns stay out — a different mechanic, and none is implemented.
+ */
+const pirate = (n: string) => ({ label: n, src: `/models/quaternius-pirate/${n}.glb` });
+
+const WEAPON_GROUPS: { group: string; items: { label: string; src: string }[] }[] = [
+  { group: 'Melee', items: ['Cutlass', 'Sword', 'Axe', 'Dagger', 'Large Bone'].map(pirate) },
+  // Thrown: the bomb is the one that already has behaviour behind it; the rest
+  // are here because anything you can pick up is something you can throw, and
+  // it has to look held while you wind up.
+  { group: 'Thrown', items: ['Bomb', 'Rock', 'Prop Bottle', 'Skull', 'Chicken Leg'].map(pirate) },
+  // The rod ships as five tiers (Lvl1..Lvl5) behind hashed filenames — these
+  // are genuinely different models, not the usual duplicate-export trap.
+  { group: 'Fishing', items: [
+    { label: 'Fishing Rod I', src: '/models/animated-fish-bundle/Fishing Rod.glb' },
+    { label: 'Fishing Rod II', src: '/models/animated-fish-bundle/Fishing Rod-0YAR0Lg58p.glb' },
+    { label: 'Fishing Rod III', src: '/models/animated-fish-bundle/Fishing Rod-lDlWQjn9Zg.glb' },
+    { label: 'Fishing Rod IV', src: '/models/animated-fish-bundle/Fishing Rod-9AOHhRPHE7.glb' },
+    { label: 'Fishing Rod V', src: '/models/animated-fish-bundle/Fishing Rod-aOabqWh68m.glb' },
+  ] },
+];
+
+const WEAPONS = WEAPON_GROUPS.flatMap((g) => g.items);
 
 /* ----------------------------------------------------------------- bench --- */
 
@@ -50,6 +78,42 @@ let fit: Fit = { bone: '', pos: [0, 0.1, 0], rot: [Math.PI / 2, 0, 0], scale: 0.
 /** Playback controls: a swing at full speed is too quick to fit against. */
 let playing = true;
 let speed = 0.35;
+/** The loaded character's clips, and which one the bench is holding. */
+let clips: THREE.AnimationClip[] = [];
+let clipName = '';
+/** True once the user picks a pose by hand, so reloads stop overriding it. */
+let clipPinned = false;
+
+/** Which group the selected item belongs to, for pose and group defaults. */
+function groupOf(src: string) {
+  return WEAPON_GROUPS.find((g) => g.items.some((i) => i.src === src))?.group ?? 'Melee';
+}
+
+/** Sensible starting pose for the kind of thing being fitted. */
+function preferredClip(): string {
+  // A blade is judged mid-swing, a thrown thing during the wind-up (Punch is
+  // the closest thing these rigs have to one), and a rod just hangs there.
+  const g = groupOf(current.weapon);
+  const want =
+    g === 'Melee' ? ['Weapon', 'Punch']
+    : g === 'Thrown' ? ['Punch', 'Weapon', 'Idle']
+    : ['Idle', 'Walk'];
+  for (const w of want) {
+    const hit = clips.find((a) => a.name.split('|').includes(w));
+    if (hit) return hit.name;
+  }
+  return clips[0]?.name ?? '';
+}
+
+function playClip(name: string) {
+  if (!mixer) return;
+  mixer.stopAllAction();
+  const clip = clips.find((a) => a.name === name);
+  if (!clip) return;
+  clipName = name;
+  mixer.clipAction(clip).play();
+  applySpeed();
+}
 
 function applySpeed() {
   if (mixer) mixer.timeScale = playing ? speed : 0;
@@ -134,10 +198,14 @@ function ensure() {
     <select id="rf-char">${PLAYER_CHOICES.map(
       (c) => `<option value="${c.src}">${c.label}</option>`
     ).join('')}</select>
-    <label>Weapon</label>
-    <select id="rf-weap">${WEAPONS.map(
-      (w) => `<option value="${w.src}">${w.label}</option>`
+    <label>Item</label>
+    <select id="rf-weap">${WEAPON_GROUPS.map(
+      (g) => `<optgroup label="${g.group}">${g.items.map(
+        (w) => `<option value="${w.src}">${w.label}</option>`
+      ).join('')}</optgroup>`
     ).join('')}</select>
+    <label>Pose</label>
+    <select id="rf-clip"></select>
     <label>Bone</label>
     <select id="rf-bone"></select>
     ${['x', 'y', 'z'].map((a, i) => `
@@ -219,8 +287,16 @@ function ensure() {
     void load();
   });
   on('#rf-weap', 'change', (e) => {
+    const prev = groupOf(current.weapon);
     current.weapon = (e.target as HTMLSelectElement).value;
+    // Crossing from Melee to Thrown means a different pose is the right one to
+    // judge against, so an explicit pick only sticks within its own group.
+    if (groupOf(current.weapon) !== prev) clipPinned = false;
     void load();
+  });
+  on('#rf-clip', 'change', (e) => {
+    clipPinned = true;
+    playClip((e.target as HTMLSelectElement).value);
   });
   on('#rf-bone', 'change', (e) => {
     fit.bone = (e.target as HTMLSelectElement).value;
@@ -291,10 +367,21 @@ async function load() {
   rig.position.y = -new THREE.Box3().setFromObject(rig).min.y;
   scene.add(rig);
   mixer = new THREE.AnimationMixer(rig);
-  const clip =
-    gltf.animations.find((a) => a.name.split('|').includes('Weapon')) ??
-    gltf.animations.find((a) => a.name.split('|').includes('Idle'));
-  if (clip) mixer.clipAction(clip).play();
+  // The pose you fit against depends on the job. A blade is judged mid-swing,
+  // so Weapon is the default — but a bomb is judged during the wind-up and a
+  // rod during a plain Idle, and neither of those is the Weapon clip. These
+  // rigs have no Throw, so the choice has to be the user's.
+  clips = gltf.animations;
+  const want =
+    clipPinned && clips.some((a) => a.name === clipName) ? clipName : preferredClip();
+  const clipSel = el!.querySelector('#rf-clip') as HTMLSelectElement;
+  clipSel.innerHTML = clips
+    .map((a) => {
+      const short = a.name.split('|').pop() ?? a.name;
+      return `<option value="${a.name}"${a.name === want ? ' selected' : ''}>${short}</option>`;
+    })
+    .join('');
+  playClip(want);
   applySpeed();
 
   // Bone list, hand first so the sensible default is preselected.
