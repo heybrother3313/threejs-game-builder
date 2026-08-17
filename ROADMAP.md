@@ -75,7 +75,7 @@ actually is.
       objective); food as a collectible that heals. Probably all three, gated
       differently — passive for chip damage, sleep for a full reset, food as
       the thing you spend an economy on.
-- [ ] **Crafting.** Recorded because it keeps coming up, NOT scheduled — Erik
+- [ ] **Crafting.** Recorded because it keeps coming up, NOT scheduled — Ethan
       is explicit he doesn't want to build it. If it ever happens the honest
       version is small: a workbench (the survival kit has three) that turns
       N of one collectible into one of another, which is the economy with a
