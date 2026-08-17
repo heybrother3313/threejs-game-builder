@@ -789,7 +789,10 @@ export function updateNpcs(
   state: State,
   dt: number,
   playerPos: THREE.Vector3 | undefined,
-  active: boolean
+  active: boolean,
+  /** Which way the player is looking, so the talk prompt matches the key. */
+  faceX = 0,
+  faceZ = 0
 ) {
   ensureUi();
   setHudVisible(active);
@@ -932,7 +935,10 @@ export function updateNpcs(
 
     // Offer a chat when close enough.
     if (
-      linesOf(item).length && toPlayer < 3 && canReach && cfg.faction !== 'hostile' &&
+      linesOf(item).length &&
+      canReach &&
+      cfg.faction !== 'hostile' &&
+      canTalkTo(item, playerPos.x, playerPos.z, faceX, faceZ) &&
       (!boardNear || toPlayer <= boardNear.d)
     ) {
       prompt = `<b>E</b>&nbsp; talk to ${nameOf(item)}`;
@@ -1108,7 +1114,48 @@ function detonate(state: State, proj: PlacedItem, playerPos: THREE.Vector3) {
 }
 
 /** True when the key was consumed by conversation. */
-export function npcKey(code: string, playerPos: THREE.Vector3 | undefined): boolean {
+/** How close you stand to start a conversation. */
+const TALK_RADIUS = 2.2;
+/** How squarely you must be looking at them: about a 70° cone. */
+const TALK_LOOK = 0.35;
+/** How far they may be turned away and still answer: just past side-on. */
+const TALK_MUTUAL = -0.15;
+
+/**
+ * Is this someone you could talk to from where you're standing?
+ *
+ * The single answer used by BOTH the prompt and the key, because a prompt
+ * that offers a conversation the key then refuses — or a key that talks with
+ * no prompt — is worse than either rule on its own.
+ *
+ * With no facing supplied it degrades to the old plain radius.
+ */
+function canTalkTo(
+  item: PlacedItem,
+  px: number,
+  pz: number,
+  faceX: number,
+  faceZ: number
+): boolean {
+  const dx = item.obj.position.x - px;
+  const dz = item.obj.position.z - pz;
+  const d = Math.hypot(dx, dz);
+  if (d >= TALK_RADIUS || d < 1e-3) return false;
+  if (faceX === 0 && faceZ === 0) return true;
+  const ux = dx / d;
+  const uz = dz / d;
+  if (ux * faceX + uz * faceZ < TALK_LOOK) return false;
+  // Not their back: someone turned away is walking off, not chatting.
+  const ny = item.obj.rotation.y;
+  return -ux * Math.sin(ny) + -uz * Math.cos(ny) >= TALK_MUTUAL;
+}
+
+export function npcKey(
+  code: string,
+  playerPos: THREE.Vector3 | undefined,
+  faceX = 0,
+  faceZ = 0
+): boolean {
   // Dead players only have one verb.
   if (playerDead) {
     if (code === 'KeyR') respawnPlayer();
@@ -1169,19 +1216,22 @@ export function npcKey(code: string, playerPos: THREE.Vector3 | undefined): bool
       return true;
     }
     const board = nearbyBoard(playerPos);
-    // Nearest talkable NPC wins over picking things up.
+    // Nearest talkable NPC wins over picking things up — so the reach has to
+    // be tight, and it has to be a conversation. A three-metre sphere meant a
+    // vendor standing near a thing you wanted took the E press, and you could
+    // strike one up with someone's back as they walked away.
     let best: PlacedItem | null = null;
-    let bestD = 3;
+    let bestD = TALK_RADIUS;
     for (const item of placed) {
       if (!linesOf(item).length && !item.entry.npc?.wantsItem) continue;
       if (item.entry.npc?.faction === 'hostile') continue;
       if (npcRuntime(item).state === 'dead') continue;
       if (Math.abs(item.obj.position.y - playerPos.y) > REACH_HEIGHT) continue;
+      if (!canTalkTo(item, playerPos.x, playerPos.z, faceX, faceZ)) continue;
       const d = Math.hypot(item.obj.position.x - playerPos.x, item.obj.position.z - playerPos.z);
-      if (d < bestD) {
-        best = item;
-        bestD = d;
-      }
+      if (d >= bestD) continue;
+      best = item;
+      bestD = d;
     }
     // A board in a town square sits within arm's reach of everyone; if it
     // always won, none of them could be spoken to. Nearest thing wins.

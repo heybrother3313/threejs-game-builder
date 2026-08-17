@@ -231,8 +231,10 @@ window.addEventListener('keyup', (e) => {
 window.addEventListener('keydown', (e) => {
   if (e.repeat || buildMode) return;
   // Conversation gets first refusal on keys: E talks to a nearby NPC rather
-  // than grabbing, and F answers "follow me" instead of throwing.
-  if (npcKey(e.code, lastPlayerPos)) return;
+  // than grabbing, and F answers "follow me" instead of throwing. It only
+  // claims the key when you're actually facing someone, so it can't swallow
+  // a pickup just by standing near a vendor.
+  if (npcKey(e.code, lastPlayerPos, -Math.sin(heading), -Math.cos(heading))) return;
   // Double-tap forward (or back) to run: two presses inside the window below
   // latch a sprint that lasts until you let go of the key. Held as a latch
   // rather than a modifier so it survives the second tap being a HOLD.
@@ -951,7 +953,7 @@ const VisualsSystem: System = {
         pendingPunch = null;
       }
     }
-    updateNpcs(state, dt, playerPos, !buildMode);
+    updateNpcs(state, dt, playerPos, !buildMode, -Math.sin(heading), -Math.cos(heading));
     updateObjectives(state, dt, playerPos?.x ?? 0, playerPos?.z ?? 0, !buildMode && !!playerPos);
     const players = playerQuery(state.world);
     if (players.length > 0) updateCharacterVisual(state, players[0]);
