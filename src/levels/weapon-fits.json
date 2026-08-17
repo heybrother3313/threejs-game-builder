@@ -1,5 +1,61 @@
 {
- "Frog.glb|Cutlass.glb": {
+ "Alien-RRliSQBP7r.glb|*": {
+  "bone": "Middle1L",
+  "pos": [
+   -0.01,
+   0.17,
+   -0.08
+  ],
+  "rot": [
+   -2.65,
+   -0.09,
+   -0.83
+  ],
+  "scale": 0.71
+ },
+ "Alien-RRliSQBP7r.glb|Axe.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   0.025,
+   0.105,
+   -0.1
+  ],
+  "rot": [
+   2.53,
+   0.29,
+   -1.49
+  ],
+  "scale": 0.91
+ },
+ "Alien-RRliSQBP7r.glb|Bomb.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   0.025,
+   0.03,
+   -0.23
+  ],
+  "rot": [
+   -2.65,
+   -0.09,
+   -0.83
+  ],
+  "scale": 0.71
+ },
+ "Alien-RRliSQBP7r.glb|Chicken Leg.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   0.01,
+   0.43,
+   -0.125
+  ],
+  "rot": [
+   -2.65,
+   -0.09,
+   -0.83
+  ],
+  "scale": 0.71
+ },
+ "Alien-RRliSQBP7r.glb|Cutlass.glb": {
   "bone": "Middle1L",
   "pos": [
    -0.025,
@@ -10,6 +66,608 @@
    -2.15,
    0.35,
    -0.83
+  ],
+  "scale": 0.71
+ },
+ "Alien-RRliSQBP7r.glb|Dagger.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   0.045,
+   0.165,
+   -0.075
+  ],
+  "rot": [
+   -0.99,
+   -0.11,
+   -1.59
+  ],
+  "scale": 0.71
+ },
+ "Alien-RRliSQBP7r.glb|Fishing Rod-0YAR0Lg58p.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   0.055,
+   0.23,
+   -0.055
+  ],
+  "rot": [
+   -2.81,
+   3.15,
+   3.15
+  ],
+  "scale": 2
+ },
+ "Alien-RRliSQBP7r.glb|Fishing Rod-9AOHhRPHE7.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   0.055,
+   0.23,
+   -0.055
+  ],
+  "rot": [
+   -2.81,
+   3.15,
+   3.15
+  ],
+  "scale": 2
+ },
+ "Alien-RRliSQBP7r.glb|Fishing Rod-aOabqWh68m.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   0.055,
+   0.23,
+   -0.055
+  ],
+  "rot": [
+   -2.81,
+   3.15,
+   3.15
+  ],
+  "scale": 2
+ },
+ "Alien-RRliSQBP7r.glb|Fishing Rod-lDlWQjn9Zg.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   0.055,
+   0.23,
+   -0.055
+  ],
+  "rot": [
+   -2.81,
+   3.15,
+   3.15
+  ],
+  "scale": 2
+ },
+ "Alien-RRliSQBP7r.glb|Fishing Rod.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   0.055,
+   0.23,
+   -0.055
+  ],
+  "rot": [
+   -2.81,
+   3.15,
+   3.15
+  ],
+  "scale": 2
+ },
+ "Alien-RRliSQBP7r.glb|Large Bone.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   0.11,
+   0.3,
+   -0.08
+  ],
+  "rot": [
+   -2.71,
+   -0.09,
+   -0.83
+  ],
+  "scale": 0.71
+ },
+ "Alien-RRliSQBP7r.glb|Prop Bottle.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   -0.01,
+   0.17,
+   -0.08
+  ],
+  "rot": [
+   -2.65,
+   -0.09,
+   -0.83
+  ],
+  "scale": 0.71
+ },
+ "Alien-RRliSQBP7r.glb|Rock.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   0.05,
+   0.09,
+   -0.365
+  ],
+  "rot": [
+   0.13,
+   -1.09,
+   -0.83
+  ],
+  "scale": 0.71
+ },
+ "Alien-RRliSQBP7r.glb|Skull.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   0.205,
+   0.255,
+   -0.16
+  ],
+  "rot": [
+   -2.65,
+   -1.93,
+   -0.71
+  ],
+  "scale": 0.64
+ },
+ "Alien-RRliSQBP7r.glb|Sword.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   0.08,
+   0.18,
+   -0.075
+  ],
+  "rot": [
+   -0.53,
+   -0.01,
+   -1.83
+  ],
+  "scale": 0.71
+ },
+ "Dino.glb|*": {
+  "bone": "Middle1L",
+  "pos": [
+   -0.01,
+   0.17,
+   -0.08
+  ],
+  "rot": [
+   -2.65,
+   -0.09,
+   -0.83
+  ],
+  "scale": 0.71
+ },
+ "Dino.glb|Axe.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   0.025,
+   0.105,
+   -0.1
+  ],
+  "rot": [
+   2.53,
+   0.29,
+   -1.49
+  ],
+  "scale": 0.91
+ },
+ "Dino.glb|Bomb.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   0.025,
+   0.03,
+   -0.23
+  ],
+  "rot": [
+   -2.65,
+   -0.09,
+   -0.83
+  ],
+  "scale": 0.71
+ },
+ "Dino.glb|Chicken Leg.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   0.01,
+   0.43,
+   -0.125
+  ],
+  "rot": [
+   -2.65,
+   -0.09,
+   -0.83
+  ],
+  "scale": 0.71
+ },
+ "Dino.glb|Cutlass.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   -0.025,
+   0.165,
+   -0.115
+  ],
+  "rot": [
+   -2.15,
+   0.35,
+   -0.83
+  ],
+  "scale": 0.71
+ },
+ "Dino.glb|Dagger.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   0.045,
+   0.165,
+   -0.075
+  ],
+  "rot": [
+   -0.99,
+   -0.11,
+   -1.59
+  ],
+  "scale": 0.71
+ },
+ "Dino.glb|Fishing Rod-0YAR0Lg58p.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   0.055,
+   0.23,
+   -0.055
+  ],
+  "rot": [
+   -2.81,
+   3.15,
+   3.15
+  ],
+  "scale": 2
+ },
+ "Dino.glb|Fishing Rod-9AOHhRPHE7.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   0.055,
+   0.23,
+   -0.055
+  ],
+  "rot": [
+   -2.81,
+   3.15,
+   3.15
+  ],
+  "scale": 2
+ },
+ "Dino.glb|Fishing Rod-aOabqWh68m.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   0.055,
+   0.23,
+   -0.055
+  ],
+  "rot": [
+   -2.81,
+   3.15,
+   3.15
+  ],
+  "scale": 2
+ },
+ "Dino.glb|Fishing Rod-lDlWQjn9Zg.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   0.055,
+   0.23,
+   -0.055
+  ],
+  "rot": [
+   -2.81,
+   3.15,
+   3.15
+  ],
+  "scale": 2
+ },
+ "Dino.glb|Fishing Rod.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   0.055,
+   0.23,
+   -0.055
+  ],
+  "rot": [
+   -2.81,
+   3.15,
+   3.15
+  ],
+  "scale": 2
+ },
+ "Dino.glb|Large Bone.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   0.11,
+   0.3,
+   -0.08
+  ],
+  "rot": [
+   -2.71,
+   -0.09,
+   -0.83
+  ],
+  "scale": 0.71
+ },
+ "Dino.glb|Prop Bottle.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   -0.01,
+   0.17,
+   -0.08
+  ],
+  "rot": [
+   -2.65,
+   -0.09,
+   -0.83
+  ],
+  "scale": 0.71
+ },
+ "Dino.glb|Rock.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   0.05,
+   0.09,
+   -0.365
+  ],
+  "rot": [
+   0.13,
+   -1.09,
+   -0.83
+  ],
+  "scale": 0.71
+ },
+ "Dino.glb|Skull.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   0.205,
+   0.255,
+   -0.16
+  ],
+  "rot": [
+   -2.65,
+   -1.93,
+   -0.71
+  ],
+  "scale": 0.64
+ },
+ "Dino.glb|Sword.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   0.08,
+   0.18,
+   -0.075
+  ],
+  "rot": [
+   -0.53,
+   -0.01,
+   -1.83
+  ],
+  "scale": 0.71
+ },
+ "Fish-ypEYhCImAB.glb|*": {
+  "bone": "Middle1L",
+  "pos": [
+   -0.01,
+   0.17,
+   -0.08
+  ],
+  "rot": [
+   -2.65,
+   -0.09,
+   -0.83
+  ],
+  "scale": 0.71
+ },
+ "Fish-ypEYhCImAB.glb|Axe.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   0.025,
+   0.105,
+   -0.1
+  ],
+  "rot": [
+   2.53,
+   0.29,
+   -1.49
+  ],
+  "scale": 0.91
+ },
+ "Fish-ypEYhCImAB.glb|Bomb.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   0.025,
+   0.03,
+   -0.23
+  ],
+  "rot": [
+   -2.65,
+   -0.09,
+   -0.83
+  ],
+  "scale": 0.71
+ },
+ "Fish-ypEYhCImAB.glb|Chicken Leg.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   0.01,
+   0.43,
+   -0.125
+  ],
+  "rot": [
+   -2.65,
+   -0.09,
+   -0.83
+  ],
+  "scale": 0.71
+ },
+ "Fish-ypEYhCImAB.glb|Cutlass.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   -0.025,
+   0.165,
+   -0.115
+  ],
+  "rot": [
+   -2.15,
+   0.35,
+   -0.83
+  ],
+  "scale": 0.71
+ },
+ "Fish-ypEYhCImAB.glb|Dagger.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   0.045,
+   0.165,
+   -0.075
+  ],
+  "rot": [
+   -0.99,
+   -0.11,
+   -1.59
+  ],
+  "scale": 0.71
+ },
+ "Fish-ypEYhCImAB.glb|Fishing Rod-0YAR0Lg58p.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   0.055,
+   0.23,
+   -0.055
+  ],
+  "rot": [
+   -2.81,
+   3.15,
+   3.15
+  ],
+  "scale": 2
+ },
+ "Fish-ypEYhCImAB.glb|Fishing Rod-9AOHhRPHE7.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   0.055,
+   0.23,
+   -0.055
+  ],
+  "rot": [
+   -2.81,
+   3.15,
+   3.15
+  ],
+  "scale": 2
+ },
+ "Fish-ypEYhCImAB.glb|Fishing Rod-aOabqWh68m.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   0.055,
+   0.23,
+   -0.055
+  ],
+  "rot": [
+   -2.81,
+   3.15,
+   3.15
+  ],
+  "scale": 2
+ },
+ "Fish-ypEYhCImAB.glb|Fishing Rod-lDlWQjn9Zg.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   0.055,
+   0.23,
+   -0.055
+  ],
+  "rot": [
+   -2.81,
+   3.15,
+   3.15
+  ],
+  "scale": 2
+ },
+ "Fish-ypEYhCImAB.glb|Fishing Rod.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   0.055,
+   0.23,
+   -0.055
+  ],
+  "rot": [
+   -2.81,
+   3.15,
+   3.15
+  ],
+  "scale": 2
+ },
+ "Fish-ypEYhCImAB.glb|Large Bone.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   0.11,
+   0.3,
+   -0.08
+  ],
+  "rot": [
+   -2.71,
+   -0.09,
+   -0.83
+  ],
+  "scale": 0.71
+ },
+ "Fish-ypEYhCImAB.glb|Prop Bottle.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   -0.01,
+   0.17,
+   -0.08
+  ],
+  "rot": [
+   -2.65,
+   -0.09,
+   -0.83
+  ],
+  "scale": 0.71
+ },
+ "Fish-ypEYhCImAB.glb|Rock.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   0.05,
+   0.09,
+   -0.365
+  ],
+  "rot": [
+   0.13,
+   -1.09,
+   -0.83
+  ],
+  "scale": 0.71
+ },
+ "Fish-ypEYhCImAB.glb|Skull.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   0.205,
+   0.255,
+   -0.16
+  ],
+  "rot": [
+   -2.65,
+   -1.93,
+   -0.71
+  ],
+  "scale": 0.64
+ },
+ "Fish-ypEYhCImAB.glb|Sword.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   0.08,
+   0.18,
+   -0.075
+  ],
+  "rot": [
+   -0.53,
+   -0.01,
+   -1.83
   ],
   "scale": 0.71
  },
@@ -41,17 +699,45 @@
   ],
   "scale": 0.91
  },
- "Frog.glb|Sword.glb": {
+ "Frog.glb|Bomb.glb": {
   "bone": "Middle1L",
   "pos": [
-   0.08,
-   0.18,
-   -0.075
+   0.025,
+   0.03,
+   -0.23
   ],
   "rot": [
-   -0.53,
-   -0.01,
-   -1.83
+   -2.65,
+   -0.09,
+   -0.83
+  ],
+  "scale": 0.71
+ },
+ "Frog.glb|Chicken Leg.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   0.01,
+   0.43,
+   -0.125
+  ],
+  "rot": [
+   -2.65,
+   -0.09,
+   -0.83
+  ],
+  "scale": 0.71
+ },
+ "Frog.glb|Cutlass.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   -0.02,
+   0.165,
+   -0.07
+  ],
+  "rot": [
+   -1.55,
+   0.19,
+   -1.07
   ],
   "scale": 0.71
  },
@@ -69,6 +755,76 @@
   ],
   "scale": 0.71
  },
+ "Frog.glb|Fishing Rod-0YAR0Lg58p.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   0.055,
+   0.23,
+   -0.055
+  ],
+  "rot": [
+   -2.81,
+   3.15,
+   3.15
+  ],
+  "scale": 2
+ },
+ "Frog.glb|Fishing Rod-9AOHhRPHE7.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   0.055,
+   0.23,
+   -0.055
+  ],
+  "rot": [
+   -2.81,
+   3.15,
+   3.15
+  ],
+  "scale": 2
+ },
+ "Frog.glb|Fishing Rod-aOabqWh68m.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   0.055,
+   0.23,
+   -0.055
+  ],
+  "rot": [
+   -2.81,
+   3.15,
+   3.15
+  ],
+  "scale": 2
+ },
+ "Frog.glb|Fishing Rod-lDlWQjn9Zg.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   0.055,
+   0.23,
+   -0.055
+  ],
+  "rot": [
+   -2.81,
+   3.15,
+   3.15
+  ],
+  "scale": 2
+ },
+ "Frog.glb|Fishing Rod.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   0.055,
+   0.23,
+   -0.055
+  ],
+  "rot": [
+   -2.81,
+   3.15,
+   3.15
+  ],
+  "scale": 2
+ },
  "Frog.glb|Large Bone.glb": {
   "bone": "Middle1L",
   "pos": [
@@ -83,16 +839,114 @@
   ],
   "scale": 0.71
  },
- "Dino.glb|Cutlass.glb": {
+ "Frog.glb|Prop Bottle.glb": {
   "bone": "Middle1L",
   "pos": [
-   -0.025,
-   0.165,
-   -0.115
+   -0.01,
+   0.17,
+   -0.08
   ],
   "rot": [
-   -2.15,
-   0.35,
+   -2.65,
+   -0.09,
+   -0.83
+  ],
+  "scale": 0.71
+ },
+ "Frog.glb|Rock.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   0.05,
+   0.09,
+   -0.365
+  ],
+  "rot": [
+   0.13,
+   -1.09,
+   -0.83
+  ],
+  "scale": 0.71
+ },
+ "Frog.glb|Skull.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   0.205,
+   0.255,
+   -0.16
+  ],
+  "rot": [
+   -2.65,
+   -1.93,
+   -0.71
+  ],
+  "scale": 0.64
+ },
+ "Frog.glb|Sword.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   0.08,
+   0.18,
+   -0.075
+  ],
+  "rot": [
+   -0.53,
+   -0.01,
+   -1.83
+  ],
+  "scale": 0.71
+ },
+ "Monkroose.glb|*": {
+  "bone": "Middle1L",
+  "pos": [
+   -0.01,
+   0.17,
+   -0.08
+  ],
+  "rot": [
+   -2.65,
+   -0.09,
+   -0.83
+  ],
+  "scale": 0.71
+ },
+ "Monkroose.glb|Axe.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   0.025,
+   0.105,
+   -0.1
+  ],
+  "rot": [
+   2.53,
+   0.29,
+   -1.49
+  ],
+  "scale": 0.91
+ },
+ "Monkroose.glb|Bomb.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   0.025,
+   0.03,
+   -0.23
+  ],
+  "rot": [
+   -2.65,
+   -0.09,
+   -0.83
+  ],
+  "scale": 0.71
+ },
+ "Monkroose.glb|Chicken Leg.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   0.01,
+   0.43,
+   -0.125
+  ],
+  "rot": [
+   -2.65,
+   -0.09,
    -0.83
   ],
   "scale": 0.71
@@ -111,30 +965,212 @@
   ],
   "scale": 0.71
  },
- "Alien-RRliSQBP7r.glb|Cutlass.glb": {
+ "Monkroose.glb|Dagger.glb": {
   "bone": "Middle1L",
   "pos": [
-   -0.025,
+   0.045,
    0.165,
-   -0.115
+   -0.075
   ],
   "rot": [
-   -2.15,
-   0.35,
+   -0.99,
+   -0.11,
+   -1.59
+  ],
+  "scale": 0.71
+ },
+ "Monkroose.glb|Fishing Rod-0YAR0Lg58p.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   0.055,
+   0.23,
+   -0.055
+  ],
+  "rot": [
+   -2.81,
+   3.15,
+   3.15
+  ],
+  "scale": 2
+ },
+ "Monkroose.glb|Fishing Rod-9AOHhRPHE7.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   0.055,
+   0.23,
+   -0.055
+  ],
+  "rot": [
+   -2.81,
+   3.15,
+   3.15
+  ],
+  "scale": 2
+ },
+ "Monkroose.glb|Fishing Rod-aOabqWh68m.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   0.055,
+   0.23,
+   -0.055
+  ],
+  "rot": [
+   -2.81,
+   3.15,
+   3.15
+  ],
+  "scale": 2
+ },
+ "Monkroose.glb|Fishing Rod-lDlWQjn9Zg.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   0.055,
+   0.23,
+   -0.055
+  ],
+  "rot": [
+   -2.81,
+   3.15,
+   3.15
+  ],
+  "scale": 2
+ },
+ "Monkroose.glb|Fishing Rod.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   0.055,
+   0.23,
+   -0.055
+  ],
+  "rot": [
+   -2.81,
+   3.15,
+   3.15
+  ],
+  "scale": 2
+ },
+ "Monkroose.glb|Large Bone.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   0.11,
+   0.3,
+   -0.08
+  ],
+  "rot": [
+   -2.71,
+   -0.09,
    -0.83
   ],
   "scale": 0.71
  },
- "Fish-ypEYhCImAB.glb|Cutlass.glb": {
+ "Monkroose.glb|Prop Bottle.glb": {
   "bone": "Middle1L",
   "pos": [
-   -0.025,
-   0.165,
-   -0.115
+   -0.01,
+   0.17,
+   -0.08
   ],
   "rot": [
-   -2.15,
-   0.35,
+   -2.65,
+   -0.09,
+   -0.83
+  ],
+  "scale": 0.71
+ },
+ "Monkroose.glb|Rock.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   0.05,
+   0.09,
+   -0.365
+  ],
+  "rot": [
+   0.13,
+   -1.09,
+   -0.83
+  ],
+  "scale": 0.71
+ },
+ "Monkroose.glb|Skull.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   0.205,
+   0.255,
+   -0.16
+  ],
+  "rot": [
+   -2.65,
+   -1.93,
+   -0.71
+  ],
+  "scale": 0.64
+ },
+ "Monkroose.glb|Sword.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   0.08,
+   0.18,
+   -0.075
+  ],
+  "rot": [
+   -0.53,
+   -0.01,
+   -1.83
+  ],
+  "scale": 0.71
+ },
+ "Yeti-ceRHrn8HHE.glb|*": {
+  "bone": "Middle1L",
+  "pos": [
+   -0.01,
+   0.17,
+   -0.08
+  ],
+  "rot": [
+   -2.65,
+   -0.09,
+   -0.83
+  ],
+  "scale": 0.71
+ },
+ "Yeti-ceRHrn8HHE.glb|Axe.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   0.025,
+   0.105,
+   -0.1
+  ],
+  "rot": [
+   2.53,
+   0.29,
+   -1.49
+  ],
+  "scale": 0.91
+ },
+ "Yeti-ceRHrn8HHE.glb|Bomb.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   0.025,
+   0.03,
+   -0.23
+  ],
+  "rot": [
+   -2.65,
+   -0.09,
+   -0.83
+  ],
+  "scale": 0.71
+ },
+ "Yeti-ceRHrn8HHE.glb|Chicken Leg.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   0.01,
+   0.43,
+   -0.125
+  ],
+  "rot": [
+   -2.65,
+   -0.09,
    -0.83
   ],
   "scale": 0.71
@@ -153,272 +1189,6 @@
   ],
   "scale": 0.71
  },
- "Dino.glb|*": {
-  "bone": "Middle1L",
-  "pos": [
-   -0.01,
-   0.17,
-   -0.08
-  ],
-  "rot": [
-   -2.65,
-   -0.09,
-   -0.83
-  ],
-  "scale": 0.71
- },
- "Monkroose.glb|*": {
-  "bone": "Middle1L",
-  "pos": [
-   -0.01,
-   0.17,
-   -0.08
-  ],
-  "rot": [
-   -2.65,
-   -0.09,
-   -0.83
-  ],
-  "scale": 0.71
- },
- "Alien-RRliSQBP7r.glb|*": {
-  "bone": "Middle1L",
-  "pos": [
-   -0.01,
-   0.17,
-   -0.08
-  ],
-  "rot": [
-   -2.65,
-   -0.09,
-   -0.83
-  ],
-  "scale": 0.71
- },
- "Fish-ypEYhCImAB.glb|*": {
-  "bone": "Middle1L",
-  "pos": [
-   -0.01,
-   0.17,
-   -0.08
-  ],
-  "rot": [
-   -2.65,
-   -0.09,
-   -0.83
-  ],
-  "scale": 0.71
- },
- "Yeti-ceRHrn8HHE.glb|*": {
-  "bone": "Middle1L",
-  "pos": [
-   -0.01,
-   0.17,
-   -0.08
-  ],
-  "rot": [
-   -2.65,
-   -0.09,
-   -0.83
-  ],
-  "scale": 0.71
- },
- "Dino.glb|Axe.glb": {
-  "bone": "Middle1L",
-  "pos": [
-   0.025,
-   0.105,
-   -0.1
-  ],
-  "rot": [
-   2.53,
-   0.29,
-   -1.49
-  ],
-  "scale": 0.91
- },
- "Monkroose.glb|Axe.glb": {
-  "bone": "Middle1L",
-  "pos": [
-   0.025,
-   0.105,
-   -0.1
-  ],
-  "rot": [
-   2.53,
-   0.29,
-   -1.49
-  ],
-  "scale": 0.91
- },
- "Alien-RRliSQBP7r.glb|Axe.glb": {
-  "bone": "Middle1L",
-  "pos": [
-   0.025,
-   0.105,
-   -0.1
-  ],
-  "rot": [
-   2.53,
-   0.29,
-   -1.49
-  ],
-  "scale": 0.91
- },
- "Fish-ypEYhCImAB.glb|Axe.glb": {
-  "bone": "Middle1L",
-  "pos": [
-   0.025,
-   0.105,
-   -0.1
-  ],
-  "rot": [
-   2.53,
-   0.29,
-   -1.49
-  ],
-  "scale": 0.91
- },
- "Yeti-ceRHrn8HHE.glb|Axe.glb": {
-  "bone": "Middle1L",
-  "pos": [
-   0.025,
-   0.105,
-   -0.1
-  ],
-  "rot": [
-   2.53,
-   0.29,
-   -1.49
-  ],
-  "scale": 0.91
- },
- "Dino.glb|Sword.glb": {
-  "bone": "Middle1L",
-  "pos": [
-   0.08,
-   0.18,
-   -0.075
-  ],
-  "rot": [
-   -0.53,
-   -0.01,
-   -1.83
-  ],
-  "scale": 0.71
- },
- "Monkroose.glb|Sword.glb": {
-  "bone": "Middle1L",
-  "pos": [
-   0.08,
-   0.18,
-   -0.075
-  ],
-  "rot": [
-   -0.53,
-   -0.01,
-   -1.83
-  ],
-  "scale": 0.71
- },
- "Alien-RRliSQBP7r.glb|Sword.glb": {
-  "bone": "Middle1L",
-  "pos": [
-   0.08,
-   0.18,
-   -0.075
-  ],
-  "rot": [
-   -0.53,
-   -0.01,
-   -1.83
-  ],
-  "scale": 0.71
- },
- "Fish-ypEYhCImAB.glb|Sword.glb": {
-  "bone": "Middle1L",
-  "pos": [
-   0.08,
-   0.18,
-   -0.075
-  ],
-  "rot": [
-   -0.53,
-   -0.01,
-   -1.83
-  ],
-  "scale": 0.71
- },
- "Yeti-ceRHrn8HHE.glb|Sword.glb": {
-  "bone": "Middle1L",
-  "pos": [
-   0.08,
-   0.18,
-   -0.075
-  ],
-  "rot": [
-   -0.53,
-   -0.01,
-   -1.83
-  ],
-  "scale": 0.71
- },
- "Dino.glb|Dagger.glb": {
-  "bone": "Middle1L",
-  "pos": [
-   0.045,
-   0.165,
-   -0.075
-  ],
-  "rot": [
-   -0.99,
-   -0.11,
-   -1.59
-  ],
-  "scale": 0.71
- },
- "Monkroose.glb|Dagger.glb": {
-  "bone": "Middle1L",
-  "pos": [
-   0.045,
-   0.165,
-   -0.075
-  ],
-  "rot": [
-   -0.99,
-   -0.11,
-   -1.59
-  ],
-  "scale": 0.71
- },
- "Alien-RRliSQBP7r.glb|Dagger.glb": {
-  "bone": "Middle1L",
-  "pos": [
-   0.045,
-   0.165,
-   -0.075
-  ],
-  "rot": [
-   -0.99,
-   -0.11,
-   -1.59
-  ],
-  "scale": 0.71
- },
- "Fish-ypEYhCImAB.glb|Dagger.glb": {
-  "bone": "Middle1L",
-  "pos": [
-   0.045,
-   0.165,
-   -0.075
-  ],
-  "rot": [
-   -0.99,
-   -0.11,
-   -1.59
-  ],
-  "scale": 0.71
- },
  "Yeti-ceRHrn8HHE.glb|Dagger.glb": {
   "bone": "Middle1L",
   "pos": [
@@ -433,61 +1203,75 @@
   ],
   "scale": 0.71
  },
- "Dino.glb|Large Bone.glb": {
+ "Yeti-ceRHrn8HHE.glb|Fishing Rod-0YAR0Lg58p.glb": {
   "bone": "Middle1L",
   "pos": [
-   0.11,
-   0.3,
-   -0.08
+   0.055,
+   0.23,
+   -0.055
   ],
   "rot": [
-   -2.71,
-   -0.09,
-   -0.83
+   -2.81,
+   3.15,
+   3.15
   ],
-  "scale": 0.71
+  "scale": 2
  },
- "Monkroose.glb|Large Bone.glb": {
+ "Yeti-ceRHrn8HHE.glb|Fishing Rod-9AOHhRPHE7.glb": {
   "bone": "Middle1L",
   "pos": [
-   0.11,
-   0.3,
-   -0.08
+   0.055,
+   0.23,
+   -0.055
   ],
   "rot": [
-   -2.71,
-   -0.09,
-   -0.83
+   -2.81,
+   3.15,
+   3.15
   ],
-  "scale": 0.71
+  "scale": 2
  },
- "Alien-RRliSQBP7r.glb|Large Bone.glb": {
+ "Yeti-ceRHrn8HHE.glb|Fishing Rod-aOabqWh68m.glb": {
   "bone": "Middle1L",
   "pos": [
-   0.11,
-   0.3,
-   -0.08
+   0.055,
+   0.23,
+   -0.055
   ],
   "rot": [
-   -2.71,
-   -0.09,
-   -0.83
+   -2.81,
+   3.15,
+   3.15
   ],
-  "scale": 0.71
+  "scale": 2
  },
- "Fish-ypEYhCImAB.glb|Large Bone.glb": {
+ "Yeti-ceRHrn8HHE.glb|Fishing Rod-lDlWQjn9Zg.glb": {
   "bone": "Middle1L",
   "pos": [
-   0.11,
-   0.3,
-   -0.08
+   0.055,
+   0.23,
+   -0.055
   ],
   "rot": [
-   -2.71,
-   -0.09,
-   -0.83
+   -2.81,
+   3.15,
+   3.15
   ],
-  "scale": 0.71
+  "scale": 2
+ },
+ "Yeti-ceRHrn8HHE.glb|Fishing Rod.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   0.055,
+   0.23,
+   -0.055
+  ],
+  "rot": [
+   -2.81,
+   3.15,
+   3.15
+  ],
+  "scale": 2
  },
  "Yeti-ceRHrn8HHE.glb|Large Bone.glb": {
   "bone": "Middle1L",
@@ -500,6 +1284,62 @@
    -2.71,
    -0.09,
    -0.83
+  ],
+  "scale": 0.71
+ },
+ "Yeti-ceRHrn8HHE.glb|Prop Bottle.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   -0.01,
+   0.17,
+   -0.08
+  ],
+  "rot": [
+   -2.65,
+   -0.09,
+   -0.83
+  ],
+  "scale": 0.71
+ },
+ "Yeti-ceRHrn8HHE.glb|Rock.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   0.05,
+   0.09,
+   -0.365
+  ],
+  "rot": [
+   0.13,
+   -1.09,
+   -0.83
+  ],
+  "scale": 0.71
+ },
+ "Yeti-ceRHrn8HHE.glb|Skull.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   0.205,
+   0.255,
+   -0.16
+  ],
+  "rot": [
+   -2.65,
+   -1.93,
+   -0.71
+  ],
+  "scale": 0.64
+ },
+ "Yeti-ceRHrn8HHE.glb|Sword.glb": {
+  "bone": "Middle1L",
+  "pos": [
+   0.08,
+   0.18,
+   -0.075
+  ],
+  "rot": [
+   -0.53,
+   -0.01,
+   -1.83
   ],
   "scale": 0.71
  }
