@@ -200,8 +200,14 @@ let pendingThrow: { t: number; speed: number; lift: number } | null = null;
 const ATTACK_HOLD_MAX = 0.5;
 /** How much of the swing survives the release, in seconds. */
 const THROW_FOLLOW_THROUGH = 0.12;
-/** Where in the Weapon clip the arm is up and the object should leave. */
-const THROW_RELEASE_FRAC = 0.12;
+/**
+ * Where in the Weapon clip the arm is up and the object should leave.
+ *
+ * Eyeballed off the clip rather than derived — 0.25 and 0.33 both looked
+ * right to Ethan, so it sits between them and is tunable live via
+ * __game.setThrowRelease(f) instead of costing a rebuild per guess.
+ */
+let throwReleaseFrac = 0.3;
 
 /** Last drawn player position, for input handlers that run outside systems. */
 const lastPlayerPos = new THREE.Vector3();
@@ -617,14 +623,14 @@ const CarrySystem: System = {
     if (wantsThrow && heldItem && !pendingThrow) {
       // Release as a FRACTION of the clip, not the melee contact time. Ethan
       // scrubbed the Weapon clip and found the throw pose — arm up, weight
-      // forward — about an eighth of the way in. SWING_CONTACT is 0.32s tuned
-      // for where a blade connects, which is a different moment and drifts
+      // forward — a quarter of the way in. SWING_CONTACT is 0.32s tuned for
+      // where a blade connects, which is a different moment and drifts
       // against clips of different length.
       const dur = playerSwing();
       attackHold = Math.min(dur, ATTACK_HOLD_MAX);
       attackFacing = heading;
       pendingThrow = {
-        t: dur > 0 ? dur * THROW_RELEASE_FRAC : SWING_CONTACT,
+        t: dur > 0 ? dur * throwReleaseFrac : SWING_CONTACT,
         speed: CARRY.throwSpeed,
         lift: CARRY.throwLift,
       };
@@ -1003,6 +1009,11 @@ withSystem(PlatformSlipSystem)
         },
         queries: { playerQuery, cameraQuery },
         getHeading: () => heading,
+        /** Tune where in the swing a throw lets go, 0..1. */
+        setThrowRelease: (f: number) => {
+          throwReleaseFrac = Math.min(0.9, Math.max(0.02, f));
+          return throwReleaseFrac;
+        },
         setHeading: (h: number) => {
           heading = h;
         },
