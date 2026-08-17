@@ -14,6 +14,7 @@
  */
 
 import * as THREE from 'three';
+import { clone as cloneSkinned } from 'three/examples/jsm/utils/SkeletonUtils.js';
 
 import { WATER_Y } from './atmosphere';
 import { ISLAND, islandHeight } from './ground';
@@ -324,17 +325,29 @@ let caughtReady: string | null = null;
 async function attachFish(name: string) {
   const src = `/models/animated-fish-bundle/${name}.glb`;
   try {
-    const model = (await loadModel(src)).clone(true);
+    const loaded = await loadModel(src);
     // The line may already be back — reeled, cancelled, or a different fish
     // struck since. Dropping a late arrival beats a fish appearing out of
     // nowhere over dry land.
     if (!host || !cast || hookedName !== name) return;
-    const size = new THREE.Box3().setFromObject(model).getSize(new THREE.Vector3());
-    model.scale.setScalar(FISH_SIZE / Math.max(size.x, size.y, size.z, 1e-3));
+    // Every fish here is rigged, and a plain clone of a skinned mesh shares
+    // or loses its skeleton — the copy renders at a wild size or not at all.
+    // Same trap that made a placed Tentacle enormous.
+    const model = cloneSkinned(loaded) as THREE.Group;
     model.traverse((o) => {
-      const m = o as THREE.Mesh;
+      const m = o as THREE.SkinnedMesh;
       if (m.isMesh) m.castShadow = true;
+      // Skinned bounds are the bind pose, so a fish thrashing outside them
+      // gets culled and vanishes at exactly the moment it is worth watching.
+      if (m.isSkinnedMesh) m.frustumCulled = false;
     });
+    model.updateMatrixWorld(true);
+    const box = new THREE.Box3().setFromObject(model);
+    const size = box.getSize(new THREE.Vector3());
+    const longest = Math.max(size.x, size.y, size.z);
+    // An unmeasurable model gives ±Infinity, not zero; scaling by that is NaN
+    // and the fish disappears while its mixer happily runs.
+    model.scale.setScalar(Number.isFinite(longest) && longest > 1e-3 ? FISH_SIZE / longest : 1);
     host.add(model);
     const mixer = new THREE.AnimationMixer(model);
     const clips = animationsFor(src);
