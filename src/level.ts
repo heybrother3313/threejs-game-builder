@@ -373,6 +373,37 @@ function footprint(item: PlacedItem): number {
   return r;
 }
 
+const hitVolumes = new WeakMap<PlacedItem, { radius: number; height: number }>();
+
+/**
+ * The volume a thrown thing has to pass through to count as a hit.
+ *
+ * Measured, because the old test was a fixed 1.1m circle for everything —
+ * the same reach whether you were throwing at a chicken or an ogre. And it
+ * is a CYLINDER standing on the piece's origin rather than a sphere around
+ * it, because the origin sits at the feet: a sphere there is generous at the
+ * ankles and misses the chest, which is how rocks sailed through people.
+ *
+ * Wider than the walking footprint on purpose. Being blocked by something is
+ * a constraint and wants to be tight; hitting something is a reward and wants
+ * to be forgiving.
+ */
+export function hitVolume(item: PlacedItem): { radius: number; height: number } {
+  const hit = hitVolumes.get(item);
+  if (hit) return hit;
+  const box = new THREE.Box3().setFromObject(item.obj);
+  const sx = box.max.x - box.min.x;
+  const sy = box.max.y - box.min.y;
+  const sz = box.max.z - box.min.z;
+  const ok = Number.isFinite(sx) && Number.isFinite(sy) && Number.isFinite(sz);
+  const v = {
+    radius: ok ? Math.min(1.8, Math.max(0.5, Math.max(sx, sz) * 0.45)) : 1.1,
+    height: ok ? Math.min(4.5, Math.max(0.9, sy)) : 1.8,
+  };
+  hitVolumes.set(item, v);
+  return v;
+}
+
 /**
  * Would stepping to (x, z) push this one FURTHER into something?
  *

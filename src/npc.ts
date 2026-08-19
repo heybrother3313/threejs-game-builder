@@ -5,7 +5,8 @@ import {
   FISTS, attachWeaponToHand, blastFlash, explode, fitFor, isBomb, weaponSrc,
 } from './weapons';
 import {
-  blockedAt, dropNpcSolid, findClip, groundHeightAt, instantiate, loadModel, persist, placed,
+  blockedAt, dropNpcSolid, findClip, groundHeightAt, hitVolume, instantiate, loadModel, persist,
+  placed,
   removeItem, syncMarker, syncNpcSolid, type PlacedItem,
 } from './level';
 import { getScene } from 'vibegame/rendering';
@@ -895,14 +896,36 @@ export function updateNpcs(
     if (isBomb(proj)) armedBombs.add(proj);
     const bomb = isBomb(proj);
     let struck = false;
+    // Where it was last frame. A throw covers most of a metre per step, so
+    // testing only where it happens to BE lets a fast one straddle a body
+    // between samples and pass clean through — checked as a segment instead.
+    const fl = proj.flight;
+    const pp = proj.obj.position;
+    const ax = pp.x - fl.vx * dt;
+    const ay = pp.y - fl.vy * dt;
+    const az = pp.z - fl.vz * dt;
     for (const target of placed) {
       if (target === proj || !ensureAlive(target)) continue;
       if (npcRuntime(target).state === 'dead') continue;
-      const d = Math.hypot(
-        proj.obj.position.x - target.obj.position.x,
-        proj.obj.position.z - target.obj.position.z
-      );
-      if (d < 1.1 && Math.abs(proj.obj.position.y - target.obj.position.y) < 2) {
+      const vol = hitVolume(target);
+      const tp = target.obj.position;
+      // Closest point on this frame's travel to the target's standing axis.
+      const sx = pp.x - ax;
+      const sz = pp.z - az;
+      const len2 = sx * sx + sz * sz;
+      const t =
+        len2 > 1e-9
+          ? Math.max(0, Math.min(1, ((tp.x - ax) * sx + (tp.z - az) * sz) / len2))
+          : 0;
+      const cx = ax + sx * t;
+      const cz = az + sz * t;
+      const gap = Math.hypot(tp.x - cx, tp.z - cz);
+      if (gap >= vol.radius) continue;
+      // A cylinder standing on the target, not a ball at its ankles: the
+      // origin is at the feet, so a throw at chest height has to count.
+      const cy = ay + (pp.y - ay) * t;
+      if (cy < tp.y - 0.4 || cy > tp.y + vol.height + 0.3) continue;
+      {
         struck = true;
         if (!bomb) {
           proj.flight = undefined;
