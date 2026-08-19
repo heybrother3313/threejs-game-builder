@@ -5,8 +5,8 @@ import {
   FISTS, attachWeaponToHand, blastFlash, explode, fitFor, isBomb, weaponSrc,
 } from './weapons';
 import {
-  findClip, groundHeightAt, instantiate, loadModel, persist, placed, removeItem,
-  syncMarker, type PlacedItem,
+  blockedAt, dropNpcSolid, findClip, groundHeightAt, instantiate, loadModel, persist, placed,
+  removeItem, syncMarker, syncNpcSolid, type PlacedItem,
 } from './level';
 import { getScene } from 'vibegame/rendering';
 import { isTriggered, markTriggered } from './objectives';
@@ -530,13 +530,36 @@ function faceAndStep(item: PlacedItem, tx: number, tz: number, speed: number, dt
     item.obj.rotation.y = Math.atan2(dx, dz);
     return dist;
   }
-  p.x = nx;
-  p.z = nz;
+  // Walk into things, not through them.
+  //
+  // NPC movement writes obj.position straight, so physics never sees it —
+  // which is why a guard could stroll through a market stall and why three of
+  // them chasing you ended up standing inside one another. The blocking is
+  // done here, in the same place the step is taken.
+  //
+  // Sliding rather than stopping: a body refused outright gets wedged on the
+  // first barrel it clips and gives up, so a blocked diagonal retries each
+  // axis on its own and takes whichever is free. That is what lets them round
+  // a corner instead of grinding into it.
+  if (!isSwimmer(item)) {
+    if (!blockedAt(item, nx, nz)) {
+      p.x = nx;
+      p.z = nz;
+    } else if (!blockedAt(item, nx, p.z)) {
+      p.x = nx;
+    } else if (!blockedAt(item, p.x, nz)) {
+      p.z = nz;
+    }
+  } else {
+    p.x = nx;
+    p.z = nz;
+  }
   // Chasing across a hill should climb it, not tunnel through it.
-  if (!isSwimmer(item)) p.y = (item.entry.y ?? 0) + groundHeightAt(nx, nz);
+  if (!isSwimmer(item)) p.y = (item.entry.y ?? 0) + groundHeightAt(p.x, p.z);
   item.obj.rotation.y = Math.atan2(dx, dz);
   return dist;
 }
+
 
 /* --------------------------------------------------------- health bar --- */
 
@@ -591,6 +614,9 @@ export function damageNpc(state: State, item: PlacedItem, amount: number, fromX:
   if (r.hp <= 0) {
     r.state = 'dead';
     item.dead = true; // stops level.ts walking the corpse along its path
+    // A corpse is scenery. Leaving its body box standing turns every kill
+    // into an invisible wall where the fight happened.
+    dropNpcSolid(state, item);
     r.t = 0;
     /*
      * Death has to STOP the other clips, not fade them.
@@ -1110,6 +1136,9 @@ export function updateNpcs(
         play(item, 'idle');
     }
 
+    // Whatever it just did, take its body box with it — a collider left at
+    // last frame's position blocks where the character used to be.
+    syncNpcSolid(state, item);
     drawHealthBar(item);
   }
 

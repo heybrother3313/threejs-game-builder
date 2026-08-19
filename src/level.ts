@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { clone as cloneSkinned } from 'three/examples/jsm/utils/SkeletonUtils.js';
 import type { State } from 'vibegame';
-import { Body, BodyType, Collider } from 'vibegame/physics';
+import { Body, BodyType, Collider, KinematicMove } from 'vibegame/physics';
 import { getScene } from 'vibegame/rendering';
 import { Transform } from 'vibegame/transforms';
 import type { NpcConfig } from './npc';
@@ -344,8 +344,139 @@ function buildGroundProxy(state: State, item: PlacedItem) {
   }
 }
 
+/** Half-height of an NPC's body box, so the mover knows where to hold it. */
+const npcSolidLift = new WeakMap<PlacedItem, number>();
+
+/** A body's worth of personal space. Everything alive is roughly person-sized. */
+const BODY_RADIUS = 0.42;
+/** Cached footprints, keyed by piece — colliderBoxes is far too heavy per step. */
+const footprints = new WeakMap<PlacedItem, number>();
+
+/**
+ * How wide a thing is on the ground, for the purpose of not walking into it.
+ *
+ * A quarter of the widest span rather than a half: a bounding box takes in
+ * outstretched arms and a trailing tail, and blocking on that gives everything
+ * an invisible shell.
+ */
+function footprint(item: PlacedItem): number {
+  const hit = footprints.get(item);
+  if (hit !== undefined) return hit;
+  let r = BODY_RADIUS;
+  const box = new THREE.Box3().setFromObject(item.obj);
+  const sx = box.max.x - box.min.x;
+  const sz = box.max.z - box.min.z;
+  if (Number.isFinite(sx) && Number.isFinite(sz)) {
+    r = Math.min(1.4, Math.max(0.3, Math.max(sx, sz) * 0.25));
+  }
+  footprints.set(item, r);
+  return r;
+}
+
+/**
+ * Would stepping to (x, z) push this one FURTHER into something?
+ *
+ * Lives here rather than in npc.ts because there are TWO movers: npc.ts steps
+ * the code-driven states, and the patrol walker below parametrically follows
+ * an authored path. A rule in only one of them leaves the other walking
+ * through walls, which is what a guard patrolling straight through a market
+ * stall was.
+ *
+ * Deliberately not "would it overlap": plenty of things start out overlapping —
+ * a route authored through a stall, a body shoved by a blast. Refusing every
+ * overlapping step wedges them for good, and the obvious escape hatch (ignore
+ * everything once inside anything) is worse: clip one barrel and you walk
+ * through people for the rest of the level. So the rule is about DIRECTION.
+ * Already inside something? Only moves that back out of it are allowed.
+ */
+export function blockedAt(mover: PlacedItem, x: number, z: number): boolean {
+  const mp = mover.obj.position;
+  for (const other of placed) {
+    if (other === mover || other.carried || other.flight) continue;
+    const alive = !!other.entry.npc && !other.dead;
+    // Only bodies and things with a collider. Grass is not an obstacle.
+    if (!alive && !other.entry.solid) continue;
+    // Something you stand on is not something you walk into.
+    if (other.entry.groundMesh) continue;
+    const op = other.obj.position;
+    if (Math.abs(op.y - mp.y) > 1.5) continue;
+    const reach = BODY_RADIUS + (alive ? BODY_RADIUS : footprint(other));
+    const dx = op.x - x;
+    const dz = op.z - z;
+    const to = dx * dx + dz * dz;
+    if (to >= reach * reach) continue;
+    const cx = op.x - mp.x;
+    const cz = op.z - mp.z;
+    // Closer than it already is: refuse. Otherwise it is backing out.
+    if (to < cx * cx + cz * cz) return true;
+  }
+  return false;
+}
+
+/**
+ * A body you can bump into, that goes where the body goes.
+ *
+ * NPCs are deliberately not `solid`: that flag means a STATIC prop, and a
+ * fixed collider left standing at the spawn point while the character walks
+ * away is worse than no collider at all. So they get one kinematic box, and
+ * npcs drive it after them — which is how the player stops walking through
+ * people. One box, not the slab decomposition a prop gets: a person is a
+ * person-shaped obstacle and nobody needs their hat to be separately solid.
+ */
+function buildNpcSolid(state: State, item: PlacedItem) {
+  const box = new THREE.Box3().setFromObject(item.obj);
+  const size = box.getSize(new THREE.Vector3());
+  if (!Number.isFinite(size.y) || size.y < 1e-3) return;
+  const h = Math.min(2.4, Math.max(0.5, size.y));
+  // A quarter of the span: a measured box takes in outstretched arms, and
+  // blocking on that gives everyone an invisible shell.
+  const r = Math.min(1.0, Math.max(0.28, Math.max(size.x, size.z) * 0.25));
+  const p = item.obj.position;
+  const lift = h / 2;
+  const e = state.createEntity();
+  state.addComponent(e, Transform, {
+    posX: p.x, posY: p.y + lift, posZ: p.z,
+    rotY: 0, rotW: 1, eulerY: 0, scaleX: 1, scaleY: 1, scaleZ: 1,
+  });
+  state.addComponent(e, Body, {
+    type: BodyType.KinematicPositionBased,
+    posX: p.x, posY: p.y + lift, posZ: p.z,
+    rotY: 0, rotW: 1, eulerY: 0, mass: 0, gravityScale: 0,
+  });
+  state.addComponent(e, Collider, { shape: 0, sizeX: r * 2, sizeY: h, sizeZ: r * 2 });
+  item.solidEs.push(e);
+  npcSolidLift.set(item, lift);
+}
+
+/** Carry an NPC's body box along with it. Driven exactly like the raft. */
+export function syncNpcSolid(state: State, item: PlacedItem) {
+  const lift = npcSolidLift.get(item);
+  if (lift === undefined) return;
+  const p = item.obj.position;
+  for (const e of item.solidEs) {
+    if (!state.exists(e)) continue;
+    if (!state.hasComponent(e, KinematicMove)) state.addComponent(e, KinematicMove);
+    KinematicMove.x[e] = p.x;
+    KinematicMove.y[e] = p.y + lift;
+    KinematicMove.z[e] = p.z;
+  }
+}
+
+/** Death takes the body box away, so a corpse is scenery rather than a wall. */
+export function dropNpcSolid(state: State, item: PlacedItem) {
+  if (!npcSolidLift.has(item)) return;
+  npcSolidLift.delete(item);
+  destroySolid(state, item);
+}
+
 function buildSolid(state: State, item: PlacedItem) {
   destroySolid(state, item);
+  npcSolidLift.delete(item);
+  // Anything alive gets a body, whether or not the author marked it solid.
+  if (!item.entry.solid && item.entry.npc) {
+    buildNpcSolid(state, item);
+    return;
+  }
   if (!item.entry.solid) return;
   if (item.entry.groundMesh) {
     buildGroundProxy(state, item);
@@ -1262,6 +1393,7 @@ export function updateLevel(state: State, dt: number, playerPos?: THREE.Vector3)
           const seed = Math.abs(Math.sin(item.entry.x * 12.9898 + item.entry.z * 78.233));
           item.pathDist = (seed % 1) * total;
         }
+        const before = item.pathDist;
         item.pathDist = (item.pathDist + (item.entry.speed ?? 1.3) * dt) % total;
         let d = item.pathDist;
         let seg = 0;
@@ -1272,11 +1404,21 @@ export function updateLevel(state: State, dt: number, playerPos?: THREE.Vector3)
         const t = lens[seg] > 0 ? d / lens[seg] : 0;
         const px = pts[seg][0] + (pts[seg + 1][0] - pts[seg][0]) * t;
         const pz = pts[seg][1] + (pts[seg + 1][1] - pts[seg][1]) * t;
-        item.obj.position.x = item.homePos.x + (px - item.entry.x);
-        item.obj.position.z = item.homePos.z + (pz - item.entry.z);
+        const wx = item.homePos.x + (px - item.entry.x);
+        const wz = item.homePos.z + (pz - item.entry.z);
+        // Hold at the last clear spot rather than walk through whatever is in
+        // the way. Rewinding pathDist too means they resume where they stopped
+        // instead of teleporting up the route once it clears.
+        const swims = item.entry.clip?.startsWith('Swimming');
+        if (!swims && blockedAt(item, wx, wz)) {
+          item.pathDist = before;
+        } else {
+          item.obj.position.x = wx;
+          item.obj.position.z = wz;
+        }
         // Walk the terrain, not the altitude you were authored at. Swimmers
         // keep their own depth — the sea floor is not their ground.
-        if (!item.entry.clip?.startsWith('Swimming')) {
+        if (!swims) {
           item.obj.position.y =
             item.entry.y + groundHeightAt(item.obj.position.x, item.obj.position.z);
         }
