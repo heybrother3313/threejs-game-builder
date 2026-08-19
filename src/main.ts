@@ -72,9 +72,11 @@ import {
   endCharge,
   isCastOut,
   isCharging,
+  isFighting,
   isReeling,
   reelIn,
   setFlopWeight,
+  setPulling,
   startReel,
   takeCatch,
   tryHook,
@@ -252,6 +254,7 @@ const lastPlayerPos = new THREE.Vector3();
 
 window.addEventListener('keyup', (e) => {
   if (RUN_KEYS.has(e.code)) running = false;
+  if (e.code === 'KeyF') actionHeld = false;
   // Letting go of a wind-up is what actually casts, and how far.
   if (e.code === 'KeyF' && isCharging()) wantsCast = endCharge();
 });
@@ -260,6 +263,15 @@ window.addEventListener('keyup', (e) => {
 function fishingWindUp(): boolean {
   return !!heldItem && isFishingRod(heldItem.entry.src) && !isCastOut();
 }
+
+/**
+ * Is the action button down right now?
+ *
+ * The fight needs a HELD state, not a press: you hold the line to gain on the
+ * fish and ease off while it runs. Keydown alone cannot express that, so the
+ * raw button is tracked and fed to the fight every frame.
+ */
+let actionHeld = false;
 
 window.addEventListener('keydown', (e) => {
   if (e.repeat || buildMode) return;
@@ -279,6 +291,7 @@ window.addEventListener('keydown', (e) => {
   }
   if (e.code === 'KeyE') wantsGrab = true;
   else if (e.code === 'KeyF') {
+    actionHeld = true;
     // The longer you hold, the further it goes. Everything else — reeling,
     // throwing, punching — still acts the moment you press.
     if (fishingWindUp()) beginCharge();
@@ -302,10 +315,14 @@ const onGameCanvas = (ev: Event) => (ev.target as HTMLElement | null)?.id === 'g
 window.addEventListener('mousedown', (e) => {
   mouseDownAt = onGameCanvas(e) ? { x: e.clientX, y: e.clientY, button: e.button } : null;
   // Holding the left button winds a cast up, the same as holding F.
-  if (mouseDownAt && !buildMode && e.button === 0 && fishingWindUp()) beginCharge();
+  if (mouseDownAt && !buildMode && e.button === 0) {
+    actionHeld = true;
+    if (fishingWindUp()) beginCharge();
+  }
 });
 
 window.addEventListener('mouseup', (e) => {
+  if (e.button === 0) actionHeld = false;
   const down = mouseDownAt;
   mouseDownAt = null;
   // A wind-up is deliberate, so it casts however far the pointer wandered.
@@ -752,15 +769,24 @@ const CarrySystem: System = {
       // Line already out: F strikes and reels. Striking during a bite lands
       // the fish; striking at any other moment just brings the lure back, so
       // being late costs you the catch and never the lure.
+      // A fish on the line is a fight, and the fight owns the button — the
+      // press that struck rolls straight into holding it.
+      if (isFighting()) {
+        wantsGrab = wantsThrow = false;
+        return;
+      }
       if (wantsThrow && isCastOut()) {
         if (!isReeling()) {
-          // The catch is not banked here. It rides the line in, flops on the
-          // end of the rod, and only then goes in the bag — see takeCatch.
-          tryHook();
-          const back = playerReverseSwing(castReleaseFrac, reelSeconds);
-          attackHold = Math.min(back, ATTACK_HOLD_MAX);
-          attackFacing = heading;
-          startReel(back > 0 ? back : reelSeconds);
+          // Strike first. A hooked fish starts a FIGHT and owns the button
+          // from here — starting the plain reel as well would immediately
+          // overwrite the fight state and hand you the fish for free.
+          const hooked = tryHook();
+          if (!hooked) {
+            const back = playerReverseSwing(castReleaseFrac, reelSeconds);
+            attackHold = Math.min(back, ATTACK_HOLD_MAX);
+            attackFacing = heading;
+            startReel(back > 0 ? back : reelSeconds);
+          }
         }
         wantsGrab = wantsThrow = false;
         return;
@@ -1025,6 +1051,7 @@ const VisualsSystem: System = {
     updateWater();
     // The line is redrawn every frame because both ends move: the lure rides
     // the swell, and the rod tip goes wherever the hand does.
+    setPulling(actionHeld);
     updateFishing(
       state.time.deltaTime,
       heldWeaponTip(castTipScratch) ? castTipScratch : null,
