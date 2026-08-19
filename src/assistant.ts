@@ -107,6 +107,35 @@ export const QUICK_PROMPTS: { label: string; prompt: string }[] = [
       'aggroRadius 5, health 40, dropping a Gold Bag when defeated.',
   },
   {
+    label: 'Fetch N of an item',
+    prompt:
+      'Add a friendly cook near the player who wants 3 Gem Blue, thanks you warmly and ' +
+      'rewards a Chest Gold. Scatter the three gems around the level, each one guarded by ' +
+      'a hostile monster with health 30 and aggroRadius 5.',
+  },
+  {
+    label: 'Fishing errand',
+    prompt:
+      'Add a friendly fishmonger near the player who wants a Tuna, with a line about the ' +
+      'deep water being where the big ones are, and rewards a Gold Bag. Put a pickable ' +
+      'fishing rod beside them and a dock running out into open water.',
+  },
+  {
+    label: 'Objective chain',
+    prompt:
+      'Build a three-step objective chain: step 1 talk to a friendly guide near the player, ' +
+      'step 2 defeat a hostile monster about 10 units away (health 60, loot Gold Bag), ' +
+      'step 3 reach a spot past it with radius 4. Give each step HUD text and a done line.',
+  },
+  {
+    label: 'Island finale',
+    prompt:
+      'Stage the end of this island: a boss monster (health 140, damage 14, loot Chest Gold) ' +
+      'with two minions, as objective step 1 kind defeat. Then put a ship at the shore as ' +
+      'step 2 kind activate, with unlockExit town-island and unlockLabel "Sail home", so ' +
+      'beating the boss opens the way out.',
+  },
+  {
     label: 'Boss arena',
     prompt:
       'Stage a boss fight about 10 units from the player: one big monster (health 120, damage 15, ' +
@@ -260,13 +289,43 @@ function systemPrompt(cat: Map<string, string[]>): string {
     '             Gem Pink | Chest Gold (loot auto-collects into the player inventory)',
     '  weapon     the blade it fights with (Axe, Cutlass, Sword, Dagger). Dropped as a',
     '             pickable on defeat, so beating one arms the player for the next fight.',
-    '  wantsItem + thanksLine + reward = fetch quest. Collectibles: Coins, Gold Bag,',
-    '    Gold ore, Gem Blue/Green/Pink, Chest Gold, Skull, Prop Bottle. The NPC',
-    '    automatically ASKS for wantsItem in conversation — no need to script it.',
+    '  wantsItem + thanksLine + reward = fetch quest. The NPC automatically ASKS',
+    '    for wantsItem in conversation — no need to script it.',
+    '  INVENTORY ITEMS (for wantsItem, reward, loot, and objective "collect"):',
+    '    Coins, Gold Bag, Gold ore, Gem Blue, Gem Green, Gem Pink, Chest Gold,',
+    '    Skull, Prop Bottle — these lie on the ground and auto-collect.',
+    '    Anglerfish, Blue Tang, Butterfly Fish, Clownfish, Goldfish, Parrot Fish,',
+    '    Red Snapper, Swordfish, Tuna — these are CAUGHT with a fishing rod, not',
+    '    placed. Shallow water gives Clownfish/Goldfish/Butterfly Fish, mid gives',
+    '    Parrot Fish/Blue Tang/Red Snapper, deep gives Tuna/Swordfish/Anglerfish.',
+    '    Ask for a deep-water fish and you have set a real errand.',
+    '',
+    'ENTRY.objective — a TRACKED STEP in the island\'s chain. Put it on the piece',
+    'the step is about (the monster to kill, the thing to collect, the lever).',
+    'Steps complete in ascending order and the HUD shows the current one.',
+    '  step       1, 2, 3… order in the chain',
+    '  kind       "defeat"   — this npc must be beaten',
+    '             "collect"  — gather item x count (item must be an INVENTORY ITEM)',
+    '             "reach"    — walk within radius of this piece',
+    '             "activate" — press E on it',
+    '             "talk"     — speak to this npc',
+    '  text       HUD line while the step is current ("Land three tuna")',
+    '  item,count for collect. radius for reach (3-5 reads well).',
+    '  done       line shown when the step completes',
+    '  unlockExit + unlockLabel — on completion this piece BECOMES a portal to',
+    '    that world. This is how an island ends: finishing the chain opens the',
+    '    way out. Put it on a ship or a gate, not on the thing you killed.',
     '',
     'SCENE RECIPES — compose these, they are what makes a request a SCENE:',
     '  Guarded prize: loot on the ground + hostile guard behavior:"guard" nearby.',
     '  Quest chain: NPC A wantsItem X + reward Y; place X guarded elsewhere.',
+    '  Objective chain: step 1 talk to the person who sends you, step 2 defeat or',
+    '    collect, step 3 reach or activate, and unlockExit on the last one so the',
+    '    island opens when it is done. Three or four steps is a level; ten is a',
+    '    chore list.',
+    '  Errand a player must EARN: wantsItem a deep-water fish. They have to find',
+    '    a rod, cast past the shallows, and land it — a fetch quest with a whole',
+    '    activity inside it, from one field.',
     '  Patrol route: path around a landmark + faction hostile + small aggroRadius.',
     '  Escort: guideTo a far point + arriveLine; put danger along the way.',
     '  Market/camp: cluster props 0.5-1 unit apart near a building + one talker;',
