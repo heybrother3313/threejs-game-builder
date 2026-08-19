@@ -426,8 +426,14 @@ const fishFrom = new THREE.Vector3();
 const fishTo = new THREE.Vector3();
 /** How long the drop to the sand takes. */
 const DROP_SECONDS = 0.45;
-/** How many times it flops before you pocket it. */
-const FLOPS = 3;
+/**
+ * How many times it flops before you pocket it.
+ *
+ * The clip is 1.5s, so this is seconds of standing still watching a fish:
+ * three was four and a half of them, which is a long time to be finished
+ * with something. Two reads as a landed fish; more reads as a wait.
+ */
+const FLOPS = 2;
 
 /**
  * Put the fish on the line.
