@@ -49,42 +49,6 @@ const BITE_MAX = 6.5;
 const BITE_WINDOW = 1.0;
 
 /**
- * The fight.
- *
- * Hold the line and it comes in; let go and it takes line back. The fish runs
- * in bursts, and pulling against a run is what builds tension — so the game is
- * knowing when to stop reeling, not how fast you can press. Snap the line and
- * you lose it.
- */
-/**
- * Long enough to contain several runs.
- *
- * At the old rate a fight was over in two seconds — about one run — so there
- * was never a second decision to make and nothing to learn from the first.
- * Five seconds of actual pulling, spread across the lulls, comes out around
- * eight seconds of fight and three or four times you have to let go.
- */
-const FIGHT_GAIN = 0.2;
-/** Letting go costs time, not line. Punishing it too would discourage the
- *  one thing the player is supposed to do. */
-const FIGHT_SLIP = 0.03;
-/** Released line bleeds fast, so a run costs about a second of waiting. */
-const TENSION_RELAX = 1.2;
-/** How long a run lasts, and the lull between runs. */
-const RUN_SECONDS = [0.7, 1.3];
-const REST_SECONDS = [0.9, 1.8];
-/**
- * Tension per second while you pull against a run, shallow fish to deep.
- *
- * Set so that sitting through a single deep-water run snaps the line outright
- * and two shallow ones do. There is no fish you can simply out-hold.
- */
-const FIGHT_WEAK = 1.0;
-const FIGHT_STRONG = 1.7;
-
-const between = ([lo, hi]: number[]) => lo + Math.random() * (hi - lo);
-
-/**
  * What is down there, by how far out the lure landed.
  *
  * Measured with waterDistance, which is the same distance the water's colour
@@ -135,23 +99,8 @@ const FISH_SIZE = 0.95;
 /** Every model in the bundle ships this; it is what a landed fish does. */
 const OUT_OF_WATER = 'Out_Of_Water';
 
-type Fight = {
-  /** How far in it is, 0..1. Reaching 1 lands it. */
-  progress: number;
-  /** How hard the line is loaded, 0..1. Reaching 1 snaps it. */
-  tension: number;
-  /** True while the fish is running; pulling against a run loads the line. */
-  running: boolean;
-  /** Time left in the current run or lull. */
-  t: number;
-  /** Tension per second while pulled against — bigger fish, harder fight. */
-  strength: number;
-};
-
 type Cast = {
-  state: 'flying' | 'floating' | 'bite' | 'fighting' | 'reeling';
-  /** Set while a hooked fish is being fought in. */
-  fight: Fight | null;
+  state: 'flying' | 'floating' | 'bite' | 'reeling';
   /** Seconds of quiet water left before something takes the lure. */
   biteIn: number;
   /** How long the current bite has been going, against BITE_WINDOW. */
@@ -361,7 +310,6 @@ export function beginCast(
     vel: new THREE.Vector3(fx * speed, lift, fz * speed),
     restT: 0,
     onWater: false,
-    fight: null,
     biteIn: nextBiteDelay(),
     biteT: 0,
     reelFrom: new THREE.Vector3(),
@@ -403,29 +351,7 @@ export function tryHook(): string | null {
   showBite(false);
   hookedName = fish;
   void attachFish(fish);
-  // Deeper water fought harder, which is the reason to cast out there.
-  const deep = Math.min(1, waterDistance(cast.pos.x, cast.pos.z) / 12);
-  cast.state = 'fighting';
-  cast.fight = {
-    progress: 0,
-    tension: 0,
-    running: false,
-    t: between(REST_SECONDS),
-    strength: FIGHT_WEAK + (FIGHT_STRONG - FIGHT_WEAK) * deep,
-  };
-  cast.reelFrom.copy(cast.pos);
   return fish;
-}
-
-/** True while a hooked fish is being fought. */
-export function isFighting(): boolean {
-  return cast?.state === 'fighting';
-}
-
-/** Whether the player is holding the line in. Written every frame by input. */
-let pulling = false;
-export function setPulling(on: boolean) {
-  pulling = on;
 }
 
 /* -------------------------------------------------------------- fish --- */
@@ -725,10 +651,6 @@ function updateLandedFish(dt: number) {
 export function fishingDebug() {
   return {
     castState: cast?.state ?? 'none',
-    tension: cast?.fight ? +cast.fight.tension.toFixed(2) : null,
-    progress: cast?.fight ? +cast.fight.progress.toFixed(2) : null,
-    running: cast?.fight?.running ?? null,
-    pulling,
     fishPhase,
     fishT: +fishT.toFixed(2),
     hookedName,
@@ -752,91 +674,6 @@ export function takeCatch(): string | null {
   const c = caughtReady;
   caughtReady = null;
   return c;
-}
-
-let fightEl: HTMLDivElement | null = null;
-let fightLine: HTMLDivElement | null = null;
-let fightTension: HTMLDivElement | null = null;
-let fightCall: HTMLDivElement | null = null;
-
-/**
- * Two bars: how much line is in, and how loaded it is.
- *
- * The tension bar is the one you watch, so it goes on top and turns as it
- * fills. The run itself is telegraphed by the bar climbing rather than by a
- * separate tell — if you are looking at the meter you can see the fish pull.
- */
-function drawFight(f: Fight | null) {
-  if (!fightEl) {
-    if (!f) return;
-    fightEl = document.createElement('div');
-    fightEl.id = 'fish-fight';
-    fightEl.style.cssText =
-      'position:fixed;left:50%;bottom:120px;transform:translateX(-50%);z-index:18;' +
-      'display:none;width:260px;font-family:var(--font-display,sans-serif);' +
-      'text-align:center;';
-    // The instruction, not the meters, is what teaches this. Two unlabelled
-    // bars appearing at the bottom of the screen tell you nothing about what
-    // you are supposed to be doing with them.
-    fightCall = document.createElement('div');
-    fightCall.style.cssText =
-      'font-weight:700;font-size:19px;letter-spacing:.06em;text-transform:uppercase;' +
-      'margin-bottom:6px;-webkit-text-stroke:3px var(--border-strong,#111);' +
-      'paint-order:stroke fill;';
-    const mk = (h: number) =>
-      `background:var(--surface,#fff);border:3px solid var(--border-strong,#111);` +
-      `border-radius:10px;box-shadow:0 4px 0 var(--border-strong,#111);` +
-      `overflow:hidden;height:${h}px;`;
-    const label = () =>
-      `font-size:10px;letter-spacing:.1em;text-transform:uppercase;text-align:left;` +
-      `color:var(--text-primary,#111);margin:4px 0 2px;`;
-    const tLab = document.createElement('div');
-    tLab.style.cssText = label();
-    tLab.textContent = 'Line tension';
-    const tWrap = document.createElement('div');
-    tWrap.style.cssText = mk(16);
-    fightTension = document.createElement('div');
-    fightTension.style.cssText = 'height:100%;width:0%;background:#f0b429;';
-    tWrap.appendChild(fightTension);
-    const lLab = document.createElement('div');
-    lLab.style.cssText = label();
-    lLab.textContent = 'Fish reeled in';
-    const lWrap = document.createElement('div');
-    lWrap.style.cssText = mk(12);
-    fightLine = document.createElement('div');
-    fightLine.style.cssText =
-      'height:100%;width:0%;background:var(--color-lime,#b7e26b);';
-    lWrap.appendChild(fightLine);
-    fightEl.append(fightCall, tLab, tWrap, lLab, lWrap);
-    document.body.appendChild(fightEl);
-  }
-  fightEl.style.display = f ? 'block' : 'none';
-  if (!f) return;
-  // Say the thing. A player who has never seen this should get it first try.
-  if (fightCall) {
-    fightCall.textContent = f.running ? 'Let go!' : 'Hold F to reel';
-    fightCall.style.color = f.running ? '#e0523e' : 'var(--color-lime,#b7e26b)';
-  }
-  if (fightTension) {
-    fightTension.style.width = `${Math.round(f.tension * 100)}%`;
-    fightTension.style.background = f.tension > 0.6 ? '#e0523e' : '#f0b429';
-  }
-  if (fightLine) fightLine.style.width = `${Math.round(f.progress * 100)}%`;
-}
-
-/** Said once, when the line goes. */
-function showSnap() {
-  drawFight(null);
-  showBite(false);
-  if (!biteEl) return;
-  biteEl.innerHTML = 'Line snapped!';
-  biteEl.style.display = 'block';
-  window.setTimeout(() => {
-    if (biteEl) {
-      biteEl.style.display = 'none';
-      biteEl.innerHTML = 'Fish on! &nbsp;<b>F</b>';
-    }
-  }, 1100);
 }
 
 let biteEl: HTMLDivElement | null = null;
@@ -864,8 +701,6 @@ function showBite(on: boolean) {
 export function reelIn() {
   cast = null;
   showBite(false);
-  drawFight(null);
-  pulling = false;
   // Walking away mid-fight loses the fish with the cast — it goes back in the
   // water rather than into the bag, which is the cost of giving up the line.
   clearFish();
@@ -910,66 +745,6 @@ export function updateFishing(dt: number, tip: THREE.Vector3 | null, scene: THRE
   if (!cast) {
     lure.position.set(tip.x, tip.y - STOW_DROP, tip.z);
     drawLine(tip, lure.position);
-    return;
-  }
-
-  // The fight: hold to gain line, ease off while it runs.
-  if (cast.state === 'fighting' && cast.fight) {
-    const f = cast.fight;
-    f.t -= dt;
-    if (f.t <= 0) {
-      f.running = !f.running;
-      f.t = between(f.running ? RUN_SECONDS : REST_SECONDS);
-    }
-    if (pulling) {
-      f.progress += FIGHT_GAIN * dt;
-      // Holding NEVER bleeds tension — that was the bug that made this
-      // boring. Reeling through a lull used to relax the line faster than a
-      // run loaded it, so holding the button down the whole fight came out
-      // net zero and simply worked. Now holding is neutral in the lulls and
-      // loads in the runs, so tension accumulates across every run you sit
-      // through and the button-masher always snaps.
-      if (f.running) f.tension += f.strength * dt;
-    } else {
-      f.progress -= FIGHT_SLIP * dt;
-      // Letting go is the ONLY thing that saves the line.
-      f.tension -= TENSION_RELAX * dt;
-    }
-    f.progress = Math.max(0, Math.min(1, f.progress));
-    f.tension = Math.max(0, Math.min(1, f.tension));
-    drawFight(f);
-
-    // Snapped: the fish keeps the lure's dignity and you get nothing.
-    if (f.tension >= 1) {
-      showSnap();
-      clearFish();
-      reelIn();
-      return;
-    }
-    // Landed: hand it to the drop-and-flop, exactly as the old reel did.
-    if (f.progress >= 1) {
-      const name = hookedName;
-      drawFight(null);
-      if (name && hooked) {
-        fishFrom.copy(hooked.pivot.position);
-        fishTo.set(tip.x, restHeight(tip.x, tip.z) + hooked.flopDip, tip.z);
-        fishPhase = 'dropping';
-        fishT = 0;
-        cast = null;
-      } else if (name) {
-        caughtReady = name;
-        clearFish();
-        reelIn();
-      } else {
-        reelIn();
-      }
-      return;
-    }
-    // The lure tracks how much line is in.
-    cast.pos.lerpVectors(cast.reelFrom, tip, f.progress);
-    lure.position.copy(cast.pos);
-    drawLine(tip, cast.pos);
-    seatFish();
     return;
   }
 
