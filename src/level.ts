@@ -373,6 +373,52 @@ function footprint(item: PlacedItem): number {
   return r;
 }
 
+/**
+ * How far to swing off course looking for a way past, in radians.
+ *
+ * Tried nearest-first and alternating sides, so a body brushing the edge of a
+ * barrel slips by with a small deviation and only something squarely in the
+ * way makes it take the long way round. Always taking the same side first
+ * would be simpler, but a pair meeting head-on would then mirror each other
+ * forever.
+ */
+const AVOID_ANGLES = [0.5, -0.5, 1.0, -1.0, 1.6, -1.6, 2.3, -2.3];
+
+/**
+ * A step toward (tx, tz) that goes AROUND whatever is in the way.
+ *
+ * Deliberately local, not a path search: with a grid this small, swinging off
+ * course and converging back gets a body round a market stall and costs
+ * nothing per frame. Returns null only when it is properly hemmed in, and the
+ * caller can decide whether that means stop or wait.
+ */
+export function avoidStep(
+  mover: PlacedItem,
+  tx: number,
+  tz: number,
+  stepLen: number
+): { x: number; z: number } | null {
+  const p = mover.obj.position;
+  const dx = tx - p.x;
+  const dz = tz - p.z;
+  const d = Math.hypot(dx, dz);
+  if (d < 1e-5 || stepLen <= 0) return null;
+  const ux = dx / d;
+  const uz = dz / d;
+  const step = Math.min(stepLen, d);
+  const nx = p.x + ux * step;
+  const nz = p.z + uz * step;
+  if (!blockedAt(mover, nx, nz)) return { x: nx, z: nz };
+  for (const a of AVOID_ANGLES) {
+    const c = Math.cos(a);
+    const s = Math.sin(a);
+    const ax = p.x + (ux * c - uz * s) * step;
+    const az = p.z + (ux * s + uz * c) * step;
+    if (!blockedAt(mover, ax, az)) return { x: ax, z: az };
+  }
+  return null;
+}
+
 const hitVolumes = new WeakMap<PlacedItem, { radius: number; height: number }>();
 
 /**
@@ -1424,7 +1470,6 @@ export function updateLevel(state: State, dt: number, playerPos?: THREE.Vector3)
           const seed = Math.abs(Math.sin(item.entry.x * 12.9898 + item.entry.z * 78.233));
           item.pathDist = (seed % 1) * total;
         }
-        const before = item.pathDist;
         item.pathDist = (item.pathDist + (item.entry.speed ?? 1.3) * dt) % total;
         let d = item.pathDist;
         let seg = 0;
@@ -1437,15 +1482,38 @@ export function updateLevel(state: State, dt: number, playerPos?: THREE.Vector3)
         const pz = pts[seg][1] + (pts[seg + 1][1] - pts[seg][1]) * t;
         const wx = item.homePos.x + (px - item.entry.x);
         const wz = item.homePos.z + (pz - item.entry.z);
-        // Hold at the last clear spot rather than walk through whatever is in
-        // the way. Rewinding pathDist too means they resume where they stopped
-        // instead of teleporting up the route once it clears.
         const swims = item.entry.clip?.startsWith('Swimming');
-        if (!swims && blockedAt(item, wx, wz)) {
-          item.pathDist = before;
-        } else {
+        let faceX = pts[seg + 1][0] - pts[seg][0];
+        let faceZ = pts[seg + 1][1] - pts[seg][1];
+        if (swims) {
+          // Nothing blocks a fish, so it rides the route exactly.
           item.obj.position.x = wx;
           item.obj.position.z = wz;
+        } else {
+          // STEER toward the point on the route rather than snapping onto it.
+          //
+          // That one change is what turns "stops dead behind a barrel" into
+          // "goes around it and carries on": the route point keeps advancing
+          // whatever happens on the ground, so a body that had to detour is
+          // simply behind its mark and closes the gap once the way is clear.
+          // Rejoining the path costs no extra code — it IS the steering.
+          //
+          // Faster than the route moves, or a detour could never be made up.
+          const cur = item.obj.position;
+          const move = avoidStep(item, wx, wz, (item.entry.speed ?? 1.3) * 1.8 * dt);
+          if (move) {
+            // Face where it actually went, not where the route pointed —
+            // walking a detour sideways while staring down the path looks
+            // like a bug even when the feet are right.
+            faceX = move.x - cur.x;
+            faceZ = move.z - cur.z;
+            cur.x = move.x;
+            cur.z = move.z;
+          }
+          if (Math.hypot(faceX, faceZ) < 1e-4) {
+            faceX = pts[seg + 1][0] - pts[seg][0];
+            faceZ = pts[seg + 1][1] - pts[seg][1];
+          }
         }
         // Walk the terrain, not the altitude you were authored at. Swimmers
         // keep their own depth — the sea floor is not their ground.
@@ -1453,7 +1521,7 @@ export function updateLevel(state: State, dt: number, playerPos?: THREE.Vector3)
           item.obj.position.y =
             item.entry.y + groundHeightAt(item.obj.position.x, item.obj.position.z);
         }
-        item.obj.rotation.y = Math.atan2(pts[seg + 1][0] - pts[seg][0], pts[seg + 1][1] - pts[seg][1]);
+        item.obj.rotation.y = Math.atan2(faceX, faceZ);
         positionBang(item);
       }
     }

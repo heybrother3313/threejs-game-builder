@@ -5,9 +5,8 @@ import {
   FISTS, attachWeaponToHand, blastFlash, explode, fitFor, isBomb, weaponSrc,
 } from './weapons';
 import {
-  blockedAt, dropNpcSolid, findClip, groundHeightAt, hitVolume, instantiate, loadModel, persist,
-  placed,
-  removeItem, syncMarker, syncNpcSolid, type PlacedItem,
+  avoidStep, dropNpcSolid, findClip, groundHeightAt, hitVolume, instantiate, loadModel,
+  persist, placed, removeItem, syncMarker, syncNpcSolid, type PlacedItem,
 } from './level';
 import { getScene } from 'vibegame/rendering';
 import { isTriggered, markTriggered } from './objectives';
@@ -543,13 +542,12 @@ function faceAndStep(item: PlacedItem, tx: number, tz: number, speed: number, dt
   // axis on its own and takes whichever is free. That is what lets them round
   // a corner instead of grinding into it.
   if (!isSwimmer(item)) {
-    if (!blockedAt(item, nx, nz)) {
-      p.x = nx;
-      p.z = nz;
-    } else if (!blockedAt(item, nx, p.z)) {
-      p.x = nx;
-    } else if (!blockedAt(item, p.x, nz)) {
-      p.z = nz;
+    // Round it, don't grind into it. The axis-by-axis slide this replaces got
+    // a body past a wall but stuck it solid on anything round.
+    const move = avoidStep(item, tx, tz, step);
+    if (move) {
+      p.x = move.x;
+      p.z = move.z;
     }
   } else {
     p.x = nx;
