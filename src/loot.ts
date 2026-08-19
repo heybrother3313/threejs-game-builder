@@ -157,8 +157,17 @@ let handEl: HTMLDivElement | null = null;
 export function showHeld(label: string | null) {
   if (!handEl) {
     handEl = document.createElement('div');
+    // Beside the health bar, not under it. This used to sit at a fixed 150px
+    // from the top, which is inside the loot tray once you are carrying more
+    // than a few things — the label ended up wedged between two loot slots
+    // halfway down the screen, reading as a broken row rather than as what is
+    // in your hand. The bar is a fixed 190px from left:16, so 222 clears it,
+    // and the top lines the chip up with the bar rather than its caption.
     handEl.style.cssText =
-      'position:fixed;left:16px;top:150px;z-index:13;pointer-events:none;' +
+      // translateY rather than a top that assumes a height: the chip grows
+      // with the label's font, and 45 is the bar's centre line either way.
+      'position:fixed;left:222px;top:45px;transform:translateY(-50%);' +
+      'z-index:13;pointer-events:none;' +
       'font-family:var(--font-body,Inter,sans-serif);font-weight:700;font-size:13px;' +
       'color:var(--text-primary,#111);background:var(--surface-face,#faf6ef);' +
       'border:2px solid var(--border-strong,#111);border-radius:10px;' +

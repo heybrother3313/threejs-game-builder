@@ -57,14 +57,17 @@ const BITE_WINDOW = 1.0;
  * scaled to what a cast from the shore can actually reach (roughly 0..15),
  * not to the colour ramp's own constants, which run to 40 and would call
  * every reachable cast "shallow".
+ *
+ * Three per band rather than five. Fifteen species meant an inventory of
+ * fifteen single fish — a wall of ×1 slots down the side of the screen, none
+ * of them memorable. Fewer kinds means you catch the same fish twice, which
+ * reads as a haul instead of a list. The ones cut were also the lookalikes:
+ * Cardinal and Zebra Clown next to a Clownfish, Sunfish next to a Tuna.
  */
 const CATCH_TABLE: { within: number; fish: string[] }[] = [
-  {
-    within: 3,
-    fish: ['Clownfish', 'Goldfish', 'Cardinal Fish', 'Butterfly Fish', 'Zebra Clown Fish'],
-  },
-  { within: 8, fish: ['Parrot Fish', 'Blue Tang', 'Mandarin Fish', 'Cowfish', 'Red Snapper'] },
-  { within: Infinity, fish: ['Tuna', 'Swordfish', 'Sunfish', 'Anglerfish', 'Goblin Shark'] },
+  { within: 3, fish: ['Clownfish', 'Goldfish', 'Butterfly Fish'] },
+  { within: 8, fish: ['Parrot Fish', 'Blue Tang', 'Red Snapper'] },
+  { within: Infinity, fish: ['Tuna', 'Swordfish', 'Anglerfish'] },
 ];
 
 /**
