@@ -67,6 +67,19 @@ const CATCH_TABLE: { within: number; fish: string[] }[] = [
   { within: Infinity, fish: ['Tuna', 'Swordfish', 'Sunfish', 'Anglerfish', 'Goblin Shark'] },
 ];
 
+/**
+ * Everything the table can produce, for the quest dropdowns.
+ *
+ * Deliberately NOT added to COLLECTIBLE_NAMES, which is the auto-scoop list:
+ * a fish is granted straight to the counts and never touches the floor, and
+ * putting it there would make the market stalls' tuna vanish into your pocket
+ * as you walked past. Wanting and rewarding go through spendLoot/grantLoot,
+ * which work on names, so being catchable is all it takes to be questable.
+ */
+export const CATCHABLE_FISH: string[] = [
+  ...new Set(CATCH_TABLE.flatMap((band) => band.fish)),
+].sort();
+
 /** What would bite at (x, z). */
 function fishFor(x: number, z: number): string {
   const d = waterDistance(x, z);

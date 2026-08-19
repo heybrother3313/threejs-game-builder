@@ -32,6 +32,17 @@ import { QUICK_PROMPTS, aiConfig, listModels, runAssistant, saveAiConfig } from 
 import { PLAYER_CHOICES, playerModel, portraitFor, setPlayerModel } from './character';
 import { DEFAULTS, resetNpc, resolveLoot, type NpcConfig } from './npc';
 import { COLLECTIBLE_NAMES } from './loot';
+import { CATCHABLE_FISH } from './fishing';
+
+/**
+ * What an NPC can ask for or pay out.
+ *
+ * Anything the inventory can hold, which is a wider set than the things that
+ * get scooped off the floor: a caught fish is granted straight to the counts.
+ * Both ends of a fetch quest go through spendLoot/grantLoot by name, so the
+ * only requirement is that it can be in there at all.
+ */
+const QUEST_ITEMS: string[] = [...COLLECTIBLE_NAMES, ...CATCHABLE_FISH];
 import { canRedo, canUndo, initHistory, mark, redo, redoLabel, replaceAll, undo, undoLabel } from './history';
 import { STARTERS } from './starters';
 import { ISLAND } from './ground';
@@ -1001,7 +1012,7 @@ function updateNpcPanel() {
     <label>Wants item (fetch quest)</label>
     <select id="n-wants">
       <option value="">nothing</option>
-      ${COLLECTIBLE_NAMES.map(
+      ${QUEST_ITEMS.map(
         (name) => `<option value="${name}"${(n.wantsItem ?? '') === name ? ' selected' : ''}>${name}</option>`
       ).join('')}
     </select>
@@ -1011,7 +1022,7 @@ function updateNpcPanel() {
     <label>Reward</label>
     <select id="n-reward">
       <option value="">nothing</option>
-      ${COLLECTIBLE_NAMES.map(
+      ${QUEST_ITEMS.map(
         (name) => `<option value="${name}"${(n.reward ?? '') === name ? ' selected' : ''}>${name}</option>`
       ).join('')}
     </select>
