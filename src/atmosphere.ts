@@ -30,6 +30,8 @@ let fog: THREE.Fog | null = null;
 let sceneRef: THREE.Scene | null = null;
 let water: THREE.Mesh | null = null;
 let waterBase: Float32Array | null = null;
+/** The still colours, so the shimmer can be re-applied rather than accumulate. */
+let waterBaseColor: Float32Array | null = null;
 
 export function initAtmosphere(state: State) {
   const scene = getScene(state);
@@ -114,6 +116,7 @@ export function initAtmosphere(state: State) {
   water.position.y = WATER_Y;
   scene.add(water);
   waterBase = Float32Array.from(wpos.array as Float32Array);
+  waterBaseColor = Float32Array.from(wcolors);
 
   // Far islands: dark low lumps half-swallowed by the fog. Cones are enough —
   // at that distance silhouette is all that survives.
@@ -177,15 +180,38 @@ export function updateWater() {
   const geo = water.geometry as THREE.PlaneGeometry;
   const pos = geo.getAttribute('position') as THREE.BufferAttribute;
   const arr = pos.array as Float32Array;
+  const col = geo.getAttribute('color') as THREE.BufferAttribute | undefined;
+  const cArr = col?.array as Float32Array | undefined;
   for (let i = 0; i < pos.count; i++) {
     const x = waterBase[i * 3];
     const z = waterBase[i * 3 + 2];
+    // Long swell, then a shorter chop on top.
+    //
+    // The old wavelengths were about nine metres on a mesh whose quads are
+    // three and a third — under three vertices to a wave, which the grid
+    // cannot resolve, so a real animation rendered as almost nothing moving.
+    // Stretching the rollers past thirty metres gives them ten vertices each
+    // and they finally read as swell.
     arr[i * 3 + 1] =
-      Math.sin(x * 0.7 + t * 1.1) * 0.085 +
-      Math.cos(z * 0.55 + t * 0.8) * 0.085 +
-      Math.sin((x + z) * 0.32 + t * 0.5) * 0.04;
+      Math.sin(x * 0.16 + t * 0.9) * 0.16 +
+      Math.cos(z * 0.13 + t * 0.7) * 0.14 +
+      Math.sin((x + z) * 0.31 + t * 1.6) * 0.05;
+
+    // Light travelling across the surface. Geometry alone is nearly invisible
+    // on a sea seen at a shallow angle from the shore — most of what sells
+    // moving water at this distance is the brightness sliding over it.
+    if (cArr && waterBaseColor) {
+      const shimmer =
+        1 +
+        0.09 * Math.sin(x * 0.21 - t * 1.3) +
+        0.06 * Math.sin(z * 0.17 + t * 0.9);
+      cArr[i * 3] = waterBaseColor[i * 3] * shimmer;
+      cArr[i * 3 + 1] = waterBaseColor[i * 3 + 1] * shimmer;
+      cArr[i * 3 + 2] = waterBaseColor[i * 3 + 2] * shimmer;
+    }
   }
   pos.needsUpdate = true;
+  if (col) col.needsUpdate = true;
   geo.computeVertexNormals();
 }
 
