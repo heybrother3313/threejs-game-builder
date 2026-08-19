@@ -56,16 +56,31 @@ const BITE_WINDOW = 1.0;
  * knowing when to stop reeling, not how fast you can press. Snap the line and
  * you lose it.
  */
-const FIGHT_GAIN = 0.45;
-const FIGHT_SLIP = 0.2;
-/** Tension bleeds off this fast whenever you are not pulling against a run. */
-const TENSION_RELAX = 0.9;
+/**
+ * Long enough to contain several runs.
+ *
+ * At the old rate a fight was over in two seconds — about one run — so there
+ * was never a second decision to make and nothing to learn from the first.
+ * Five seconds of actual pulling, spread across the lulls, comes out around
+ * eight seconds of fight and three or four times you have to let go.
+ */
+const FIGHT_GAIN = 0.2;
+/** Letting go costs time, not line. Punishing it too would discourage the
+ *  one thing the player is supposed to do. */
+const FIGHT_SLIP = 0.03;
+/** Released line bleeds fast, so a run costs about a second of waiting. */
+const TENSION_RELAX = 1.2;
 /** How long a run lasts, and the lull between runs. */
-const RUN_SECONDS = [0.6, 1.2];
-const REST_SECONDS = [0.8, 1.8];
-/** Tension per second while you pull against a run, shallow fish to deep. */
-const FIGHT_WEAK = 0.55;
-const FIGHT_STRONG = 1.15;
+const RUN_SECONDS = [0.7, 1.3];
+const REST_SECONDS = [0.9, 1.8];
+/**
+ * Tension per second while you pull against a run, shallow fish to deep.
+ *
+ * Set so that sitting through a single deep-water run snaps the line outright
+ * and two shallow ones do. There is no fish you can simply out-hold.
+ */
+const FIGHT_WEAK = 1.0;
+const FIGHT_STRONG = 1.7;
 
 const between = ([lo, hi]: number[]) => lo + Math.random() * (hi - lo);
 
@@ -742,6 +757,7 @@ export function takeCatch(): string | null {
 let fightEl: HTMLDivElement | null = null;
 let fightLine: HTMLDivElement | null = null;
 let fightTension: HTMLDivElement | null = null;
+let fightCall: HTMLDivElement | null = null;
 
 /**
  * Two bars: how much line is in, and how loaded it is.
@@ -757,31 +773,53 @@ function drawFight(f: Fight | null) {
     fightEl.id = 'fish-fight';
     fightEl.style.cssText =
       'position:fixed;left:50%;bottom:120px;transform:translateX(-50%);z-index:18;' +
-      'display:none;width:240px;font-family:var(--font-display,sans-serif);';
+      'display:none;width:260px;font-family:var(--font-display,sans-serif);' +
+      'text-align:center;';
+    // The instruction, not the meters, is what teaches this. Two unlabelled
+    // bars appearing at the bottom of the screen tell you nothing about what
+    // you are supposed to be doing with them.
+    fightCall = document.createElement('div');
+    fightCall.style.cssText =
+      'font-weight:700;font-size:19px;letter-spacing:.06em;text-transform:uppercase;' +
+      'margin-bottom:6px;-webkit-text-stroke:3px var(--border-strong,#111);' +
+      'paint-order:stroke fill;';
     const mk = (h: number) =>
       `background:var(--surface,#fff);border:3px solid var(--border-strong,#111);` +
       `border-radius:10px;box-shadow:0 4px 0 var(--border-strong,#111);` +
-      `overflow:hidden;height:${h}px;margin-bottom:5px;`;
+      `overflow:hidden;height:${h}px;`;
+    const label = () =>
+      `font-size:10px;letter-spacing:.1em;text-transform:uppercase;text-align:left;` +
+      `color:var(--text-primary,#111);margin:4px 0 2px;`;
+    const tLab = document.createElement('div');
+    tLab.style.cssText = label();
+    tLab.textContent = 'Line tension';
     const tWrap = document.createElement('div');
     tWrap.style.cssText = mk(16);
     fightTension = document.createElement('div');
-    fightTension.style.cssText = 'height:100%;width:0%;background:#e0523e;';
+    fightTension.style.cssText = 'height:100%;width:0%;background:#f0b429;';
     tWrap.appendChild(fightTension);
+    const lLab = document.createElement('div');
+    lLab.style.cssText = label();
+    lLab.textContent = 'Fish reeled in';
     const lWrap = document.createElement('div');
     lWrap.style.cssText = mk(12);
     fightLine = document.createElement('div');
     fightLine.style.cssText =
       'height:100%;width:0%;background:var(--color-lime,#b7e26b);';
     lWrap.appendChild(fightLine);
-    fightEl.append(tWrap, lWrap);
+    fightEl.append(fightCall, tLab, tWrap, lLab, lWrap);
     document.body.appendChild(fightEl);
   }
   fightEl.style.display = f ? 'block' : 'none';
   if (!f) return;
+  // Say the thing. A player who has never seen this should get it first try.
+  if (fightCall) {
+    fightCall.textContent = f.running ? 'Let go!' : 'Hold F to reel';
+    fightCall.style.color = f.running ? '#e0523e' : 'var(--color-lime,#b7e26b)';
+  }
   if (fightTension) {
     fightTension.style.width = `${Math.round(f.tension * 100)}%`;
-    // Yellow while it is merely loaded, red once letting go is urgent.
-    fightTension.style.background = f.tension > 0.65 ? '#e0523e' : '#f0b429';
+    fightTension.style.background = f.tension > 0.6 ? '#e0523e' : '#f0b429';
   }
   if (fightLine) fightLine.style.width = `${Math.round(f.progress * 100)}%`;
 }
@@ -885,11 +923,16 @@ export function updateFishing(dt: number, tip: THREE.Vector3 | null, scene: THRE
     }
     if (pulling) {
       f.progress += FIGHT_GAIN * dt;
-      // Only pulling AGAINST a run loads the line. Reeling in the lulls is
-      // free, which is the whole skill: watch the fish, not the meter.
-      f.tension += (f.running ? f.strength : -TENSION_RELAX) * dt;
+      // Holding NEVER bleeds tension — that was the bug that made this
+      // boring. Reeling through a lull used to relax the line faster than a
+      // run loaded it, so holding the button down the whole fight came out
+      // net zero and simply worked. Now holding is neutral in the lulls and
+      // loads in the runs, so tension accumulates across every run you sit
+      // through and the button-masher always snaps.
+      if (f.running) f.tension += f.strength * dt;
     } else {
       f.progress -= FIGHT_SLIP * dt;
+      // Letting go is the ONLY thing that saves the line.
       f.tension -= TENSION_RELAX * dt;
     }
     f.progress = Math.max(0, Math.min(1, f.progress));
